@@ -1,0 +1,17 @@
+black
+click
+Django
+future
+gunicorn
+MarkupSafe
+pycparser
+pylint
+pyparsing
+python-dateutil
+python-dotenv
+pytz
+requests
+simplejson
+six
+sqlparse
+whitenoise
