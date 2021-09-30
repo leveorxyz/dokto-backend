@@ -10,34 +10,26 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-from pathlib import Path
-import dotenv
 import os
+from pathlib import Path
+from decouple import config
+from dj_database_url import parse as db_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Read .env file
-dotenv_file = BASE_DIR / '.env'
-if dotenv_file.exists():
-    dotenv.load_dotenv(dotenv_file)
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = config(
+    'SECRET_KEY', 'django-insecure-z8l(0jnbqgj*j^x@^c%xgw80#@=2l_12qqloi(9ij9vfi(yir')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
-
 # SECURITY WARNING: don't run with debug turned on in production!
-debug_value = os.getenv("DEBUG", "True")
-if debug_value == "True":
-    DEBUG = True
-else:
-    DEBUG = False
-
-__version__ = os.getenv("VERSION", "v1")
+DEBUG = config('DEBUG', default=True, cast=bool)
+TEMPLATE_DEBUG = DEBUG
+__version__ = config("VERSION", "v1")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -51,10 +43,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third Party Apps,
+    'corsheaders',
+    'rest_framework',
+    'rest_framework.authtoken',
+    # Project Apps
+    'app'
+
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,7 +69,7 @@ ROOT_URLCONF = 'Dokto_Backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -89,10 +89,11 @@ WSGI_APPLICATION = 'Dokto_Backend.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': config(
+        'DATABASE_URL',
+        default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
+        cast=db_url
+    )
 }
 
 
@@ -143,3 +144,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Extra settings
 USE_X_FORWARDED_HOST = True
 SITE_ID = 1
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = 'your email'
+# EMAIL_HOST_PASSWORD = 'your password'
+# EMAIL_USE_TLS = True
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+# CORS_ORIGIN_WHITELIST = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000"
+# ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+}
