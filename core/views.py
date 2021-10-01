@@ -7,8 +7,6 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
-from .literals import INIT_CART
-
 # Create your views here.
 
 
