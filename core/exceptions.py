@@ -9,7 +9,8 @@ def custom_exception_handler(exception, context):
     if response:
         data = response.data
         message_list = []
-        for _, v in data.items():
+        for k, v in data.items():
+            print(k)
             if isinstance(v, str):
                 message_list.append(v)
             else:
