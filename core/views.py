@@ -19,6 +19,7 @@ def custom_response(response):
     response.data = response_data
     return response
 
+
 class CustomRetrieveAPIView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
