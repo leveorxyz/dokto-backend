@@ -34,7 +34,7 @@ python-decouple==3.4
 python-dotenv==0.19.0
 pytz==2021.1
 regex==2021.9.24
-requests==2.20.0
+requests==2.26.0
 simplejson==3.17.5
 six==1.16.0
 sqlparse==0.4.2
