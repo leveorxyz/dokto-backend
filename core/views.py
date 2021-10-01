@@ -12,7 +12,7 @@ from rest_framework.generics import (
 
 def custom_response(response):
     response_data = {
-        "message": "success",
+        "message": ["success"],
         "status_code": response.status_code,
         "result": response.data,
     }

@@ -23,7 +23,7 @@ class CustomPagination(LimitOffsetPagination):
         )
         response.data = OrderedDict(
             [
-                ("message", "success"),
+                ("message", ["success"]),
                 ("status_code", response.status_code),
                 ("result", raw_data),
             ]

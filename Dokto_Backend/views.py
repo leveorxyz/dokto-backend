@@ -6,7 +6,7 @@ from rest_framework.status import HTTP_404_NOT_FOUND
 class Custom404(APIView):
     def get(self, *args, **kwargs):
         response_data = {
-            "message": "Not found!",
+            "message": ["Not found!"],
             "status_code": 404,
             "result": None,
         }
