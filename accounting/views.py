@@ -1,7 +1,11 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from paypalrestsdk import notifications
 from django.conf import settings
 import stripe
+import json
+
 
 from .serializers import (StripeChargeSerializer)
 
@@ -64,3 +68,45 @@ class StripeChargeAPIView(generics.CreateAPIView):
             return Response(data={'status': 400, 'message': e.error.message}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(data={'status': 200, 'message': 'success'}, status=status.HTTP_201_CREATED)
+
+
+class PaypalProcessWebhookAPIView(APIView):
+    """
+    Paypal payment verification webhook
+    """
+
+    def post(self, request):
+        if "HTTP_PAYPAL_TRANSMISSION_ID" not in request.META:
+            return Response(data={'status': 400, 'message': 'Bad Request'})
+
+        auth_algo = request.META['HTTP_PAYPAL_AUTH_ALGO']
+        cert_url = request.META['HTTP_PAYPAL_CERT_URL']
+        transmission_id = request.META['HTTP_PAYPAL_TRANSMISSION_ID']
+        transmission_sig = request.META['HTTP_PAYPAL_TRANSMISSION_SIG']
+        transmission_time = request.META['HTTP_PAYPAL_TRANSMISSION_TIME']
+        webhook_id = settings.PAYPAL_WEBHOOK_ID
+        event_body = request.body.decode(request.encoding or "utf-8")
+
+        valid = notifications.WebhookEvent.verify(
+            transmission_id=transmission_id,
+            timestamp=transmission_time,
+            webhook_id=webhook_id,
+            event_body=event_body,
+            cert_url=cert_url,
+            actual_sig=transmission_sig,
+            auth_algo=auth_algo,
+        )
+
+        if not valid:
+            return Response(data={'status': 400, 'message': 'Invalid Transaction'}, status=status.HTTP_400_BAD_REQUEST)
+
+        webhook_event = json.loads(event_body)
+
+        event_type = webhook_event["event_type"]
+
+        CHECKOUT_ORDER_APPROVED = "CHECKOUT.ORDER.APPROVED"
+
+        if event_type == CHECKOUT_ORDER_APPROVED:
+            #  Checkout successfull, do something
+            pass
+        return Response(data={'status': 200, 'message': 'Bad Request'}, status=status.HTTP_200_OK)
