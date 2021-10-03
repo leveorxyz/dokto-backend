@@ -115,3 +115,4 @@ class PaypalProcessWebhookAPIView(APIView):
 # https://developer.flutterwave.com/v2.0/docs/events-webhooks
 
 # TODO: Add Paystack webhook handler
+# https://paystack.com/docs/payments/webhooks/
