@@ -110,3 +110,8 @@ class PaypalProcessWebhookAPIView(APIView):
             #  Checkout successfull, do something
             pass
         return Response(data={'status': 200, 'message': 'Bad Request'}, status=status.HTTP_200_OK)
+
+# TODO: Add Flutterwave webhook handler
+# https://developer.flutterwave.com/v2.0/docs/events-webhooks
+
+# TODO: Add Paystack webhook handler
