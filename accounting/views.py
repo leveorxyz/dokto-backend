@@ -8,7 +8,7 @@ import json
 import hashlib, hmac
 
 
-from .serializers import (StripeChargeSerializer)
+from .serializers import StripeChargeSerializer
 from Dokto_Backend.settings import SECRET_KEY
 
 
@@ -37,6 +37,7 @@ class StripeChargeAPIView(generics.CreateAPIView):
 
     3. Return response to my frontend to display a confirmation / error
     """
+
     serializer_class = StripeChargeSerializer
 
     def create(self, request, *args, **kwargs):
@@ -44,32 +45,37 @@ class StripeChargeAPIView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         stripe.api_key = settings.STRIPE_SECRET_KEY
 
-        token = serializer.data.get('token')
+        token = serializer.data.get("token")
 
         try:
             charge = stripe.Charge.create(
                 amount=100,
-                currency='usd',
+                currency="usd",
                 description="Description",
                 source=token,
                 receipt_email="receipt email",
                 shipping={
                     "name": "customer name",
                     "phone": "",
-                    'address': {
+                    "address": {
                         "country": "",
                         "line1": "",
                         "line2": "",
                         "postal_code": "",
-                    }
-                }
+                    },
+                },
             )
             print(charge)
 
         except Exception as e:
-            return Response(data={'status': 400, 'message': e.error.message}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={"status": 400, "message": e.error.message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response(data={'status': 200, 'message': 'success'}, status=status.HTTP_201_CREATED)
+        return Response(
+            data={"status": 200, "message": "success"}, status=status.HTTP_201_CREATED
+        )
 
 
 class PaypalProcessWebhookAPIView(APIView):
@@ -79,13 +85,13 @@ class PaypalProcessWebhookAPIView(APIView):
 
     def post(self, request):
         if "HTTP_PAYPAL_TRANSMISSION_ID" not in request.META:
-            return Response(data={'status': 400, 'message': 'Bad Request'})
+            return Response(data={"status": 400, "message": "Bad Request"})
 
-        auth_algo = request.META['HTTP_PAYPAL_AUTH_ALGO']
-        cert_url = request.META['HTTP_PAYPAL_CERT_URL']
-        transmission_id = request.META['HTTP_PAYPAL_TRANSMISSION_ID']
-        transmission_sig = request.META['HTTP_PAYPAL_TRANSMISSION_SIG']
-        transmission_time = request.META['HTTP_PAYPAL_TRANSMISSION_TIME']
+        auth_algo = request.META["HTTP_PAYPAL_AUTH_ALGO"]
+        cert_url = request.META["HTTP_PAYPAL_CERT_URL"]
+        transmission_id = request.META["HTTP_PAYPAL_TRANSMISSION_ID"]
+        transmission_sig = request.META["HTTP_PAYPAL_TRANSMISSION_SIG"]
+        transmission_time = request.META["HTTP_PAYPAL_TRANSMISSION_TIME"]
         webhook_id = settings.PAYPAL_WEBHOOK_ID
         event_body = request.body.decode(request.encoding or "utf-8")
 
@@ -100,7 +106,10 @@ class PaypalProcessWebhookAPIView(APIView):
         )
 
         if not valid:
-            return Response(data={'status': 400, 'message': 'Invalid Transaction'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={"status": 400, "message": "Invalid Transaction"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         webhook_event = json.loads(event_body)
 
@@ -111,7 +120,10 @@ class PaypalProcessWebhookAPIView(APIView):
         if event_type == CHECKOUT_ORDER_APPROVED:
             #  Checkout successfull, do something
             pass
-        return Response(data={'status': 200, 'message': 'Bad Request'}, status=status.HTTP_200_OK)
+        return Response(
+            data={"status": 200, "message": "Bad Request"}, status=status.HTTP_200_OK
+        )
+
 
 # TODO: Add Flutterwave webhook handler
 # https://developer.flutterwave.com/v2.0/docs/events-webhooks
@@ -122,7 +134,12 @@ class PaystackProcessWebhookAPIView(APIView):
     """
     Paystack payment verification webhook
     """
+
     def post(self, request):
-        hash = hmac.new(SECRET_KEY, digestmod=hashlib.sha512).update(request.body).hexdigest()
+        hmac_value = (
+            hmac.new(SECRET_KEY.encode(), digestmod=hashlib.sha512)
+        )
+        hmac_value.update(request.body)
+        hash = hmac_value.hexdigest()
         print(hash)
         return Response(status=status.HTTP_200_OK)
