@@ -116,3 +116,8 @@ class PaypalProcessWebhookAPIView(APIView):
 
 # TODO: Add Paystack webhook handler
 # https://paystack.com/docs/payments/webhooks/
+class PaystackProcessWebhookAPIView(APIView):
+    """
+    Paystack payment verification webhook
+    """
+    pass
