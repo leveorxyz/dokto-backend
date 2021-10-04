@@ -120,4 +120,5 @@ class PaystackProcessWebhookAPIView(APIView):
     """
     Paystack payment verification webhook
     """
-    pass
+    def post(self, request):
+        return Response(status=status.HTTP_200_OK)
