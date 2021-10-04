@@ -52,9 +52,8 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "debug_toolbar",
     # Project Apps
-    'core',
-    'accounting'
-
+    "core",
+    "accounting",
 ]
 
 MIDDLEWARE = [
@@ -189,6 +188,6 @@ INTERNAL_IPS = [
 
 # Stripe Credenentials
 STRIPE_PUBLISHABLE_KEY = os.getenv(
-    'STRIPE_PUBLISHABLE_KEY', 'pk_test_TYooMQauvdEDq54NiTphI7jx')
-STRIPE_SECRET_KEY = os.getenv(
-    'STRIPE_SECRET_KEY', 'sk_test_4eC39HqLyjWDarjtT1zdp7dc')
+    "STRIPE_PUBLISHABLE_KEY", "pk_test_TYooMQauvdEDq54NiTphI7jx"
+)
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")

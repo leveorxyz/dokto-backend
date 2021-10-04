@@ -136,10 +136,13 @@ class PaystackProcessWebhookAPIView(APIView):
     """
 
     def post(self, request):
-        hmac_value = (
-            hmac.new(SECRET_KEY.encode(), digestmod=hashlib.sha512)
-        )
+        hmac_value = hmac.new(SECRET_KEY.encode(), digestmod=hashlib.sha512)
         hmac_value.update(request.body)
         hash = hmac_value.hexdigest()
-        print(hash)
-        return Response(status=status.HTTP_200_OK)
+        if (
+            "x-paystack-signature" in request.headers
+            and request.headers["x-paystack-signature"] == hash
+        ):
+            #  Checkout successful, do something
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
