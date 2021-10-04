@@ -5,9 +5,11 @@ from paypalrestsdk import notifications
 from django.conf import settings
 import stripe
 import json
+import hashlib, hmac
 
 
 from .serializers import (StripeChargeSerializer)
+from Dokto_Backend.settings import SECRET_KEY
 
 
 class StripeChargeAPIView(generics.CreateAPIView):
@@ -121,4 +123,6 @@ class PaystackProcessWebhookAPIView(APIView):
     Paystack payment verification webhook
     """
     def post(self, request):
+        hash = hmac.new(SECRET_KEY, digestmod=hashlib.sha512).update(request.body).hexdigest()
+        print(hash)
         return Response(status=status.HTTP_200_OK)
