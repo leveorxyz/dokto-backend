@@ -1,8 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
-from .literals import INIT_CART
-
 
 def custom_exception_handler(exception, context):
     response = exception_handler(exception, context)
