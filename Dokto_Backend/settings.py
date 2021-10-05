@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     # Project Apps
     "core",
+    "accounting",
 ]
 
 MIDDLEWARE = [
@@ -177,10 +178,16 @@ REST_FRAMEWORK = {
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
     ],
-    "EXCEPTION_HANDLER": "core.exception.custom_exception_handler",
+    "EXCEPTION_HANDLER": "core.exceptions.custom_exception_handler",
 }
 
 
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+# Stripe Credenentials
+STRIPE_PUBLISHABLE_KEY = os.getenv(
+    "STRIPE_PUBLISHABLE_KEY", "pk_test_TYooMQauvdEDq54NiTphI7jx"
+)
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")
