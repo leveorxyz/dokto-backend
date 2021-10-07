@@ -6,6 +6,17 @@ The backend api server for the Dokto project.
 
 ```bash
 Dokto-Backend
+├── accounting
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
 ├── core
 │   ├── admin.py
 │   ├── apps.py
@@ -31,12 +42,13 @@ Dokto-Backend
 │   └── wsgi.py
 ├── example.env
 ├── manage.py
+├── Procfile
 ├── README.md
 ├── requirements.txt
 └── scripts
     └── fresh_init.sh
 
-6 directories, 24 files
+8 directories, 33 files
 ```
 
 ## Requirements
