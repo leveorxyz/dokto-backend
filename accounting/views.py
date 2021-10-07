@@ -6,11 +6,11 @@ from paypalrestsdk import notifications
 from django.conf import settings
 import stripe
 import json
+import requests
 import hashlib, hmac
 
 
 from .serializers import StripeChargeSerializer
-from Dokto_Backend.settings import SECRET_KEY
 
 
 class StripeChargeAPIView(generics.CreateAPIView):
@@ -140,15 +140,36 @@ class PaystackVerifyAPIView(APIView):
         request_body = json.loads(request.body)
         if not "reference" in request_body:
             raise ValidationError(detail="No reference string in body")
-        print(request_body)
-        # hmac_value = hmac.new(SECRET_KEY.encode(), digestmod=hashlib.sha512)
-        # hmac_value.update(request.body)
-        # hash = hmac_value.hexdigest()
-        # if (
-        #     "x-paystack-signature" in request.headers
-        #     and request.headers["x-paystack-signature"] == hash
-        # ):
-        #     #  Checkout successful, do something
-        #     return Response(status=status.HTTP_200_OK)
-        # return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response()
+        paystack_verification_url = (
+            f"https://api.paystack.co/transaction/verify/{request_body['reference']}"
+        )
+        paystack_verification_response = requests.get(
+            paystack_verification_url,
+            headers={"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"},
+        )
+        paystack_verification_response_json = paystack_verification_response.json()
+        if paystack_verification_response_json["status"] == True:
+            #  Checkout successful, do something
+            return Response(
+                data={
+                    "status_code": 200,
+                    "message": paystack_verification_response_json["message"],
+                    "result": {
+                        "paid_at": paystack_verification_response_json["data"][
+                            "paid_at"
+                        ],
+                        "created_at": paystack_verification_response_json["data"][
+                            "created_at"
+                        ],
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            data={
+                "status_code": 400,
+                "message": paystack_verification_response_json["message"],
+                "result": None,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
