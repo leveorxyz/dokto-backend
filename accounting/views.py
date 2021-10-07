@@ -129,25 +129,36 @@ class PaypalProcessWebhookAPIView(APIView):
 # TODO: Add Flutterwave webhook handler
 # https://developer.flutterwave.com/v2.0/docs/events-webhooks
 
-# TODO: Add Paystack webhook handler
-# https://paystack.com/docs/payments/webhooks/
+
 class PaystackVerifyAPIView(APIView):
     """
     Paystack payment verification
+    Request body parameters:
+    - transaction_reference
+    - appointment_id
+
+    return:
+    - 200: if verification is successful
+    - 400: if verification is unsuccessful
     """
 
     def post(self, request):
+        # Extracting reference and appointment_id from request
         request_body = json.loads(request.body)
-        if not "reference" in request_body:
+
+        # If reference is not present in request body throw error
+        if not "transaction_reference" in request_body:
             raise ValidationError(detail="No reference string in body")
-        paystack_verification_url = (
-            f"https://api.paystack.co/transaction/verify/{request_body['reference']}"
-        )
+
+        # Sending request to paystack to verify the transaction
+        paystack_verification_url = f"https://api.paystack.co/transaction/verify/{request_body['transaction_reference']}"
         paystack_verification_response = requests.get(
             paystack_verification_url,
             headers={"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"},
         )
         paystack_verification_response_json = paystack_verification_response.json()
+
+        # If transaction is not successful throw error else return success
         if paystack_verification_response_json["status"] == True:
             #  Checkout successful, do something
             return Response(
@@ -165,6 +176,8 @@ class PaystackVerifyAPIView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+
+        # Verification failed
         return Response(
             data={
                 "status_code": 400,
