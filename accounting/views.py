@@ -35,7 +35,7 @@ class FlutterwaveVerifyAPIView(APIView):
         if not "transaction_reference" in request_body:
             raise ValidationError(detail="No reference string in body")
 
-        # Sending request to paystack to verify the transaction
+        # Sending request to flutterwave to verify the transaction
         flutterwave_verification_url = f"https://api.flutterwave.com/v3/transactions/{request_body['transaction_reference']}/verify"
         flutterwave_verification_response = requests.get(
             flutterwave_verification_url,
