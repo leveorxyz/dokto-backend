@@ -1,6 +1,7 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 from paypalrestsdk import notifications
 from django.conf import settings
 import stripe
@@ -130,19 +131,24 @@ class PaypalProcessWebhookAPIView(APIView):
 
 # TODO: Add Paystack webhook handler
 # https://paystack.com/docs/payments/webhooks/
-class PaystackProcessWebhookAPIView(APIView):
+class PaystackVerifyAPIView(APIView):
     """
-    Paystack payment verification webhook
+    Paystack payment verification
     """
 
     def post(self, request):
-        hmac_value = hmac.new(SECRET_KEY.encode(), digestmod=hashlib.sha512)
-        hmac_value.update(request.body)
-        hash = hmac_value.hexdigest()
-        if (
-            "x-paystack-signature" in request.headers
-            and request.headers["x-paystack-signature"] == hash
-        ):
-            #  Checkout successful, do something
-            return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        request_body = json.loads(request.body)
+        if not "reference" in request_body:
+            raise ValidationError(detail="No reference string in body")
+        print(request_body)
+        # hmac_value = hmac.new(SECRET_KEY.encode(), digestmod=hashlib.sha512)
+        # hmac_value.update(request.body)
+        # hash = hmac_value.hexdigest()
+        # if (
+        #     "x-paystack-signature" in request.headers
+        #     and request.headers["x-paystack-signature"] == hash
+        # ):
+        #     #  Checkout successful, do something
+        #     return Response(status=status.HTTP_200_OK)
+        # return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response()

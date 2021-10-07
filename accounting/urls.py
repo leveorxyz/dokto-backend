@@ -11,7 +11,7 @@ urlpatterns = [
     ),
     path(
         "paystack-verify/",
-        views.PaystackProcessWebhookAPIView.as_view(),
+        views.PaystackVerifyAPIView.as_view(),
         name="paystack_verify",
     ),
 ]
