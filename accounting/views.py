@@ -11,7 +11,7 @@ import hashlib, hmac
 from .serializers import StripeChargeSerializer
 
 
-from .serializers import (StripeChargeSerializer)
+from .serializers import StripeChargeSerializer
 
 
 class StripeChargeAPIView(generics.CreateAPIView):
@@ -39,6 +39,7 @@ class StripeChargeAPIView(generics.CreateAPIView):
 
     3. Return response to my frontend to display a confirmation / error
     """
+
     serializer_class = StripeChargeSerializer
 
     def create(self, request, *args, **kwargs):
@@ -46,32 +47,37 @@ class StripeChargeAPIView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         stripe.api_key = settings.STRIPE_SECRET_KEY
 
-        token = serializer.data.get('token')
+        token = serializer.data.get("token")
 
         try:
             charge = stripe.Charge.create(
                 amount=100,
-                currency='usd',
+                currency="usd",
                 description="Description",
                 source=token,
                 receipt_email="receipt email",
                 shipping={
                     "name": "customer name",
                     "phone": "",
-                    'address': {
+                    "address": {
                         "country": "",
                         "line1": "",
                         "line2": "",
                         "postal_code": "",
-                    }
-                }
+                    },
+                },
             )
             print(charge)
 
         except Exception as e:
-            return Response(data={'status': 400, 'message': e.error.message}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={"status": 400, "message": e.error.message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response(data={'status': 200, 'message': 'success'}, status=status.HTTP_201_CREATED)
+        return Response(
+            data={"status": 200, "message": "success"}, status=status.HTTP_201_CREATED
+        )
 
 
 class PaypalProcessWebhookAPIView(APIView):
@@ -81,13 +87,13 @@ class PaypalProcessWebhookAPIView(APIView):
 
     def post(self, request):
         if "HTTP_PAYPAL_TRANSMISSION_ID" not in request.META:
-            return Response(data={'status': 400, 'message': 'Bad Request'})
+            return Response(data={"status": 400, "message": "Bad Request"})
 
-        auth_algo = request.META['HTTP_PAYPAL_AUTH_ALGO']
-        cert_url = request.META['HTTP_PAYPAL_CERT_URL']
-        transmission_id = request.META['HTTP_PAYPAL_TRANSMISSION_ID']
-        transmission_sig = request.META['HTTP_PAYPAL_TRANSMISSION_SIG']
-        transmission_time = request.META['HTTP_PAYPAL_TRANSMISSION_TIME']
+        auth_algo = request.META["HTTP_PAYPAL_AUTH_ALGO"]
+        cert_url = request.META["HTTP_PAYPAL_CERT_URL"]
+        transmission_id = request.META["HTTP_PAYPAL_TRANSMISSION_ID"]
+        transmission_sig = request.META["HTTP_PAYPAL_TRANSMISSION_SIG"]
+        transmission_time = request.META["HTTP_PAYPAL_TRANSMISSION_TIME"]
         webhook_id = settings.PAYPAL_WEBHOOK_ID
         event_body = request.body.decode(request.encoding or "utf-8")
 
@@ -102,7 +108,10 @@ class PaypalProcessWebhookAPIView(APIView):
         )
 
         if not valid:
-            return Response(data={'status': 400, 'message': 'Invalid Transaction'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={"status": 400, "message": "Invalid Transaction"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         webhook_event = json.loads(event_body)
 
@@ -113,9 +122,11 @@ class PaypalProcessWebhookAPIView(APIView):
         if event_type == CHECKOUT_ORDER_APPROVED:
             #  Checkout successfull, do something
             pass
-        return Response(data={'status': 200, 'message': 'Bad Request'}, status=status.HTTP_200_OK)
+        return Response(
+            data={"status": 200, "message": "Bad Request"}, status=status.HTTP_200_OK
+        )
 
-      
+
 class FlutterwaveVerifyAPIView(APIView):
     """
     Flutterwave payment verification
@@ -147,7 +158,6 @@ class FlutterwaveVerifyAPIView(APIView):
         flutterwave_verification_response_json = (
             flutterwave_verification_response.json()
         )
-        print(flutterwave_verification_response_json)
 
         # If transaction is not successful throw error else return success
         if flutterwave_verification_response_json["status"] == "success":
@@ -174,6 +184,7 @@ class FlutterwaveVerifyAPIView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+
 
 class PaystackVerifyAPIView(APIView):
     """
