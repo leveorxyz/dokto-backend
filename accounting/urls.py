@@ -14,6 +14,7 @@ urlpatterns = [
         views.PaystackVerifyAPIView.as_view(),
         name="paystack_verify",
     ),
+    path(
         "flutterwave-verify/",
         views.FlutterwaveVerifyAPIView.as_view(),
         name="flutterwave_verify",
