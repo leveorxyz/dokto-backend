@@ -188,10 +188,11 @@ INTERNAL_IPS = [
 ]
 
 # Stripe Credenentials
+STRIPE_SECRET_KEY = os.getenv(
+    'STRIPE_SECRET_KEY', 'sk_test_4eC39HqLyjWDarjtT1zdp7dc')
 STRIPE_PUBLISHABLE_KEY = os.getenv(
     "STRIPE_PUBLISHABLE_KEY", "pk_test_TYooMQauvdEDq54NiTphI7jx"
 )
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")
 
 PAYSTACK_SECRET_KEY = os.getenv(
     "PAYSTACK_SECRET_KEY", "sk_test_131a38e1f5bcbca8f338e5762118922ea6fc1e92"
