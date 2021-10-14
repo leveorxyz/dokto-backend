@@ -38,3 +38,11 @@ class User(AbstractUser, CoreModel):
     contact_no = models.CharField(_("contact no"), max_length=20, blank=True, null=True)
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
+
+
+class UserIp(CoreModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip_address = models.GenericIPAddressField()
+
+    def __str__(self):
+        return self.user.username
