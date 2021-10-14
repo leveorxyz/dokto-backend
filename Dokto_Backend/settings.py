@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     # Project Apps
     "core",
     "accounting",
+    "user",
 ]
 
 MIDDLEWARE = [
@@ -188,8 +189,7 @@ INTERNAL_IPS = [
 ]
 
 # Stripe Credenentials
-STRIPE_SECRET_KEY = os.getenv(
-    'STRIPE_SECRET_KEY', 'sk_test_4eC39HqLyjWDarjtT1zdp7dc')
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")
 STRIPE_PUBLISHABLE_KEY = os.getenv(
     "STRIPE_PUBLISHABLE_KEY", "pk_test_TYooMQauvdEDq54NiTphI7jx"
 )
