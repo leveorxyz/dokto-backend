@@ -23,7 +23,7 @@ def custom_exception_handler(exception, context):
         custom_response = {
             "message": " ".join(message_list),
             "status_code": response.status_code,
-            "result": None
+            "result": None,
         }
         response.data = custom_response
     return response
