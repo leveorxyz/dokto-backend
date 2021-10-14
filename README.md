@@ -45,10 +45,24 @@ Dokto-Backend
 ├── Procfile
 ├── README.md
 ├── requirements.txt
-└── scripts
-    └── fresh_init.sh
+├── scripts
+│   └── fresh_init.sh
+└── user
+    ├── admin.py
+    ├── apps.py
+    ├── __init__.py
+    ├── migrations
+    │   ├── 0001_initial.py
+    │   ├── 0002_auto_20211014_1528.py
+    │   ├── 0003_auto_20211014_1536.py
+    │   └── __init__.py
+    ├── models.py
+    ├── serializers.py
+    ├── tests.py
+    ├── urls.py
+    └── views.py
 
-8 directories, 33 files
+10 directories, 45 files
 ```
 
 ## Requirements
