@@ -30,5 +30,12 @@ class User(AbstractUser, CoreModel):
     user_type = models.CharField(
         _("user type"), max_length=20, default="Patient", blank=True
     )
+    is_verified = models.BooleanField(
+        _("is verified"), default=False, blank=True, null=True
+    )
+    street = models.CharField(_("street"), max_length=100, blank=True, null=True)
+    state = models.CharField(_("state"), max_length=50, blank=True, null=True)
+    city = models.CharField(_("city"), max_length=50, blank=True, null=True)
+    zip_code = models.CharField(_("zip code"), max_length=15, blank=True, null=True)
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
