@@ -15,9 +15,7 @@ class User(AbstractUser, CoreModel):
         _("username"),
         max_length=150,
         unique=True,
-        help_text=_(
-            "Required. 150 characters or fewer. Letters and digits only."
-        ),
+        help_text=_("Required. 150 characters or fewer. Letters and digits only."),
         validators=[username_validator],
         error_messages={
             "unique": _("A user with that username already exists."),
@@ -37,5 +35,6 @@ class User(AbstractUser, CoreModel):
     state = models.CharField(_("state"), max_length=50, blank=True, null=True)
     city = models.CharField(_("city"), max_length=50, blank=True, null=True)
     zip_code = models.CharField(_("zip code"), max_length=15, blank=True, null=True)
+    contact_no = models.CharField(_("contact no"), max_length=20, blank=True, null=True)
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
