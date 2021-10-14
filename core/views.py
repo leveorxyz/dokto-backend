@@ -30,8 +30,7 @@ def set_user_ip(request):
     else:
         ip = request.META.get("REMOTE_ADDR")
     if user.is_authenticated:
-        x = UserIp.objects.update_or_create(user=user, ip=ip)
-        print(x)
+        UserIp.objects.update_or_create(user=user, ip=ip)
 
 
 class CustomRetrieveAPIView(RetrieveAPIView):
