@@ -47,6 +47,20 @@ class LoginView(APIView):
         serializer = UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # Checking if user is already logged in
+        if request.user.is_authenticated:
+            return Response(
+                {
+                    "status_code": 200,
+                    "message": "Login successful.",
+                    "result": {
+                        "username": request.user.get_username(),
+                        "email": request.user.email,
+                        "token": request.auth.key,
+                    },
+                }
+            )
+
         # Authenticating user
         user = authenticate(
             email=serializer.validated_data["email"],
