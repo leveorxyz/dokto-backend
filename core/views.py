@@ -7,7 +7,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
-from user.models import UserIp
+from .utils import set_user_ip
 
 # Create your views here.
 
@@ -20,17 +20,6 @@ def custom_response(response):
     }
     response.data = response_data
     return response
-
-
-def set_user_ip(request):
-    ip = None
-    user = request.user
-    if request.META.get("HTTP_X_FORWARDED_FOR"):
-        ip = request.META.get("HTTP_X_FORWARDED_FOR")
-    else:
-        ip = request.META.get("REMOTE_ADDR")
-    if user.is_authenticated:
-        UserIp.objects.update_or_create(user=user, ip=ip)
 
 
 class CustomRetrieveAPIView(RetrieveAPIView):

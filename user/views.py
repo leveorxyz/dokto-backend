@@ -7,6 +7,7 @@ from rest_framework.status import HTTP_404_NOT_FOUND
 from django.contrib.auth import authenticate
 
 from core.views import CustomRetrieveAPIView
+from core.utils import set_user_ip
 from .models import User
 from .serializers import UserSerializer, UserLoginSerializer
 
@@ -49,6 +50,7 @@ class LoginView(APIView):
 
         # Checking if user is already logged in
         if request.user.is_authenticated:
+            set_user_ip(request)
             return Response(
                 {
                     "status_code": 200,
@@ -105,6 +107,7 @@ class LogoutView(APIView):
         user = request.user
         token = request.auth
         Token.objects.filter(user=user, key=token).delete()
+        set_user_ip(request)
         return Response(
             {
                 "status_code": 200,
