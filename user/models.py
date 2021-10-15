@@ -46,3 +46,11 @@ class UserIp(CoreModel):
 
     def __str__(self):
         return self.user.username
+
+
+class UserLanguage(CoreModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    language = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.user.username
