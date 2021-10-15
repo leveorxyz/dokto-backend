@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
+from rest_framework.status import HTTP_404_NOT_FOUND
 from django.contrib.auth import authenticate
 
 from core.views import CustomRetrieveAPIView
@@ -70,4 +71,44 @@ class LoginView(APIView):
                         "token": token.key,
                     },
                 }
+            )
+
+
+class UsernameExists(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        """
+        Check if username exists
+
+        Request method: GET
+
+        Response codes
+        ---
+        - 200: Username exists
+        - 404: Username does not exist
+
+        Response fields
+        ---
+        - status_code: int
+        - message: string
+        """
+
+        # Checking if username exists
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {
+                    "status_code": 200,
+                    "message": "Username exists.",
+                    "result": None,
+                }
+            )
+        else:
+            return Response(
+                {
+                    "status_code": 404,
+                    "message": "Username does not exist.",
+                    "result": None,
+                },
+                status=HTTP_404_NOT_FOUND,
             )
