@@ -18,5 +18,6 @@ class FileManager:
     def delete_file(self, path: str):
         self.storage_system.delete(path)
 
+
 class CustomTokenAuthentication(TokenAuthentication):
-    keyword = 'Bearer'
+    keyword = "Bearer"
