@@ -9,4 +9,4 @@ def set_user_ip(request):
     else:
         ip = request.META.get("REMOTE_ADDR")
     if user.is_authenticated:
-        UserIp.objects.update_or_create(user=user, ip=ip)
+        UserIp.objects.update_or_create(user=user, ip_address=ip)
