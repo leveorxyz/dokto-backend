@@ -1,9 +1,7 @@
-import base64
-import os
-
 from typing import Optional
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
+from rest_framework.authentication import TokenAuthentication
 
 
 class OverwriteFileSystemStorage(FileSystemStorage):
@@ -19,3 +17,6 @@ class FileManager:
 
     def delete_file(self, path: str):
         self.storage_system.delete(path)
+
+class CustomTokenAuthentication(TokenAuthentication):
+    keyword = 'Bearer'
