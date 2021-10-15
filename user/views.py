@@ -6,10 +6,10 @@ from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_404_NOT_FOUND
 from django.contrib.auth import authenticate, logout
 
-from core.views import CustomRetrieveAPIView
+from core.views import CustomRetrieveAPIView, CustomCreateAPIView
 from core.utils import set_user_ip
 from .models import User
-from .serializers import UserSerializer, UserLoginSerializer
+from .serializers import UserSerializer, UserLoginSerializer, DoctorSerializer
 
 
 class UserRetrieveAPIView(CustomRetrieveAPIView):
@@ -155,32 +155,30 @@ class UsernameExists(APIView):
             )
 
 
-class DoctorSignupView(APIView):
+class DoctorSignupView(CustomCreateAPIView):
+    """
+    Doctor signup endpoint
+
+    Request method: POST
+
+    Request fields
+    ---
+    - username: string
+    - email: string
+    - password: string
+    - full_name: string
+    - contact_no: string
+    - address:
+        - street: string
+        - city: string
+        - state: string
+        - zip_code: string
+        - country: string
+    """
+
     permission_classes = [AllowAny]
-
-    def post(self, request):
-        """
-        Doctor signup endpoint
-
-        Request method: POST
-
-        Request fields
-        ---
-        - username: string
-        - email: string
-        - password: string
-        - first_name: string
-        - last_name: string
-        - phone_number: string
-        - address:
-            - street: string
-            - city: string
-            - state: string
-            - zip_code: string
-            - country: string
-        """
-
-        pass
+    queryset = User.objects.filter(user_type="doctor")
+    serializer_class = DoctorSerializer
 
 
 class PatientSignupView(APIView):
