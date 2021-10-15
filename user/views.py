@@ -74,6 +74,29 @@ class LoginView(APIView):
             )
 
 
+class LogoutView(APIView):
+    def post(self, request):
+        """
+        User logout endpoint
+
+        Request method: POST
+
+        Response codes
+        ---
+        - 200: User logged out successfully
+        - 401: Invalid credentials
+        """
+
+        # Extracting user and token from request
+        user = request.user
+        token = request.auth
+        Token.objects.filter(user=user, key=token).delete()
+        return Response({
+            "status_code": 200,
+            "message": "Logout successful.",
+            "result": None,
+        })
+
 class UsernameExists(APIView):
     permission_classes = [AllowAny]
 
