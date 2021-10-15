@@ -1,7 +1,10 @@
 from typing import Optional
-from django.core.files.base import ContentFile
+from datetime import datetime, timedelta
+
 from django.core.files.storage import FileSystemStorage
+from django.conf import settings
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class OverwriteFileSystemStorage(FileSystemStorage):
@@ -21,3 +24,28 @@ class FileManager:
 
 class CustomTokenAuthentication(TokenAuthentication):
     keyword = "Bearer"
+
+    def expires_in(self, token):
+        time_elapsed = datetime.now() - token.created
+        return (
+            timedelta(seconds=settings.USER_AUTH_TOKEN_EXPIRATION_SECONDS)
+            - time_elapsed
+        )
+
+    def is_expired(self, token):
+        return self.expires_in(token) < timedelta(seconds=0)
+
+    def authenticate_credentials(self, key):
+        try:
+            token = self.get_model().objects.get(key=key)
+        except self.get_model().DoesNotExist:
+            raise AuthenticationFailed("Invalid token")
+
+        if not token.user.is_active:
+            raise AuthenticationFailed("User inactive or deleted")
+
+        if self.is_expired(token):
+            token.delete()
+            raise AuthenticationFailed("Token expired")
+
+        return (token.user, token)
