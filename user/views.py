@@ -91,11 +91,14 @@ class LogoutView(APIView):
         user = request.user
         token = request.auth
         Token.objects.filter(user=user, key=token).delete()
-        return Response({
-            "status_code": 200,
-            "message": "Logout successful.",
-            "result": None,
-        })
+        return Response(
+            {
+                "status_code": 200,
+                "message": "Logout successful.",
+                "result": None,
+            }
+        )
+
 
 class UsernameExists(APIView):
     permission_classes = [AllowAny]
@@ -135,3 +138,115 @@ class UsernameExists(APIView):
                 },
                 status=HTTP_404_NOT_FOUND,
             )
+
+
+class DoctorSignupView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Doctor signup endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - username: string
+        - email: string
+        - password: string
+        - first_name: string
+        - last_name: string
+        - phone_number: string
+        - address:
+            - street: string
+            - city: string
+            - state: string
+            - zip_code: string
+            - country: string
+        """
+
+        pass
+
+
+class PatientSignupView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Patient signup endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - username: string
+        - email: string
+        - password: string
+        - first_name: string
+        - last_name: string
+        - phone_number: string
+        - address:
+            - street: string
+            - city: string
+            - state: string
+            - zip_code: string
+            - country: string
+        """
+
+        pass
+
+
+class CollectiveSignupView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Collective signup endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - username: string
+        - email: string
+        - password: string
+        - first_name: string
+        - last_name: string
+        - phone_number: string
+        - address:
+            - street: string
+            - city: string
+            - state: string
+            - zip_code: string
+            - country: string
+        """
+
+        pass
+
+
+class PharmacySignupView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Pharmacy signup endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - username: string
+        - email: string
+        - password: string
+        - first_name: string
+        - last_name: string
+        - phone_number: string
+        - address:
+            - street: string
+            - city: string
+            - state: string
+            - zip_code: string
+            - country: string
+        """
+
+        pass
