@@ -1,5 +1,5 @@
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
@@ -26,7 +26,7 @@ class CustomTokenAuthentication(TokenAuthentication):
     keyword = "Bearer"
 
     def expires_in(self, token):
-        time_elapsed = datetime.now() - token.created
+        time_elapsed = datetime.now(timezone.utc) - token.created
         return (
             timedelta(seconds=settings.USER_AUTH_TOKEN_EXPIRATION_SECONDS)
             - time_elapsed
@@ -39,13 +39,13 @@ class CustomTokenAuthentication(TokenAuthentication):
         try:
             token = self.get_model().objects.get(key=key)
         except self.get_model().DoesNotExist:
-            raise AuthenticationFailed("Invalid token")
+            raise AuthenticationFailed("Invalid token.")
 
         if not token.user.is_active:
-            raise AuthenticationFailed("User inactive or deleted")
+            raise AuthenticationFailed("User inactive or deleted.")
 
         if self.is_expired(token):
             token.delete()
-            raise AuthenticationFailed("Token expired")
+            raise AuthenticationFailed("Token expired.")
 
         return (token.user, token)
