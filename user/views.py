@@ -27,7 +27,7 @@ class LoginView(APIView):
 
         Request fields
         ---
-        - username: string
+        - email: string
         - password: string
 
         Response codes
@@ -48,7 +48,7 @@ class LoginView(APIView):
 
         # Authenticating user
         user = authenticate(
-            username=serializer.validated_data["username"],
+            email=serializer.validated_data["email"],
             password=serializer.validated_data["password"],
         )
         if not user:

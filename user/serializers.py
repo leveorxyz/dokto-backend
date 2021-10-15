@@ -11,5 +11,5 @@ class UserSerializer(ModelSerializer):
 
 
 class UserLoginSerializer(Serializer):
-    username = CharField(required=True)
+    email = CharField(required=True)
     password = CharField(required=True)
