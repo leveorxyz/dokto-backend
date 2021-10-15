@@ -24,8 +24,8 @@ def custom_exception_handler(exception, context):
                 elif isinstance(item, ErrorDetail):
                     message_list.append(item.detail)
         custom_response = {
-            "message": " ".join(message_list),
             "status_code": response.status_code,
+            "message": " ".join(message_list),
             "result": None,
         }
         response.data = custom_response
