@@ -13,7 +13,7 @@ def custom_exception_handler(exception, context):
                 if isinstance(v, str):
                     message_list.append(v)
                 else:
-                    message_list.append(" ".join([str(exc) for exc in v]))
+                    message_list.append(" ".join([f"{k}: {str(exc)}" for exc in v]))
         elif isinstance(data, list):
             for item in data:
                 if isinstance(item, str):
