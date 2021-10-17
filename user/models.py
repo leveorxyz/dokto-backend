@@ -61,3 +61,4 @@ class DoctorInfo(CoreModel):
     profile_photo = models.CharField(max_length=150, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
+    gender = models.CharField(max_length=7, blank=True, null=True)
