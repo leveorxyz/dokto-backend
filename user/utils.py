@@ -2,14 +2,13 @@ import base64
 from datetime import datetime, timezone
 
 from django.contrib.auth.hashers import make_password
-from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.text import get_valid_filename
 
-from core.classes import FileManager
 from .models import User, UserLanguage
 
 
-def create_user(validated_data: dict):
+def create_user(validated_data: dict, user_type: str):
     """
     This method is used to take the user input and create a new user.
     Common for all users.
@@ -23,8 +22,7 @@ def create_user(validated_data: dict):
         "city",
         "state",
         "zip_code",
-        "country",
-        "user_type",
+        "profile_photo",
     ]
 
     for field in fields:
@@ -41,8 +39,16 @@ def create_user(validated_data: dict):
         city=validated_data.pop("city"),
         zip_code=validated_data.pop("zip_code"),
         contact_no=validated_data.pop("contact_no"),
-        user_type=validated_data.pop("user_type"),
+        user_type=user_type,
     )
+
+    # Extracting and saving the profile photo
+    profile_photo: InMemoryUploadedFile = validated_data.pop("profile_photo")
+    file_name = generate_image_file_name(
+        profile_photo.content_type.split("/")[-1], user.id
+    )
+    user.profile_photo.save(file_name, profile_photo, save=True)
+    user.save()
 
     # Extract language from request
     if "language" in validated_data:
@@ -56,14 +62,10 @@ def create_user(validated_data: dict):
     return user
 
 
-def generate_image_file(image_data: str, user_id: int, image_folder: str):
+def generate_image_file_name(file_extention: str, user_id: int):
     """
-    This method is used to generate a file object from the image data.
+    This method is used to generate a file name for the profile photo.
     """
     current_timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M_%S")
-    mimetype, data = image_data.split(";base64,")
-    file_extention = mimetype.split("/")[-1]
     image_name = get_valid_filename(f"{user_id}_{current_timestamp}.{file_extention}")
-    image_file = ContentFile(base64.b64decode(data), name=image_name)
-    FileManager().save_file(image_file, image_folder)
     return image_name

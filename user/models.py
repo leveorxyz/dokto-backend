@@ -1,9 +1,13 @@
+import os
+
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
 
 from core.models import CoreModel
+from core.literals import PROFILE_PHOTO_DIRECTORY
 
 # Create your models here.
 
@@ -34,6 +38,11 @@ class User(AbstractUser, CoreModel):
     city = models.CharField(_("city"), max_length=50, blank=True, null=True)
     zip_code = models.CharField(_("zip code"), max_length=15, blank=True, null=True)
     contact_no = models.CharField(_("contact no"), max_length=20, blank=True, null=True)
+    profile_photo = models.ImageField(
+        upload_to=PROFILE_PHOTO_DIRECTORY,
+        blank=True,
+        null=True,
+    )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
@@ -56,7 +65,6 @@ class UserLanguage(CoreModel):
 
 class DoctorInfo(CoreModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    profile_photo = models.CharField(max_length=150, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(max_length=7, blank=True, null=True)
