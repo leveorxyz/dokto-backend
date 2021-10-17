@@ -11,9 +11,8 @@ from rest_framework.authtoken.models import Token
 from django.conf import settings
 
 from core.literals import PROFILE_PHOTO_DIRECTORY
-from core.serializers import ReadWriteSerializerMethodField
 from .models import User, DoctorInfo
-from .utils import create_user, generate_image_file_name
+from .utils import create_user
 
 
 class UserSerializer(ModelSerializer):
