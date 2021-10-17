@@ -54,3 +54,10 @@ class UserLanguage(CoreModel):
 
     def __str__(self):
         return f"{self.user.username}-{self.language}"
+
+
+class DoctorInfo(CoreModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    profile_photo = models.CharField(max_length=150, blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    country = models.CharField(max_length=50, blank=True, null=True)

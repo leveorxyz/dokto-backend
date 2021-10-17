@@ -7,7 +7,7 @@ from rest_framework.serializers import (
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import make_password
 
-from .models import User
+from .models import User, UserLanguage
 
 
 class UserSerializer(ModelSerializer):
@@ -47,6 +47,15 @@ class DoctorSerializer(ModelSerializer):
             zip_code=validated_data["zip_code"],
             contact_no=validated_data["contact_no"],
         )
+
+        # Extract language from request
+        if "language" in validated_data:
+            language = validated_data["language"]
+            if isinstance(language, str):
+                language = [language]
+            UserLanguage.objects.bulk_create(
+                [UserLanguage(user=user, language=lang) for lang in language]
+            )
         return user
 
     class Meta:
