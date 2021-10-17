@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 
@@ -17,6 +18,11 @@ class OverwriteFileSystemStorage(FileSystemStorage):
 class FileManager:
     def __init__(self):
         self.storage_system = OverwriteFileSystemStorage()
+
+    def save_file(self, file: any, *folder_path):
+        file_path = os.path.join(settings.MEDIA_ROOT, *folder_path, file.name)
+        self.storage_system.save(file_path, file)
+        return file_path
 
     def delete_file(self, path: str):
         self.storage_system.delete(path)

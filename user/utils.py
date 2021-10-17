@@ -1,5 +1,11 @@
-from django.contrib.auth.hashers import make_password
+import base64
+from datetime import datetime, timezone
 
+from django.contrib.auth.hashers import make_password
+from django.core.files.base import ContentFile
+from django.utils.text import get_valid_filename
+
+from core.classes import FileManager
 from .models import User, UserLanguage
 
 
@@ -48,3 +54,16 @@ def create_user(validated_data: dict):
         )
 
     return user
+
+
+def generate_image_file(image_data: str, user_id: int, image_folder: str):
+    """
+    This method is used to generate a file object from the image data.
+    """
+    current_timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M_%S")
+    mimetype, data = image_data.split(";base64,")
+    file_extention = mimetype.split("/")[-1]
+    image_name = get_valid_filename(f"{user_id}_{current_timestamp}.{file_extention}")
+    image_file = ContentFile(base64.b64decode(data), name=image_name)
+    FileManager().save_file(image_file, image_folder)
+    return image_name
