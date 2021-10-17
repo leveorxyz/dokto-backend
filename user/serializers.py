@@ -6,8 +6,9 @@ from rest_framework.serializers import (
 )
 from rest_framework.authtoken.models import Token
 
-from .models import User
-from .utils import create_user
+from core.literals import PROFILE_PHOTO_DIRECTORY
+from .models import User, DoctorInfo
+from .utils import create_user, generate_image_file
 
 
 class UserSerializer(ModelSerializer):
@@ -37,6 +38,18 @@ class DoctorSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user = create_user(validated_data)
+
+        # Exracting profile photo
+        profile_photo = None
+        if "profile_photo" in validated_data:
+            profile_photo = generate_image_file(
+                validated_data.pop("profile_photo"), user.id, PROFILE_PHOTO_DIRECTORY
+            )
+
+        # Creating doctor info
+        DoctorInfo.objects.create(
+            user=user, profile_photo=profile_photo, **validated_data
+        )
         return user
 
     class Meta:
