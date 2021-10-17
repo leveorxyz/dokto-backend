@@ -49,7 +49,7 @@ class DoctorSerializer(ModelSerializer):
         return os.path.join(settings.MEDIA_URL, PROFILE_PHOTO_DIRECTORY, profile_photo)
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, "doctor")
+        user: User = create_user(validated_data, User.UserType.DOCTOR)
 
         # Creating doctor info
         DoctorInfo.objects.create(user=user, **validated_data)

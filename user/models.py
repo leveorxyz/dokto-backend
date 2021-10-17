@@ -13,6 +13,13 @@ from core.literals import PROFILE_PHOTO_DIRECTORY
 
 
 class User(AbstractUser, CoreModel):
+    class UserType(models.TextChoices):
+        ADMIN = "ADMIN", _("admin")
+        DOCTOR = "DOCTOR", _("doctor")
+        PATIENT = "PATIENT", _("patient")
+        PHARMACY = "PHARMACY", _("pharmacy")
+        HOSPITAL = "HOSPITAL", _("hospital")
+
     username_validator = UnicodeUsernameValidator()
 
     username = models.CharField(
@@ -28,7 +35,11 @@ class User(AbstractUser, CoreModel):
     full_name = models.CharField(_("full name"), max_length=180, blank=True)
     email = models.EmailField(_("email"), unique=True)
     user_type = models.CharField(
-        _("user type"), max_length=20, default="Patient", blank=True
+        _("user type"),
+        max_length=20,
+        choices=UserType.choices,
+        default=UserType.PATIENT,
+        blank=True,
     )
     is_verified = models.BooleanField(
         _("is verified"), default=False, blank=True, null=True
