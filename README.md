@@ -31,6 +31,7 @@ Dokto-Backend
 │   │   └── __init__.py
 │   ├── models.py
 │   ├── pagination.py
+│   ├── serializers.py
 │   ├── tests.py
 │   ├── utils.py
 │   └── views.py
@@ -59,14 +60,17 @@ Dokto-Backend
     │   ├── 0004_userip.py
     │   ├── 0005_userlanguage.py
     │   ├── 0006_alter_user_email.py
+    │   ├── 0007_doctorinfo.py
+    │   ├── 0008_doctorinfo_gender.py
     │   └── __init__.py
     ├── models.py
     ├── serializers.py
     ├── tests.py
     ├── urls.py
+    ├── utils.py
     └── views.py
 
-10 directories, 49 files
+10 directories, 53 files
 ```
 
 ## Requirements
