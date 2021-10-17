@@ -22,7 +22,7 @@ class User(AbstractUser, CoreModel):
         },
     )
     full_name = models.CharField(_("full name"), max_length=180, blank=True)
-    email = models.EmailField(_("email"), blank=True, null=True, unique=True)
+    email = models.EmailField(_("email"), unique=True)
     user_type = models.CharField(
         _("user type"), max_length=20, default="Patient", blank=True
     )
