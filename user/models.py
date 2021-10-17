@@ -20,8 +20,6 @@ class User(AbstractUser, CoreModel):
         error_messages={
             "unique": _("A user with that username already exists."),
         },
-        blank=True,
-        null=True,
     )
     full_name = models.CharField(_("full name"), max_length=180, blank=True)
     email = models.EmailField(_("email"), blank=True, null=True, unique=True)
