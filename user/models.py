@@ -7,7 +7,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
 
 from core.models import CoreModel
-from core.literals import PROFILE_PHOTO_DIRECTORY
+from core.literals import PROFILE_PHOTO_DIRECTORY, IDENTIFICATION_PHOTO_DIRECTORY
 
 # Create your models here.
 
@@ -80,9 +80,21 @@ class DoctorInfo(CoreModel):
         FEMALE = "FEMALE", _("female")
         OTHER = "OTHER", _("other")
 
+    class IdentificationType(models.TextChoices):
+        PASSPORT = "PASSPORT", _("passport")
+        DRIVER_LICENSE = "DRIVER'S LICENSE", _("driver's license")
+        STATE_ID = "STATE ID", _("state id")
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date_of_birth = models.DateField(blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(
         max_length=7, choices=Gender.choices, blank=True, null=True
+    )
+    identification_type = models.CharField(
+        max_length=20, choices=IdentificationType.choices, null=True, blank=True
+    )
+    identification_number = models.CharField(max_length=50, blank=True, null=True)
+    identification_photo = models.ImageField(
+        upload_to=IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )

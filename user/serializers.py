@@ -37,6 +37,7 @@ class DoctorSerializer(ModelSerializer):
     contact_no = CharField(write_only=True)
     profile_photo = ImageField(allow_empty_file=False, use_url=True)
     country = CharField(write_only=True)
+    gender = CharField(write_only=True)
 
     def get_token(self, user: User):
         token, _ = Token.objects.get_or_create(user=user)
@@ -71,4 +72,5 @@ class DoctorSerializer(ModelSerializer):
             "contact_no",
             "profile_photo",
             "country",
+            "gender",
         ]
