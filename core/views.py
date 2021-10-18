@@ -7,6 +7,8 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
+from .utils import set_user_ip
+
 # Create your views here.
 
 
@@ -23,58 +25,70 @@ def custom_response(response):
 class CustomRetrieveAPIView(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
 
 class CustomRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
     def patch(self, request, *args, **kwargs):
         response = super().patch(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
     def put(self, request, *args, **kwargs):
         response = super().put(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
     def delete(self, request, *args, **kwargs):
         response = super().delete(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
 
 class CustomCreateAPIView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
 
 class CustomListAPIView(ListAPIView):
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
 
 class CustomListCreateAPIView(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
 
 class CustomRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
     def patch(self, request, *args, **kwargs):
         response = super().patch(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)
 
     def put(self, request, *args, **kwargs):
         response = super().put(request, *args, **kwargs)
+        set_user_ip(request)
         return custom_response(response)

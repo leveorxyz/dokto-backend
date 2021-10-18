@@ -15,7 +15,11 @@ Including another URLconf
 """
 import debug_toolbar
 from django.contrib import admin
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.conf import settings
+from django.conf.urls import url
 from django.urls import path, include
+from django.views.static import serve
 from rest_framework.documentation import include_docs_urls
 
 from .views import Custom404
@@ -23,8 +27,16 @@ from .views import Custom404
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounting/", include("accounting.urls")),
+    path("user/", include("user.urls")),
     path("docs/", include_docs_urls(title="Dokto API")),
     path("__debug__/", include(debug_toolbar.urls)),
+    url(
+        r"^media/(?P<path>.*)$",
+        serve,
+        {"document_root": settings.MEDIA_ROOT, "show_indexes": True},
+    ),
 ]
+
+urlpatterns += staticfiles_urlpatterns()
 
 handler404 = Custom404.as_view()
