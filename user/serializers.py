@@ -44,7 +44,7 @@ class DoctorSerializer(ModelSerializer):
     linkedin_url = URLField(write_only=True, required=False)
     facebook_url = URLField(write_only=True, required=False)
     twitter_url = URLField(write_only=True, required=False)
-    experience = ListField(child=JSONField(), write_only=True)
+    experience = ListField(child=JSONField(), write_only=True, required=False)
     specialty = ListField(child=CharField(), write_only=True)
 
     def get_token(self, user: User):
@@ -61,7 +61,9 @@ class DoctorSerializer(ModelSerializer):
         education_data = validated_data.pop("education")
 
         # Extract experience data
-        experience_data = validated_data.pop("experience")
+        experience_data = []
+        if "experience" in validated_data:
+            experience_data = validated_data.pop("experience")
 
         # Extract specialty data
         specialty_data = validated_data.pop("specialty")
@@ -120,4 +122,10 @@ class DoctorSerializer(ModelSerializer):
             "gender",
             "language",
             "education",
+            "professional_bio",
+            "linkedin_url",
+            "facebook_url",
+            "twitter_url",
+            "experience",
+            "specialty",
         ]
