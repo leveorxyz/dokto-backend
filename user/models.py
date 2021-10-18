@@ -102,6 +102,10 @@ class DoctorInfo(CoreModel):
     identification_photo = models.ImageField(
         upload_to=IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
+    professional_bio = models.TextField(max_length=512, blank=True, null=True)
+    linkedin_url = models.URLField(blank=True, null=True)
+    facebook_url = models.URLField(blank=True, null=True)
+    twitter_url = models.URLField(blank=True, null=True)
 
 
 class DoctorEducation(CoreModel):
