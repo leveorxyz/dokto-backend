@@ -75,7 +75,14 @@ class UserLanguage(CoreModel):
 
 
 class DoctorInfo(CoreModel):
+    class Gender(models.TextChoices):
+        MALE = "MALE", _("male")
+        FEMALE = "FEMALE", _("female")
+        OTHER = "OTHER", _("other")
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date_of_birth = models.DateField(blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
-    gender = models.CharField(max_length=7, blank=True, null=True)
+    gender = models.CharField(
+        max_length=7, choices=Gender.choices, blank=True, null=True
+    )
