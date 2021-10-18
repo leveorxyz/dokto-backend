@@ -110,22 +110,20 @@ class DoctorInfo(CoreModel):
 
 class DoctorEducation(CoreModel):
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
-    course = models.CharField(max_length=50, blank=True, null=True)
-    year = models.CharField(max_length=15, blank=True, null=True)
-    college = models.CharField(max_length=60, blank=True, null=True)
-    certificate = models.ImageField(
-        upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY, blank=True, null=True
-    )
+    course = models.CharField(max_length=50)
+    year = models.CharField(max_length=15)
+    college = models.CharField(max_length=60)
+    certificate = models.ImageField(upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY)
 
 
 class DoctorExperience(CoreModel):
-    establishment_name = models.CharField(max_length=50, blank=True, null=True)
-    job_title = models.CharField(max_length=50, blank=True, null=True)
-    start_date = models.DateField(blank=True, null=True)
+    establishment_name = models.CharField(max_length=50)
+    job_title = models.CharField(max_length=50)
+    start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     job_description = models.TextField(max_length=200, blank=True, null=True)
 
 
 class DoctorSpecialty(CoreModel):
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
-    specialty = models.CharField(max_length=50, blank=True, null=True)
+    specialty = models.CharField(max_length=50)

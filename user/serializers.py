@@ -1,4 +1,5 @@
 import os
+import re
 
 from rest_framework.serializers import (
     ModelSerializer,
@@ -7,10 +8,10 @@ from rest_framework.serializers import (
     SerializerMethodField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, JSONField
+from rest_framework.serializers import ListField, JSONField, URLField
 
 from core.serializers import ReadWriteSerializerMethodField
-from .models import DoctorEducation, User, DoctorInfo
+from .models import DoctorEducation, User, DoctorInfo, DoctorExperience, DoctorSpecialty
 from .utils import create_user, generate_image_file_and_name
 
 
@@ -39,6 +40,12 @@ class DoctorSerializer(ModelSerializer):
     gender = CharField(write_only=True)
     language = ListField(child=CharField(), write_only=True)
     education = ListField(child=JSONField(), write_only=True)
+    professional_bio = CharField(write_only=True)
+    linkedin_url = URLField(write_only=True, required=False)
+    facebook_url = URLField(write_only=True, required=False)
+    twitter_url = URLField(write_only=True, required=False)
+    experience = ListField(child=JSONField(), write_only=True)
+    specialty = ListField(child=CharField(), write_only=True)
 
     def get_token(self, user: User):
         token, _ = Token.objects.get_or_create(user=user)
@@ -52,6 +59,12 @@ class DoctorSerializer(ModelSerializer):
 
         # Extract education data
         education_data = validated_data.pop("education")
+
+        # Extract experience data
+        experience_data = validated_data.pop("experience")
+
+        # Extract specialty data
+        specialty_data = validated_data.pop("specialty")
 
         # Creating doctor info
         doctor_info = DoctorInfo.objects.create(user=user, **validated_data)
@@ -69,6 +82,22 @@ class DoctorSerializer(ModelSerializer):
                 certificate_file_name, certificate_file, save=True
             )
             doctor_edication.save()
+
+        # Add doctor experience
+        DoctorExperience.objects.bulk_create(
+            [
+                DoctorExperience(**experience, doctor_info=doctor_info)
+                for experience in experience_data
+            ]
+        )
+
+        # Add doctor specialty
+        DoctorSpecialty.objects.bulk_create(
+            [
+                DoctorSpecialty(specialty=specialty, doctor_info=doctor_info)
+                for specialty in specialty_data
+            ]
+        )
 
         return user
 
