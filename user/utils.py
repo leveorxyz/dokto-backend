@@ -2,7 +2,7 @@ import base64
 from datetime import datetime, timezone
 
 from django.contrib.auth.hashers import make_password
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.base import ContentFile
 from django.utils.text import get_valid_filename
 
 from .models import User, UserLanguage
@@ -43,11 +43,9 @@ def create_user(validated_data: dict, user_type: str):
     )
 
     # Extracting and saving the profile photo
-    profile_photo: InMemoryUploadedFile = validated_data.pop("profile_photo")
-    file_name = generate_image_file_name(
-        profile_photo.content_type.split("/")[-1], user.id
-    )
-    user.profile_photo.save(file_name, profile_photo, save=True)
+    profile_photo_data = validated_data.pop("profile_photo")
+    file_name, file = generate_image_file_and_name(profile_photo_data, user.id)
+    user.profile_photo.save(file_name, file, save=True)
     user.save()
 
     # Extract language from request
@@ -62,10 +60,13 @@ def create_user(validated_data: dict, user_type: str):
     return user
 
 
-def generate_image_file_name(file_extention: str, user_id: int):
+def generate_image_file_and_name(image_data: str, user_id: int):
     """
     This method is used to generate a file name for the profile photo.
     """
     current_timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M_%S")
+    mimetype, data = image_data.split(";base64,")
+    file_extention = mimetype.split("/")[-1]
     image_name = get_valid_filename(f"{user_id}_{current_timestamp}.{file_extention}")
-    return image_name
+    image_file = ContentFile(base64.b64decode(data), name=image_name)
+    return image_name, image_file

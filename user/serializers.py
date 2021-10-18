@@ -11,6 +11,7 @@ from rest_framework.authtoken.models import Token
 from django.conf import settings
 
 from core.literals import PROFILE_PHOTO_DIRECTORY
+from core.serializers import ReadWriteSerializerMethodField
 from .models import User, DoctorInfo
 from .utils import create_user
 
@@ -35,7 +36,7 @@ class DoctorSerializer(ModelSerializer):
     city = CharField(write_only=True)
     zip_code = CharField(write_only=True)
     contact_no = CharField(write_only=True)
-    profile_photo = ImageField(allow_empty_file=False, use_url=True)
+    profile_photo = ReadWriteSerializerMethodField()
     country = CharField(write_only=True)
     gender = CharField(write_only=True)
 
@@ -44,10 +45,7 @@ class DoctorSerializer(ModelSerializer):
         return token.key
 
     def get_profile_photo(self, user: User):
-        profile_photo = DoctorInfo.objects.filter(user=user).values_list(
-            "profile_photo", flat=True
-        )[0]
-        return os.path.join(settings.MEDIA_URL, PROFILE_PHOTO_DIRECTORY, profile_photo)
+        return user.profile_photo.url
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.DOCTOR)
