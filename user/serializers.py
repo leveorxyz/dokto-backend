@@ -5,12 +5,10 @@ from rest_framework.serializers import (
     Serializer,
     CharField,
     SerializerMethodField,
-    ImageField,
 )
 from rest_framework.authtoken.models import Token
-from django.conf import settings
+from rest_framework.serializers import ListField
 
-from core.literals import PROFILE_PHOTO_DIRECTORY
 from core.serializers import ReadWriteSerializerMethodField
 from .models import User, DoctorInfo
 from .utils import create_user
@@ -39,6 +37,7 @@ class DoctorSerializer(ModelSerializer):
     profile_photo = ReadWriteSerializerMethodField()
     country = CharField(write_only=True)
     gender = CharField(write_only=True)
+    language = ListField(child=CharField(), write_only=True)
 
     def get_token(self, user: User):
         token, _ = Token.objects.get_or_create(user=user)
@@ -71,4 +70,5 @@ class DoctorSerializer(ModelSerializer):
             "profile_photo",
             "country",
             "gender",
+            "language",
         ]
