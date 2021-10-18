@@ -7,7 +7,11 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
 
 from core.models import CoreModel
-from core.literals import PROFILE_PHOTO_DIRECTORY, IDENTIFICATION_PHOTO_DIRECTORY
+from core.literals import (
+    PROFILE_PHOTO_DIRECTORY,
+    IDENTIFICATION_PHOTO_DIRECTORY,
+    DOCTOR_EDUCATION_PHOTO_DIRECTORY,
+)
 
 # Create your models here.
 
@@ -97,4 +101,14 @@ class DoctorInfo(CoreModel):
     identification_number = models.CharField(max_length=50, blank=True, null=True)
     identification_photo = models.ImageField(
         upload_to=IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
+    )
+
+
+class DoctorEducation(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    course = models.CharField(max_length=50, blank=True, null=True)
+    year = models.CharField(max_length=15, blank=True, null=True)
+    college = models.CharField(max_length=60, blank=True, null=True)
+    certificate = models.ImageField(
+        upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY, blank=True, null=True
     )
