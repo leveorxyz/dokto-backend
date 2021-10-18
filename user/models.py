@@ -116,3 +116,16 @@ class DoctorEducation(CoreModel):
     certificate = models.ImageField(
         upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY, blank=True, null=True
     )
+
+
+class DoctorExperience(CoreModel):
+    establishment_name = models.CharField(max_length=50, blank=True, null=True)
+    job_title = models.CharField(max_length=50, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    job_description = models.TextField(max_length=200, blank=True, null=True)
+
+
+class DoctorSpecialty(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    specialty = models.CharField(max_length=50, blank=True, null=True)
