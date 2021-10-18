@@ -7,11 +7,11 @@ from rest_framework.serializers import (
     SerializerMethodField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField
+from rest_framework.serializers import ListField, JSONField
 
 from core.serializers import ReadWriteSerializerMethodField
-from .models import User, DoctorInfo
-from .utils import create_user
+from .models import DoctorEducation, User, DoctorInfo
+from .utils import create_user, generate_image_file_and_name
 
 
 class UserSerializer(ModelSerializer):
@@ -38,6 +38,7 @@ class DoctorSerializer(ModelSerializer):
     country = CharField(write_only=True)
     gender = CharField(write_only=True)
     language = ListField(child=CharField(), write_only=True)
+    education = ListField(child=JSONField(), write_only=True)
 
     def get_token(self, user: User):
         token, _ = Token.objects.get_or_create(user=user)
@@ -49,8 +50,26 @@ class DoctorSerializer(ModelSerializer):
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.DOCTOR)
 
+        # Extract education data
+        education_data = validated_data.pop("education")
+
         # Creating doctor info
-        DoctorInfo.objects.create(user=user, **validated_data)
+        doctor_info = DoctorInfo.objects.create(user=user, **validated_data)
+
+        # Add doctor education
+        for education in education_data:
+            certificate = education.pop("certificate")
+            doctor_edication = DoctorEducation.objects.create(
+                **education, doctor_info=doctor_info
+            )
+            certificate_file_name, certificate_file = generate_image_file_and_name(
+                certificate, user.id
+            )
+            doctor_edication.certificate.save(
+                certificate_file_name, certificate_file, save=True
+            )
+            doctor_edication.save()
+
         return user
 
     class Meta:
@@ -71,4 +90,5 @@ class DoctorSerializer(ModelSerializer):
             "country",
             "gender",
             "language",
+            "education",
         ]
