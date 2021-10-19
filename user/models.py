@@ -137,3 +137,8 @@ class CollectiveInfo(CoreModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     collective_type = models.CharField(max_length=20, choices=CollectiveType.choices)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+
+
+class PharmacyInfo(CoreModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)

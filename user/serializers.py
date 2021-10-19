@@ -15,6 +15,7 @@ from .models import (
     DoctorExperience,
     DoctorSpecialty,
     CollectiveInfo,
+    PharmacyInfo,
 )
 from .utils import create_user, generate_image_file_and_name
 
@@ -196,7 +197,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         ]
 
 
-class CollectiveRegistrationSerializer(ModelSerializer):
+class PharmacyRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
@@ -206,7 +207,6 @@ class CollectiveRegistrationSerializer(ModelSerializer):
     zip_code = CharField(write_only=True)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
-    collective_type = CharField(write_only=True)
     number_of_practitioners = IntegerField(write_only=True)
 
     def get_token(self, user: User):
@@ -219,9 +219,9 @@ class CollectiveRegistrationSerializer(ModelSerializer):
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.COLLECTIVE)
 
-        # Extract collective info
+        # Extract pharmacy info
         try:
-            CollectiveInfo.objects.create(user=user, **validated_data)
+            PharmacyInfo.objects.create(user=user, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -243,6 +243,25 @@ class CollectiveRegistrationSerializer(ModelSerializer):
             "zip_code",
             "contact_no",
             "profile_photo",
-            "collective_type",
             "number_of_practitioners",
         ]
+
+
+class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
+    collective_type = CharField(write_only=True)
+
+    def create(self, validated_data):
+        user: User = create_user(validated_data, User.UserType.COLLECTIVE)
+
+        # Extract collective info
+        try:
+            CollectiveInfo.objects.create(user=user, **validated_data)
+        except Exception as e:
+            user.delete()
+            raise e
+
+        return user
+
+    class Meta:
+        model = User
+        fields = PharmacyRegistrationSerializer.Meta.fields + ["collective_type"]
