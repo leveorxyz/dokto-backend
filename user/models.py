@@ -22,7 +22,7 @@ class User(AbstractUser, CoreModel):
         DOCTOR = "DOCTOR", _("doctor")
         PATIENT = "PATIENT", _("patient")
         PHARMACY = "PHARMACY", _("pharmacy")
-        HOSPITAL = "HOSPITAL", _("hospital")
+        COLLECTIVE = "COLLECTIVE", _("collective")
 
     username_validator = UnicodeUsernameValidator()
 
