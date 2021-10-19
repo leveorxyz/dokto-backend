@@ -7,6 +7,7 @@ from .views import (
     LogoutView,
     DoctorSignupView,
     CollectiveSignupView,
+    PharmacySignupView,
 )
 
 urlpatterns = [
@@ -16,6 +17,7 @@ urlpatterns = [
     path(
         "collective_signup/", CollectiveSignupView.as_view(), name="collective-signup"
     ),
+    path("pharmacy_signup/", PharmacySignupView.as_view(), name="pharmacy-signup"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("exists/<str:username>", UsernameExists.as_view(), name="username-exists"),
 ]

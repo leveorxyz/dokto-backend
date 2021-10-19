@@ -217,7 +217,7 @@ class PharmacyRegistrationSerializer(ModelSerializer):
         return user.profile_photo.url
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.COLLECTIVE)
+        user: User = create_user(validated_data, User.UserType.PHARMACY)
 
         # Extract pharmacy info
         try:

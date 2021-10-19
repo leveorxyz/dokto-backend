@@ -14,6 +14,7 @@ from .serializers import (
     UserLoginSerializer,
     DoctorRegistrationSerializer,
     CollectiveRegistrationSerializer,
+    PharmacyRegistrationSerializer,
 )
 
 
@@ -241,29 +242,28 @@ class CollectiveSignupView(CustomCreateAPIView):
     serializer_class = CollectiveRegistrationSerializer
 
 
-class PharmacySignupView(APIView):
+class PharmacySignupView(CustomCreateAPIView):
+    """
+    Pharmacy signup endpoint
+
+    Request method: POST
+
+    Request fields
+    ---
+    - username: string
+    - email: string
+    - password: string
+    - first_name: string
+    - last_name: string
+    - phone_number: string
+    - address:
+        - street: string
+        - city: string
+        - state: string
+        - zip_code: string
+        - country: string
+    """
+
     permission_classes = [AllowAny]
-
-    def post(self, request):
-        """
-        Pharmacy signup endpoint
-
-        Request method: POST
-
-        Request fields
-        ---
-        - username: string
-        - email: string
-        - password: string
-        - first_name: string
-        - last_name: string
-        - phone_number: string
-        - address:
-            - street: string
-            - city: string
-            - state: string
-            - zip_code: string
-            - country: string
-        """
-
-        pass
+    queryset = User.objects.filter(user_type=User.UserType.PHARMACY)
+    serializer_class = PharmacyRegistrationSerializer
