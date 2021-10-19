@@ -65,7 +65,7 @@ class DoctorSpecialtySerializer(ModelSerializer):
         fields = ["doctor_info", "specialty"]
 
 
-class DoctorSerializer(ModelSerializer):
+class DoctorRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)

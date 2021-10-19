@@ -9,7 +9,11 @@ from django.contrib.auth import authenticate, logout
 from core.views import CustomRetrieveAPIView, CustomCreateAPIView
 from core.utils import set_user_ip
 from .models import User
-from .serializers import UserSerializer, UserLoginSerializer, DoctorSerializer
+from .serializers import (
+    UserSerializer,
+    UserLoginSerializer,
+    DoctorRegistrationSerializer,
+)
 
 
 class UserRetrieveAPIView(CustomRetrieveAPIView):
@@ -177,8 +181,8 @@ class DoctorSignupView(CustomCreateAPIView):
     """
 
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type="doctor")
-    serializer_class = DoctorSerializer
+    queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
+    serializer_class = DoctorRegistrationSerializer
 
 
 class PatientSignupView(APIView):
