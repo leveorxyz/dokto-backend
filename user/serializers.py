@@ -1,6 +1,3 @@
-import os
-import re
-
 from rest_framework.serializers import (
     ModelSerializer,
     Serializer,
@@ -24,6 +21,48 @@ class UserSerializer(ModelSerializer):
 class UserLoginSerializer(Serializer):
     email = CharField(required=True)
     password = CharField(required=True)
+
+
+class DoctorEducationSerializer(ModelSerializer):
+    certificate = CharField(required=True, write_only=True)
+
+    def create(self, validated_data):
+        certificate = validated_data.pop("certificate")
+        doctor_info = validated_data.pop("doctor_info")
+        doctor_education = DoctorEducation.objects.create(
+            doctor_info=doctor_info, **validated_data
+        )
+        certificate_file_name, certificate_file = generate_image_file_and_name(
+            certificate, doctor_info.id
+        )
+        doctor_education.certificate.save(
+            certificate_file_name, certificate_file, save=True
+        )
+        doctor_education.save()
+        return doctor_education
+
+    class Meta:
+        model = DoctorEducation
+        fields = ["doctor_info", "course", "year", "college", "certificate"]
+
+
+class DoctorExpericenceSerializer(ModelSerializer):
+    class Meta:
+        model = DoctorExperience
+        fields = [
+            "doctor_info",
+            "establishment_name",
+            "job_title",
+            "start_date",
+            "end_date",
+            "job_description",
+        ]
+
+
+class DoctorSpecialtySerializer(ModelSerializer):
+    class Meta:
+        model = DoctorSpecialty
+        fields = ["doctor_info", "specialty"]
 
 
 class DoctorSerializer(ModelSerializer):
@@ -69,37 +108,56 @@ class DoctorSerializer(ModelSerializer):
         specialty_data = validated_data.pop("specialty")
 
         # Creating doctor info
-        doctor_info = DoctorInfo.objects.create(user=user, **validated_data)
+        try:
+            doctor_info = DoctorInfo.objects.create(user=user, **validated_data)
+        except Exception as e:
+            user.delete()
+            raise e
 
         # Add doctor education
-        for education in education_data:
-            certificate = education.pop("certificate")
-            doctor_edication = DoctorEducation.objects.create(
-                **education, doctor_info=doctor_info
-            )
-            certificate_file_name, certificate_file = generate_image_file_and_name(
-                certificate, user.id
-            )
-            doctor_edication.certificate.save(
-                certificate_file_name, certificate_file, save=True
-            )
-            doctor_edication.save()
+        try:
+            for education in education_data:
+                doctor_education_serializer = DoctorEducationSerializer(
+                    data={"doctor_info": doctor_info.id, **education}
+                )
+                doctor_education_serializer.is_valid(raise_exception=True)
+                doctor_education_serializer.save()
+        except Exception as e:
+            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
+            doctor_info.delete()
+            user.delete()
+            raise e
 
         # Add doctor experience
-        DoctorExperience.objects.bulk_create(
-            [
-                DoctorExperience(**experience, doctor_info=doctor_info)
-                for experience in experience_data
-            ]
-        )
+        try:
+            for experience in experience_data:
+                doctor_experience_serializer = DoctorExpericenceSerializer(
+                    data={"doctor_info": doctor_info.id, **experience}
+                )
+                doctor_experience_serializer.is_valid(raise_exception=True)
+                doctor_experience_serializer.save()
+        except Exception as e:
+            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
+            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
+            doctor_info.delete()
+            user.delete()
+            raise e
 
         # Add doctor specialty
-        DoctorSpecialty.objects.bulk_create(
-            [
-                DoctorSpecialty(specialty=specialty, doctor_info=doctor_info)
-                for specialty in specialty_data
-            ]
-        )
+        try:
+            for specialty in specialty_data:
+                doctor_specialty_serializer = DoctorSpecialtySerializer(
+                    data={"doctor_info": doctor_info.id, "specialty": specialty}
+                )
+                doctor_specialty_serializer.is_valid(raise_exception=True)
+                doctor_specialty_serializer.save()
+        except Exception as e:
+            DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
+            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
+            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
+            doctor_info.delete()
+            user.delete()
+            raise e
 
         return user
 
