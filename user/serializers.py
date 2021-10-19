@@ -5,10 +5,17 @@ from rest_framework.serializers import (
     SerializerMethodField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, JSONField, URLField
+from rest_framework.serializers import ListField, JSONField, URLField, IntegerField
 
 from core.serializers import ReadWriteSerializerMethodField
-from .models import DoctorEducation, User, DoctorInfo, DoctorExperience, DoctorSpecialty
+from .models import (
+    DoctorEducation,
+    User,
+    DoctorInfo,
+    DoctorExperience,
+    DoctorSpecialty,
+    CollectiveInfo,
+)
 from .utils import create_user, generate_image_file_and_name
 
 
@@ -186,4 +193,56 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "twitter_url",
             "experience",
             "specialty",
+        ]
+
+
+class CollectiveRegistrationSerializer(ModelSerializer):
+    token = SerializerMethodField()
+    password = CharField(write_only=True)
+    full_name = CharField(write_only=True)
+    street = CharField(write_only=True)
+    state = CharField(write_only=True)
+    city = CharField(write_only=True)
+    zip_code = CharField(write_only=True)
+    contact_no = CharField(write_only=True)
+    profile_photo = ReadWriteSerializerMethodField()
+    collective_type = CharField(write_only=True)
+    number_of_practitioners = IntegerField(write_only=True)
+
+    def get_token(self, user: User):
+        token, _ = Token.objects.get_or_create(user=user)
+        return token.key
+
+    def get_profile_photo(self, user: User):
+        return user.profile_photo.url
+
+    def create(self, validated_data):
+        user: User = create_user(validated_data, User.UserType.COLLECTIVE)
+
+        # Extract collective info
+        try:
+            CollectiveInfo.objects.create(user=user, **validated_data)
+        except Exception as e:
+            user.delete()
+            raise e
+
+        return user
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "password",
+            "token",
+            "full_name",
+            "street",
+            "state",
+            "city",
+            "zip_code",
+            "contact_no",
+            "profile_photo",
+            "collective_type",
+            "number_of_practitioners",
         ]

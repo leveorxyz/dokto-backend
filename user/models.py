@@ -127,3 +127,13 @@ class DoctorExperience(CoreModel):
 class DoctorSpecialty(CoreModel):
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
     specialty = models.CharField(max_length=50)
+
+
+class CollectiveInfo(CoreModel):
+    class CollectiveType(models.TextChoices):
+        HOSPITAL = "HOSPITAL", _("hospital")
+        CLINIC = "CLINIC", _("clinic")
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    collective_type = models.CharField(max_length=20, choices=CollectiveType.choices)
+    number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
