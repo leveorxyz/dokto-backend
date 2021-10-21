@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     # Project Apps
     "core",
     "accounting",
+    "user",
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,8 @@ DATABASES = {
     )
 }
 
+AUTH_USER_MODEL = "user.User"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -146,6 +149,9 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -181,8 +187,15 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
     ],
     "EXCEPTION_HANDLER": "core.exceptions.custom_exception_handler",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "core.classes.CustomTokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
 
+USER_AUTH_TOKEN_EXPIRATION_SECONDS = 3600 * 24 * 30
 
 INTERNAL_IPS = [
     "127.0.0.1",
