@@ -89,7 +89,7 @@ class LoginView(APIView):
                     "status_code": 200,
                     "message": "Login successful.",
                     "result": {
-                        "id": request.user.id,
+                        "id": user.id,
                         "username": user.get_username(),
                         "email": user.email,
                         "token": token.key,
