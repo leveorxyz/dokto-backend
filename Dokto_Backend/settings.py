@@ -195,6 +195,13 @@ REST_FRAMEWORK = {
     ],
 }
 
+SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    },
+}
+
 USER_AUTH_TOKEN_EXPIRATION_SECONDS = 3600 * 24 * 30
 
 INTERNAL_IPS = [
