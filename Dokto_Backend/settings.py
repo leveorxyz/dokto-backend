@@ -31,7 +31,7 @@ SECRET_KEY = config(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 TEMPLATE_DEBUG = DEBUG
-__version__ = config("VERSION", "v1")
+VERSION = config("VERSION", "v1")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     # Third Party Apps,
     "corsheaders",
     "django_filters",
+    "drf_yasg",
     "rest_framework",
     "rest_framework.authtoken",
     "debug_toolbar",
@@ -188,8 +189,7 @@ INTERNAL_IPS = [
 ]
 
 # Stripe Credenentials
-STRIPE_SECRET_KEY = os.getenv(
-    'STRIPE_SECRET_KEY', 'sk_test_4eC39HqLyjWDarjtT1zdp7dc')
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")
 STRIPE_PUBLISHABLE_KEY = os.getenv(
     "STRIPE_PUBLISHABLE_KEY", "pk_test_TYooMQauvdEDq54NiTphI7jx"
 )
