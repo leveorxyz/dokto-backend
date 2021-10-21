@@ -5,7 +5,7 @@ from rest_framework.serializers import (
     SerializerMethodField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, JSONField, URLField, IntegerField
+from rest_framework.serializers import ListField, URLField, IntegerField
 
 from core.serializers import ReadWriteSerializerMethodField
 from .models import (
@@ -96,11 +96,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
     )
     specialty = ListField(child=CharField(), write_only=True)
 
-    def get_token(self, user: User):
+    def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
         return token.key
 
-    def get_profile_photo(self, user: User):
+    def get_profile_photo(self, user: User) -> str:
         return user.profile_photo.url
 
     def create(self, validated_data):
@@ -211,11 +211,11 @@ class PharmacyRegistrationSerializer(ModelSerializer):
     profile_photo = ReadWriteSerializerMethodField()
     number_of_practitioners = IntegerField(write_only=True)
 
-    def get_token(self, user: User):
+    def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
         return token.key
 
-    def get_profile_photo(self, user: User):
+    def get_profile_photo(self, user: User) -> str:
         return user.profile_photo.url
 
     def create(self, validated_data):
