@@ -62,6 +62,19 @@ Dokto-Backend
     │   ├── 0006_alter_user_email.py
     │   ├── 0007_doctorinfo.py
     │   ├── 0008_doctorinfo_gender.py
+    │   ├── 0009_alter_user_username.py
+    │   ├── 0010_auto_20211017_1626.py
+    │   ├── 0011_alter_user_email.py
+    │   ├── 0012_auto_20211017_1829.py
+    │   ├── 0013_alter_user_user_type.py
+    │   ├── 0014_alter_doctorinfo_gender_squashed_0015_auto_20211018_1424.py
+    │   ├── 0015_doctoreducation.py
+    │   ├── 0016_auto_20211018_1820.py
+    │   ├── 0017_doctorexperience_doctorspecialty.py
+    │   ├── 0018_auto_20211018_1837.py
+    │   ├── 0019_collectiveinfo.py
+    │   ├── 0020_alter_user_user_type.py
+    │   ├── 0021_pharmacyinfo.py
     │   └── __init__.py
     ├── models.py
     ├── serializers.py
@@ -70,7 +83,7 @@ Dokto-Backend
     ├── utils.py
     └── views.py
 
-10 directories, 53 files
+10 directories, 66 files
 ```
 
 ## Requirements

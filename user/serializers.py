@@ -5,10 +5,18 @@ from rest_framework.serializers import (
     SerializerMethodField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, JSONField, URLField
+from rest_framework.serializers import ListField, URLField, IntegerField
 
 from core.serializers import ReadWriteSerializerMethodField
-from .models import DoctorEducation, User, DoctorInfo, DoctorExperience, DoctorSpecialty
+from .models import (
+    DoctorEducation,
+    User,
+    DoctorInfo,
+    DoctorExperience,
+    DoctorSpecialty,
+    CollectiveInfo,
+    PharmacyInfo,
+)
 from .utils import create_user, generate_image_file_and_name
 
 
@@ -78,19 +86,21 @@ class DoctorRegistrationSerializer(ModelSerializer):
     country = CharField(write_only=True)
     gender = CharField(write_only=True)
     language = ListField(child=CharField(), write_only=True)
-    education = ListField(child=JSONField(), write_only=True)
+    education = ListField(child=DoctorEducationSerializer(), write_only=True)
     professional_bio = CharField(write_only=True)
     linkedin_url = URLField(write_only=True, required=False)
     facebook_url = URLField(write_only=True, required=False)
     twitter_url = URLField(write_only=True, required=False)
-    experience = ListField(child=JSONField(), write_only=True, required=False)
+    experience = ListField(
+        child=DoctorEducationSerializer(), write_only=True, required=False
+    )
     specialty = ListField(child=CharField(), write_only=True)
 
-    def get_token(self, user: User):
+    def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
         return token.key
 
-    def get_profile_photo(self, user: User):
+    def get_profile_photo(self, user: User) -> str:
         return user.profile_photo.url
 
     def create(self, validated_data):
@@ -187,3 +197,73 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "experience",
             "specialty",
         ]
+
+
+class PharmacyRegistrationSerializer(ModelSerializer):
+    token = SerializerMethodField()
+    password = CharField(write_only=True)
+    full_name = CharField(write_only=True)
+    street = CharField(write_only=True)
+    state = CharField(write_only=True)
+    city = CharField(write_only=True)
+    zip_code = CharField(write_only=True)
+    contact_no = CharField(write_only=True)
+    profile_photo = ReadWriteSerializerMethodField()
+    number_of_practitioners = IntegerField(write_only=True)
+
+    def get_token(self, user: User) -> str:
+        token, _ = Token.objects.get_or_create(user=user)
+        return token.key
+
+    def get_profile_photo(self, user: User) -> str:
+        return user.profile_photo.url
+
+    def create(self, validated_data):
+        user: User = create_user(validated_data, User.UserType.PHARMACY)
+
+        # Extract pharmacy info
+        try:
+            PharmacyInfo.objects.create(user=user, **validated_data)
+        except Exception as e:
+            user.delete()
+            raise e
+
+        return user
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "password",
+            "token",
+            "full_name",
+            "street",
+            "state",
+            "city",
+            "zip_code",
+            "contact_no",
+            "profile_photo",
+            "number_of_practitioners",
+        ]
+
+
+class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
+    collective_type = CharField(write_only=True)
+
+    def create(self, validated_data):
+        user: User = create_user(validated_data, User.UserType.COLLECTIVE)
+
+        # Extract collective info
+        try:
+            CollectiveInfo.objects.create(user=user, **validated_data)
+        except Exception as e:
+            user.delete()
+            raise e
+
+        return user
+
+    class Meta:
+        model = User
+        fields = PharmacyRegistrationSerializer.Meta.fields + ["collective_type"]
