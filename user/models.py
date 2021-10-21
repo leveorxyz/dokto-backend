@@ -117,6 +117,7 @@ class DoctorEducation(CoreModel):
 
 
 class DoctorExperience(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE, default=None)
     establishment_name = models.CharField(max_length=50)
     job_title = models.CharField(max_length=50)
     start_date = models.DateField()

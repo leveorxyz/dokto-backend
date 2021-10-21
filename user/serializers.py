@@ -86,12 +86,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
     country = CharField(write_only=True)
     gender = CharField(write_only=True)
     language = ListField(child=CharField(), write_only=True)
-    education = ListField(child=JSONField(), write_only=True)
+    education = ListField(child=DoctorEducationSerializer(), write_only=True)
     professional_bio = CharField(write_only=True)
     linkedin_url = URLField(write_only=True, required=False)
     facebook_url = URLField(write_only=True, required=False)
     twitter_url = URLField(write_only=True, required=False)
-    experience = ListField(child=JSONField(), write_only=True, required=False)
+    experience = ListField(
+        child=DoctorEducationSerializer(), write_only=True, required=False
+    )
     specialty = ListField(child=CharField(), write_only=True)
 
     def get_token(self, user: User):
