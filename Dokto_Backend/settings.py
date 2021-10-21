@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     # Third Party Apps,
     "corsheaders",
     "django_filters",
-    "drf_yasg",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     "rest_framework",
     "rest_framework.authtoken",
     "debug_toolbar",
@@ -180,7 +181,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 
 REST_FRAMEWORK = {
-    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "core.pagination.CustomPagination",
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -195,11 +196,10 @@ REST_FRAMEWORK = {
     ],
 }
 
-SWAGGER_SETTINGS = {
-    "USE_SESSION_AUTH": False,
-    "SECURITY_DEFINITIONS": {
-        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
-    },
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Dokto API",
+    "DESCRIPTION": "Dokto API documentation",
+    "VERSION": VERSION,
 }
 
 USER_AUTH_TOKEN_EXPIRATION_SECONDS = 3600 * 24 * 30
