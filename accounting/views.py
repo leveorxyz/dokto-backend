@@ -1,4 +1,5 @@
 from rest_framework import generics, status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
@@ -7,7 +8,6 @@ from django.conf import settings
 import stripe
 import json
 import requests
-import hashlib, hmac
 from .serializers import StripeChargeSerializer
 
 
@@ -41,6 +41,7 @@ class StripeChargeAPIView(generics.CreateAPIView):
     """
 
     serializer_class = StripeChargeSerializer
+    permission_classes = (AllowAny,)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -84,6 +85,7 @@ class PaypalProcessWebhookAPIView(APIView):
     """
     Paypal payment verification webhook
     """
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         if "HTTP_PAYPAL_TRANSMISSION_ID" not in request.META:
@@ -137,6 +139,7 @@ class FlutterwaveVerifyAPIView(APIView):
     - 200: if verification is successful
     - 400: if verification is unsuccessful
     """
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         # Extracting reference and appointment_id from request
@@ -197,6 +200,7 @@ class PaystackVerifyAPIView(APIView):
     - 200: if verification is successful
     - 400: if verification is unsuccessful
     """
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         # Extracting reference and appointment_id from request
