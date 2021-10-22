@@ -13,6 +13,8 @@ from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     DoctorRegistrationSerializer,
+    CollectiveRegistrationSerializer,
+    PharmacyRegistrationSerializer,
 )
 
 
@@ -60,6 +62,7 @@ class LoginView(APIView):
                     "status_code": 200,
                     "message": "Login successful.",
                     "result": {
+                        "id": request.user.id,
                         "username": request.user.get_username(),
                         "email": request.user.email,
                         "token": request.auth.key,
@@ -86,6 +89,7 @@ class LoginView(APIView):
                     "status_code": 200,
                     "message": "Login successful.",
                     "result": {
+                        "id": user.id,
                         "username": user.get_username(),
                         "email": user.email,
                         "token": token.key,
@@ -213,57 +217,55 @@ class PatientSignupView(APIView):
         pass
 
 
-class CollectiveSignupView(APIView):
+class CollectiveSignupView(CustomCreateAPIView):
+    """
+    Collective signup endpoint
+
+    Request method: POST
+
+    Request fields
+    ---
+    - username: string
+    - email: string
+    - password: string
+    - first_name: string
+    - last_name: string
+    - phone_number: string
+    - address:
+        - street: string
+        - city: string
+        - state: string
+        - zip_code: string
+        - country: string
+    """
+
     permission_classes = [AllowAny]
-
-    def post(self, request):
-        """
-        Collective signup endpoint
-
-        Request method: POST
-
-        Request fields
-        ---
-        - username: string
-        - email: string
-        - password: string
-        - first_name: string
-        - last_name: string
-        - phone_number: string
-        - address:
-            - street: string
-            - city: string
-            - state: string
-            - zip_code: string
-            - country: string
-        """
-
-        pass
+    queryset = User.objects.filter(user_type=User.UserType.COLLECTIVE)
+    serializer_class = CollectiveRegistrationSerializer
 
 
-class PharmacySignupView(APIView):
+class PharmacySignupView(CustomCreateAPIView):
+    """
+    Pharmacy signup endpoint
+
+    Request method: POST
+
+    Request fields
+    ---
+    - username: string
+    - email: string
+    - password: string
+    - first_name: string
+    - last_name: string
+    - phone_number: string
+    - address:
+        - street: string
+        - city: string
+        - state: string
+        - zip_code: string
+        - country: string
+    """
+
     permission_classes = [AllowAny]
-
-    def post(self, request):
-        """
-        Pharmacy signup endpoint
-
-        Request method: POST
-
-        Request fields
-        ---
-        - username: string
-        - email: string
-        - password: string
-        - first_name: string
-        - last_name: string
-        - phone_number: string
-        - address:
-            - street: string
-            - city: string
-            - state: string
-            - zip_code: string
-            - country: string
-        """
-
-        pass
+    queryset = User.objects.filter(user_type=User.UserType.PHARMACY)
+    serializer_class = PharmacyRegistrationSerializer
