@@ -3,6 +3,7 @@ from rest_framework.serializers import (
     Serializer,
     CharField,
     SerializerMethodField,
+    DateField,
 )
 from rest_framework.authtoken.models import Token
 from rest_framework.serializers import ListField, URLField, IntegerField
@@ -17,6 +18,7 @@ from .models import (
     DoctorLanguage,
     CollectiveInfo,
     PharmacyInfo,
+    PatientInfo,
 )
 from .utils import create_user, generate_image_file_and_name
 
@@ -290,3 +292,57 @@ class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
     class Meta:
         model = User
         fields = PharmacyRegistrationSerializer.Meta.fields + ["collective_type"]
+
+
+class PatientRegistrationSerializer(ModelSerializer):
+    token = SerializerMethodField()
+    password = CharField(write_only=True)
+    full_name = CharField(write_only=True)
+    street = CharField(write_only=True)
+    state = CharField(write_only=True)
+    city = CharField(write_only=True)
+    zip_code = CharField(write_only=True)
+    contact_no = CharField(write_only=True)
+    profile_photo = ReadWriteSerializerMethodField()
+    date_of_birth = DateField(write_only=True)
+    gender = CharField(write_only=True)
+    social_security_number = CharField(write_only=True, required=False)
+    identification_type = CharField(write_only=True)
+    identification_number = CharField(write_only=True)
+
+    # Insurance details
+    insurance_type = CharField(write_only=True)
+    insurance_name = CharField(write_only=True)
+    insurance_number = CharField(write_only=True)
+    insurance_policy_holder_name = CharField(write_only=True)
+
+    # Insurance reference
+    referring_doctor_full_name = CharField(write_only=True)
+    referring_doctor_phone_number = CharField(write_only=True)
+    referring_doctor_address = CharField(write_only=True)
+
+    class Meta:
+        model = PatientInfo
+        fields = [
+            "id",
+            "token",
+            "password",
+            "full_name",
+            "street",
+            "state",
+            "city",
+            "zip_code",
+            "contact_no",
+            "profile_photo",
+            "date_of_birth",
+            "gender",
+            "social_security_number",
+            "identification_type",
+            "identification_number",
+            "insurance_type",
+            "insurance_name",
+            "insurance_number",
+            "insurance_policy_holder_name",
+            "referring_doctor_full_name" "referring_doctor_phone_number",
+            "referring_doctor_address",
+        ]
