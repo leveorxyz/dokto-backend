@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile
 from django.utils.text import get_valid_filename
 
-from .models import User, UserLanguage
+from .models import User
 
 
 def create_user(validated_data: dict, user_type: str):
@@ -48,15 +48,6 @@ def create_user(validated_data: dict, user_type: str):
     user.profile_photo.save(file_name, file, save=True)
     user.save()
 
-    # Extract language from request
-    if "language" in validated_data:
-        language = validated_data.pop("language")
-        if isinstance(language, str):
-            language = [language]
-        UserLanguage.objects.bulk_create(
-            [UserLanguage(user=user, language=lang) for lang in language]
-        )
-
     return user
 
 
@@ -64,7 +55,7 @@ def generate_image_file_and_name(image_data: str, user_id: int):
     """
     This method is used to generate a file name for the profile photo.
     """
-    current_timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M_%S")
+    current_timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M_%S_%f")
     mimetype, data = image_data.split(";base64,")
     file_extention = mimetype.split("/")[-1]
     image_name = get_valid_filename(f"{user_id}_{current_timestamp}.{file_extention}")

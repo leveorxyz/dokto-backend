@@ -70,14 +70,6 @@ class UserIp(CoreModel):
         return f"{self.user.username}-{self.ip_address}"
 
 
-class UserLanguage(CoreModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    language = models.CharField(max_length=20)
-
-    def __str__(self):
-        return f"{self.user.username}-{self.language}"
-
-
 class DoctorInfo(CoreModel):
     class Gender(models.TextChoices):
         MALE = "MALE", _("male")
@@ -106,6 +98,14 @@ class DoctorInfo(CoreModel):
     linkedin_url = models.URLField(blank=True, null=True)
     facebook_url = models.URLField(blank=True, null=True)
     twitter_url = models.URLField(blank=True, null=True)
+
+
+class DoctorLanguage(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    language = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.doctor_info.user.username}-{self.language}"
 
 
 class DoctorEducation(CoreModel):
@@ -143,3 +143,44 @@ class CollectiveInfo(CoreModel):
 class PharmacyInfo(CoreModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+
+
+class PatientInfo(CoreModel):
+    class Gender(models.TextChoices):
+        MALE = "MALE", _("male")
+        FEMALE = "FEMALE", _("female")
+        OTHER = "OTHER", _("other")
+
+    class IdentificationType(models.TextChoices):
+        PASSPORT = "PASSPORT", _("passport")
+        DRIVER_LICENSE = "DRIVER'S LICENSE", _("driver's license")
+        STATE_ID = "STATE ID", _("state id")
+        STUDENT_ID = "STUDENT ID", _("student id")
+
+    class InsuranceType(models.TextChoices):
+        SELF_PAID = "SELF PAID", _("self paid")
+        INSURANCE_VERIFIED = "INSURANCE VERIFIED", _("insurance verified")
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    gender = models.CharField(max_length=7, choices=Gender.choices)
+    date_of_birth = models.DateField()
+    social_security_number = models.CharField(max_length=12, null=True, blank=True)
+    identification_type = models.CharField(
+        max_length=20, choices=IdentificationType.choices
+    )
+    identification_number = models.CharField(max_length=50)
+
+    # Insurance Info
+    insurance_type = models.CharField(max_length=20, choices=InsuranceType.choices)
+    insurance_name = models.CharField(max_length=50, null=True, blank=True)
+    insurance_number = models.CharField(max_length=50, null=True, blank=True)
+    insurance_policy_holder_name = models.CharField(
+        max_length=50, null=True, blank=True
+    )
+
+    # Insurance reference
+    referring_doctor_full_name = models.CharField(max_length=50, null=True, blank=True)
+    referring_doctor_phone_number = models.CharField(
+        max_length=20, null=True, blank=True
+    )
+    referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
