@@ -333,14 +333,14 @@ class PatientRegistrationSerializer(ModelSerializer):
 
     # Insurance details
     insurance_type = CharField(write_only=True)
-    insurance_name = CharField(write_only=True)
-    insurance_number = CharField(write_only=True)
-    insurance_policy_holder_name = CharField(write_only=True)
+    insurance_name = CharField(write_only=True, required=False)
+    insurance_number = CharField(write_only=True, required=False)
+    insurance_policy_holder_name = CharField(write_only=True, required=False)
 
     # Insurance reference
-    referring_doctor_full_name = CharField(write_only=True)
-    referring_doctor_phone_number = CharField(write_only=True)
-    referring_doctor_address = CharField(write_only=True)
+    referring_doctor_full_name = CharField(write_only=True, required=False)
+    referring_doctor_phone_number = CharField(write_only=True, required=False)
+    referring_doctor_address = CharField(write_only=True, required=False)
 
     def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
@@ -362,9 +362,11 @@ class PatientRegistrationSerializer(ModelSerializer):
         return user
 
     class Meta:
-        model = PatientInfo
+        model = User
         fields = [
             "id",
+            "email",
+            "username",
             "token",
             "password",
             "full_name",
