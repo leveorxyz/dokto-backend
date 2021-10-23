@@ -14,6 +14,7 @@ from .models import (
     DoctorInfo,
     DoctorExperience,
     DoctorSpecialty,
+    DoctorLanguage,
     CollectiveInfo,
     PharmacyInfo,
 )
@@ -117,6 +118,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
         # Extract specialty data
         specialty_data = validated_data.pop("specialty")
 
+        # Extract language data
+        language = validated_data.pop("language")
+
         # Creating doctor info
         try:
             doctor_info = DoctorInfo.objects.create(user=user, **validated_data)
@@ -165,6 +169,21 @@ class DoctorRegistrationSerializer(ModelSerializer):
             DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
             DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
             DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
+            doctor_info.delete()
+            user.delete()
+            raise e
+
+        try:
+            if isinstance(language, str):
+                language = [language]
+            DoctorLanguage.objects.bulk_create(
+                [DoctorLanguage(doctor_info=doctor_info, language=lang) for lang in language]
+            )
+        except Exception as e:
+            DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
+            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
+            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
+            DoctorLanguage.objects.filter(doctor_info=doctor_info).delete()
             doctor_info.delete()
             user.delete()
             raise e

@@ -48,15 +48,6 @@ def create_user(validated_data: dict, user_type: str):
     user.profile_photo.save(file_name, file, save=True)
     user.save()
 
-    # Extract language from request
-    # if "language" in validated_data:
-    #     language = validated_data.pop("language")
-    #     if isinstance(language, str):
-    #         language = [language]
-    #     UserLanguage.objects.bulk_create(
-    #         [UserLanguage(user=user, language=lang) for lang in language]
-    #     )
-
     return user
 
 
