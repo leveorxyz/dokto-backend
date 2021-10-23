@@ -342,6 +342,25 @@ class PatientRegistrationSerializer(ModelSerializer):
     referring_doctor_phone_number = CharField(write_only=True)
     referring_doctor_address = CharField(write_only=True)
 
+    def get_token(self, user: User) -> str:
+        token, _ = Token.objects.get_or_create(user=user)
+        return token.key
+
+    def get_profile_photo(self, user: User) -> str:
+        return user.profile_photo.url
+
+    def create(self, validated_data):
+        user: User = create_user(validated_data, User.UserType.PATIENT)
+
+        # Extract patient info
+        try:
+            PatientInfo.objects.create(user=user, **validated_data)
+        except Exception as e:
+            user.delete()
+            raise e
+
+        return user
+
     class Meta:
         model = PatientInfo
         fields = [
