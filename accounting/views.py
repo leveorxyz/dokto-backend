@@ -7,7 +7,6 @@ from django.conf import settings
 import stripe
 import json
 import requests
-import hashlib, hmac
 from .serializers import StripeChargeSerializer
 
 
