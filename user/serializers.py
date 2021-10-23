@@ -173,11 +173,15 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
+        # Add doctor language
         try:
             if isinstance(language, str):
                 language = [language]
             DoctorLanguage.objects.bulk_create(
-                [DoctorLanguage(doctor_info=doctor_info, language=lang) for lang in language]
+                [
+                    DoctorLanguage(doctor_info=doctor_info, language=lang)
+                    for lang in language
+                ]
             )
         except Exception as e:
             DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
