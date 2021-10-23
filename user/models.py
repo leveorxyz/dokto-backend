@@ -143,3 +143,25 @@ class CollectiveInfo(CoreModel):
 class PharmacyInfo(CoreModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+
+
+class PatientInfo(CoreModel):
+    class Gender(models.TextChoices):
+        MALE = "MALE", _("male")
+        FEMALE = "FEMALE", _("female")
+        OTHER = "OTHER", _("other")
+
+    class IdentificationType(models.TextChoices):
+        PASSPORT = "PASSPORT", _("passport")
+        DRIVER_LICENSE = "DRIVER'S LICENSE", _("driver's license")
+        STATE_ID = "STATE ID", _("state id")
+        STUDENT_ID = "STUDENT ID", _("student id")
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    gender = models.CharField(max_length=7, choices=Gender.choices)
+    date_of_birth = models.DateField()
+    social_security_number = models.CharField(max_length=12, null=True, blank=True)
+    identification_type = models.CharField(
+        max_length=20, choices=IdentificationType.choices
+    )
+    identification_number = models.CharField(max_length=50)
