@@ -343,6 +343,7 @@ class PatientRegistrationSerializer(ModelSerializer):
             "insurance_name",
             "insurance_number",
             "insurance_policy_holder_name",
-            "referring_doctor_full_name" "referring_doctor_phone_number",
+            "referring_doctor_full_name",
+            "referring_doctor_phone_number",
             "referring_doctor_address",
         ]
