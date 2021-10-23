@@ -157,6 +157,10 @@ class PatientInfo(CoreModel):
         STATE_ID = "STATE ID", _("state id")
         STUDENT_ID = "STUDENT ID", _("student id")
 
+    class InsuranceType(models.TextChoices):
+        SELF_PAID = "SELF PAID", _("self paid")
+        INSURANCE_VERIFIED = "INSURANCE VERIFIED", _("insurance verified")
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     gender = models.CharField(max_length=7, choices=Gender.choices)
     date_of_birth = models.DateField()
@@ -165,3 +169,18 @@ class PatientInfo(CoreModel):
         max_length=20, choices=IdentificationType.choices
     )
     identification_number = models.CharField(max_length=50)
+
+    # Insurance Info
+    insurance_type = models.CharField(max_length=20, choices=InsuranceType.choices)
+    insurance_name = models.CharField(max_length=50, null=True, blank=True)
+    insurance_number = models.CharField(max_length=50, null=True, blank=True)
+    insurance_policy_holder_name = models.CharField(
+        max_length=50, null=True, blank=True
+    )
+
+    # Insurance reference
+    referring_doctor_full_name = models.CharField(max_length=50, null=True, blank=True)
+    referring_doctor_phone_number = models.CharField(
+        max_length=20, null=True, blank=True
+    )
+    referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
