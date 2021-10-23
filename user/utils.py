@@ -55,7 +55,7 @@ def generate_image_file_and_name(image_data: str, user_id: int):
     """
     This method is used to generate a file name for the profile photo.
     """
-    current_timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M_%S")
+    current_timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M_%S_%f")
     mimetype, data = image_data.split(";base64,")
     file_extention = mimetype.split("/")[-1]
     image_name = get_valid_filename(f"{user_id}_{current_timestamp}.{file_extention}")
