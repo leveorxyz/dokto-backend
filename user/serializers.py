@@ -98,6 +98,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
         child=DoctorEducationSerializer(), write_only=True, required=False
     )
     specialty = ListField(child=CharField(), write_only=True)
+    identification_type = CharField(write_only=True)
+    identification_number = CharField(write_only=True)
+    identification_photo = CharField(write_only=True)
+    date_of_birth = DateField(write_only=True)
 
     def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
@@ -123,9 +127,22 @@ class DoctorRegistrationSerializer(ModelSerializer):
         # Extract language data
         language = validated_data.pop("language")
 
+        # Extract identification data
+        identification_photo = validated_data.pop("identification_photo")
+
         # Creating doctor info
         try:
-            doctor_info = DoctorInfo.objects.create(user=user, **validated_data)
+            doctor_info: DoctorInfo = DoctorInfo.objects.create(
+                user=user, **validated_data
+            )
+            (
+                identification_photo_name,
+                identification_photo,
+            ) = generate_image_file_and_name(identification_photo, doctor_info.id)
+            doctor_info.identification_photo.save(
+                identification_photo_name, identification_photo, save=True
+            )
+            doctor_info.save()
         except Exception as e:
             user.delete()
             raise e
@@ -221,6 +238,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "twitter_url",
             "experience",
             "specialty",
+            "identification_type",
+            "identification_number",
+            "identification_photo",
+            "date_of_birth",
         ]
 
 
