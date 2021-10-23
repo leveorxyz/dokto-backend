@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile
 from django.utils.text import get_valid_filename
 
-from .models import User, UserLanguage
+from .models import User
 
 
 def create_user(validated_data: dict, user_type: str):
@@ -49,13 +49,13 @@ def create_user(validated_data: dict, user_type: str):
     user.save()
 
     # Extract language from request
-    if "language" in validated_data:
-        language = validated_data.pop("language")
-        if isinstance(language, str):
-            language = [language]
-        UserLanguage.objects.bulk_create(
-            [UserLanguage(user=user, language=lang) for lang in language]
-        )
+    # if "language" in validated_data:
+    #     language = validated_data.pop("language")
+    #     if isinstance(language, str):
+    #         language = [language]
+    #     UserLanguage.objects.bulk_create(
+    #         [UserLanguage(user=user, language=lang) for lang in language]
+    #     )
 
     return user
 

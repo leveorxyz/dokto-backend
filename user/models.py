@@ -70,14 +70,6 @@ class UserIp(CoreModel):
         return f"{self.user.username}-{self.ip_address}"
 
 
-class UserLanguage(CoreModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    language = models.CharField(max_length=20)
-
-    def __str__(self):
-        return f"{self.user.username}-{self.language}"
-
-
 class DoctorInfo(CoreModel):
     class Gender(models.TextChoices):
         MALE = "MALE", _("male")
@@ -106,6 +98,14 @@ class DoctorInfo(CoreModel):
     linkedin_url = models.URLField(blank=True, null=True)
     facebook_url = models.URLField(blank=True, null=True)
     twitter_url = models.URLField(blank=True, null=True)
+
+
+class DoctorLanguage(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    language = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.doctor_info.user.username}-{self.language}"
 
 
 class DoctorEducation(CoreModel):
