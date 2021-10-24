@@ -95,7 +95,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     facebook_url = URLField(write_only=True, required=False)
     twitter_url = URLField(write_only=True, required=False)
     experience = ListField(
-        child=DoctorEducationSerializer(), write_only=True, required=False
+        child=DoctorExpericenceSerializer(), write_only=True, required=False
     )
     specialty = ListField(child=CharField(), write_only=True)
     identification_type = CharField(write_only=True)
