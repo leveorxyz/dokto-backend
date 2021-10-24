@@ -55,6 +55,7 @@ class DoctorEducationSerializer(ModelSerializer):
     class Meta:
         model = DoctorEducation
         fields = ["doctor_info", "course", "year", "college", "certificate"]
+        extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorExpericenceSerializer(ModelSerializer):
@@ -68,12 +69,14 @@ class DoctorExpericenceSerializer(ModelSerializer):
             "end_date",
             "job_description",
         ]
+        extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorSpecialtySerializer(ModelSerializer):
     class Meta:
         model = DoctorSpecialty
         fields = ["doctor_info", "specialty"]
+        extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorRegistrationSerializer(ModelSerializer):

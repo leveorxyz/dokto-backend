@@ -85,6 +85,7 @@ class PaypalProcessWebhookAPIView(APIView):
     """
     Paypal payment verification webhook
     """
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -139,6 +140,7 @@ class FlutterwaveVerifyAPIView(APIView):
     - 200: if verification is successful
     - 400: if verification is unsuccessful
     """
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -200,6 +202,7 @@ class PaystackVerifyAPIView(APIView):
     - 200: if verification is successful
     - 400: if verification is unsuccessful
     """
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
