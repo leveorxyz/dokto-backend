@@ -139,7 +139,7 @@ class DoctorAvailableHours(CoreModel):
         THURSDAY = "THU", _("thursday")
         FRIDAY = "FRI", _("friday")
         SATURDAY = "SAT", _("saturday")
-        
+
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
     day_of_week = models.CharField(
         max_length=3, choices=DayOfWeek.choices, blank=True, null=True
@@ -153,7 +153,7 @@ class DoctorReview(CoreModel):
     patient_name = models.CharField(max_length=80, null=True, blank=True)
     star_count = models.FloatField(null=True, blank=True)
     comment = models.TextField(max_length=5000, null=True, blank=True)
-    
+
 
 class CollectiveInfo(CoreModel):
     class CollectiveType(models.TextChoices):
