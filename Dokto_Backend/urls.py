@@ -46,6 +46,7 @@ urlpatterns = [
     path("accounting/", include("accounting.urls")),
     path("user/", include("user.urls")),
     path("dashboard/", include("dashboard.urls")),
+    path("twilio/", include("twilio_chat.urls")),
     path("docs/", include_docs_urls(title="Dokto API")),
     path("__debug__/", include(debug_toolbar.urls)),
     url(
