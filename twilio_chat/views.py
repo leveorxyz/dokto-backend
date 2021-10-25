@@ -14,6 +14,7 @@ class VideoChatTokenCreateAPIView(generics.CreateAPIView):
     """
     View for handling twilio video chat access token generation.
     """
+
     serializer_class = VideoChatTokenSerializer
     permission_classes = [AllowAny]
 
@@ -23,15 +24,19 @@ class VideoChatTokenCreateAPIView(generics.CreateAPIView):
         validated_data = serializer.data
 
         token = AccessToken(
-            settings.TWILIO_ACCOUNT_SID, settings.TWILIO_API_KEY, settings.TWILIO_API_SECRET, identity=validated_data.get(
-                'username')
+            settings.TWILIO_ACCOUNT_SID,
+            settings.TWILIO_API_KEY,
+            settings.TWILIO_API_SECRET,
+            identity=validated_data.get("username"),
         )
 
-        token.add_grant(VideoGrant(room=validated_data.get('room_name')))
+        token.add_grant(VideoGrant(room=validated_data.get("room_name")))
 
-        data = {
-            "status_code": 201,
-            "message": "Success",
-            "token": token.to_jwt(),
-        },
+        data = (
+            {
+                "status_code": 201,
+                "message": "Success",
+                "token": token.to_jwt(),
+            },
+        )
         return Response(data=data, status=status.HTTP_201_CREATED)
