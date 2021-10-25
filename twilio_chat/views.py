@@ -32,11 +32,11 @@ class VideoChatTokenCreateAPIView(generics.CreateAPIView):
 
         token.add_grant(VideoGrant(room=validated_data.get("room_name")))
 
-        data = (
-            {
-                "status_code": 201,
-                "message": "Success",
+        data = {
+            "status_code": 201,
+            "message": "Success",
+            "result": {
                 "token": token.to_jwt(),
             },
-        )
+        }
         return Response(data=data, status=status.HTTP_201_CREATED)
