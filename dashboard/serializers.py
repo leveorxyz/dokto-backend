@@ -58,29 +58,29 @@ class DoctorProfileSerializer(ModelSerializer):
     def get_professional_bio(self, doctor: User) -> str:
         return doctor.doctorinfo_set.first().professional_bio
 
-    def get_education(self, doctor: User) -> list[dict]:
+    def get_education(self, doctor: User) -> list:
         doctor_info = doctor.doctorinfo_set.first()
         return DoctorEducationSerializer(
             instance=doctor_info.doctoreducation_set.all(), many=True
         ).data
 
-    def get_experience(self, doctor: User) -> list[dict]:
+    def get_experience(self, doctor: User) -> list:
         doctor_info = doctor.doctorinfo_set.first()
         return DoctorExpericenceSerializer(
             instance=doctor_info.doctorexperience_set.all(), many=True
         ).data
 
-    def get_specialty(self, doctor: User) -> list[str]:
+    def get_specialty(self, doctor: User) -> list:
         doctor_info = doctor.doctorinfo_set.first()
         return doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
 
-    def get_available_hours(self, doctor: User) -> list[str]:
+    def get_available_hours(self, doctor: User) -> list:
         doctor_info = doctor.doctorinfo_set.first()
         return DoctorAvailableHoursSerializer(
             instance=doctor_info.doctoravailablehours_set.all(), many=True
         ).data
 
-    def get_review(self, doctor: User) -> list[dict]:
+    def get_review(self, doctor: User) -> list:
         doctor_info = doctor.doctorinfo_set.first()
         return DoctorReviewSerializer(
             instance=doctor_info.doctorreview_set.all(), many=True
