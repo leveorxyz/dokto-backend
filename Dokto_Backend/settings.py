@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "core",
     "accounting",
     "user",
+    "dashboard",
 ]
 
 MIDDLEWARE = [
