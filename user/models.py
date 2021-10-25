@@ -130,6 +130,31 @@ class DoctorSpecialty(CoreModel):
     specialty = models.CharField(max_length=50)
 
 
+class DoctorAvailableHours(CoreModel):
+    class DayOfWeek(models.TextChoices):
+        SUNDAY = "SUN", _("sunday")
+        MONDAY = "MON", _("monday")
+        TUESDAY = "TUE", _("tuesday")
+        WEDNESDAY = "WED", _("wednesday")
+        THURSDAY = "THU", _("thursday")
+        FRIDAY = "FRI", _("friday")
+        SATURDAY = "SAT", _("saturday")
+
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    day_of_week = models.CharField(
+        max_length=3, choices=DayOfWeek.choices, blank=True, null=True
+    )
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+
+
+class DoctorReview(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    patient_name = models.CharField(max_length=80, null=True, blank=True)
+    star_count = models.FloatField(null=True, blank=True)
+    comment = models.TextField(max_length=5000, null=True, blank=True)
+
+
 class CollectiveInfo(CoreModel):
     class CollectiveType(models.TextChoices):
         HOSPITAL = "HOSPITAL", _("hospital")

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "core",
     "accounting",
     "user",
+    "dashboard",
     "twilio_chat",
 ]
 
@@ -210,8 +211,7 @@ INTERNAL_IPS = [
 ]
 
 # Stripe Credenentials
-STRIPE_SECRET_KEY = os.getenv(
-    "STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")
 STRIPE_PUBLISHABLE_KEY = os.getenv(
     "STRIPE_PUBLISHABLE_KEY", "pk_test_TYooMQauvdEDq54NiTphI7jx"
 )
@@ -231,8 +231,7 @@ FLUTTERWAVE_ENCRYPTION_KEY = os.getenv(
 
 # Twilio Credentials
 TWILIO_ACCOUNT_SID = os.getenv(
-    "TWILIO_ACCOUNT_SID", "AC9bc2f694a5f9034e7ee972e69ee865d8")
-TWILIO_API_KEY = os.getenv(
-    "TWILIO_API_KEY", "SKc6c3595b92ee19b21596509fc6fc92ac")
-TWILIO_API_SECRET = os.getenv(
-    "TWILIO_API_SECRET", "ailiJJeASuRZu7nggDkT9hyoOKBDYN9m")
+    "TWILIO_ACCOUNT_SID", "AC9bc2f694a5f9034e7ee972e69ee865d8"
+)
+TWILIO_API_KEY = os.getenv("TWILIO_API_KEY", "SKc6c3595b92ee19b21596509fc6fc92ac")
+TWILIO_API_SECRET = os.getenv("TWILIO_API_SECRET", "ailiJJeASuRZu7nggDkT9hyoOKBDYN9m")
