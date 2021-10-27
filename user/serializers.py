@@ -247,6 +247,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "date_of_birth",
         ]
 
+    extra_kwargs = {
+        "username": {"read_only": True},
+    }
+
 
 class PharmacyRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
@@ -296,6 +300,9 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             "profile_photo",
             "number_of_practitioners",
         ]
+        extra_kwargs = {
+            "username": {"read_only": True},
+        }
 
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
@@ -316,6 +323,9 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
     class Meta:
         model = User
         fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
+        extra_kwargs = {
+            "username": {"read_only": True},
+        }
 
 
 class PatientRegistrationSerializer(ModelSerializer):
@@ -392,3 +402,6 @@ class PatientRegistrationSerializer(ModelSerializer):
             "referring_doctor_phone_number",
             "referring_doctor_address",
         ]
+        extra_kwargs = {
+            "username": {"read_only": True},
+        }
