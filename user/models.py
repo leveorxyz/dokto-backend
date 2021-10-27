@@ -22,7 +22,7 @@ class User(AbstractUser, CoreModel):
         DOCTOR = "DOCTOR", _("doctor")
         PATIENT = "PATIENT", _("patient")
         PHARMACY = "PHARMACY", _("pharmacy")
-        COLLECTIVE = "COLLECTIVE", _("collective")
+        CLINIC = "CLINIC", _("clinic")
 
     username_validator = UnicodeUsernameValidator()
 
@@ -139,7 +139,7 @@ class DoctorAvailableHours(CoreModel):
         THURSDAY = "THU", _("thursday")
         FRIDAY = "FRI", _("friday")
         SATURDAY = "SAT", _("saturday")
-        
+
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
     day_of_week = models.CharField(
         max_length=3, choices=DayOfWeek.choices, blank=True, null=True
@@ -153,15 +153,15 @@ class DoctorReview(CoreModel):
     patient_name = models.CharField(max_length=80, null=True, blank=True)
     star_count = models.FloatField(null=True, blank=True)
     comment = models.TextField(max_length=5000, null=True, blank=True)
-    
 
-class CollectiveInfo(CoreModel):
-    class CollectiveType(models.TextChoices):
+
+class ClinicInfo(CoreModel):
+    class ClinicType(models.TextChoices):
         HOSPITAL = "HOSPITAL", _("hospital")
         CLINIC = "CLINIC", _("clinic")
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    collective_type = models.CharField(max_length=20, choices=CollectiveType.choices)
+    clinic_type = models.CharField(max_length=20, choices=ClinicType.choices)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
 
 

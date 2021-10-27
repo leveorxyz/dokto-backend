@@ -16,7 +16,7 @@ from .models import (
     DoctorExperience,
     DoctorSpecialty,
     DoctorLanguage,
-    CollectiveInfo,
+    ClinicInfo,
     PharmacyInfo,
     PatientInfo,
 )
@@ -298,15 +298,15 @@ class PharmacyRegistrationSerializer(ModelSerializer):
         ]
 
 
-class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
-    collective_type = CharField(write_only=True)
+class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
+    clinic_type = CharField(write_only=True)
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.COLLECTIVE)
+        user: User = create_user(validated_data, User.UserType.CLINIC)
 
-        # Extract collective info
+        # Extract clinic info
         try:
-            CollectiveInfo.objects.create(user=user, **validated_data)
+            ClinicInfo.objects.create(user=user, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -315,7 +315,7 @@ class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
 
     class Meta:
         model = User
-        fields = PharmacyRegistrationSerializer.Meta.fields + ["collective_type"]
+        fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
 
 
 class PatientRegistrationSerializer(ModelSerializer):

@@ -13,7 +13,7 @@ from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     DoctorRegistrationSerializer,
-    CollectiveRegistrationSerializer,
+    ClinicRegistrationSerializer,
     PharmacyRegistrationSerializer,
     PatientRegistrationSerializer,
 )
@@ -217,9 +217,9 @@ class PatientSignupView(CustomCreateAPIView):
     serializer_class = PatientRegistrationSerializer
 
 
-class CollectiveSignupView(CustomCreateAPIView):
+class ClinicSignupView(CustomCreateAPIView):
     """
-    Collective signup endpoint
+    Clinic signup endpoint
 
     Request method: POST
 
@@ -240,8 +240,8 @@ class CollectiveSignupView(CustomCreateAPIView):
     """
 
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.COLLECTIVE)
-    serializer_class = CollectiveRegistrationSerializer
+    queryset = User.objects.filter(user_type=User.UserType.CLINIC)
+    serializer_class = ClinicRegistrationSerializer
 
 
 class PharmacySignupView(CustomCreateAPIView):
