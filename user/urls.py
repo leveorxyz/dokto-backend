@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     UserRetrieveAPIView,
     LoginView,
-    UsernameExists,
+    EmailExists,
     LogoutView,
     DoctorSignupView,
     ClinicSignupView,
@@ -19,5 +19,5 @@ urlpatterns = [
     path("pharmacy-signup/", PharmacySignupView.as_view(), name="pharmacy-signup"),
     path("patient-signup/", PatientSignupView.as_view(), name="patient-signup"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("exists/<str:username>", UsernameExists.as_view(), name="username-exists"),
+    path("exists/<str:email>", EmailExists.as_view(), name="email-exists"),
 ]

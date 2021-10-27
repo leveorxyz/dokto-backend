@@ -124,19 +124,19 @@ class LogoutView(APIView):
         )
 
 
-class UsernameExists(APIView):
+class EmailExists(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request, username):
+    def get(self, request, email):
         """
-        Check if username exists
+        Check if email exists
 
         Request method: GET
 
         Response codes
         ---
-        - 200: Username exists
-        - 404: Username does not exist
+        - 200: Exists
+        - 404: Does not exist
 
         Response fields
         ---
@@ -145,11 +145,11 @@ class UsernameExists(APIView):
         """
 
         # Checking if username exists
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(email=email).exists():
             return Response(
                 {
                     "status_code": 200,
-                    "message": "Username exists.",
+                    "message": "Exists.",
                     "result": None,
                 }
             )
@@ -157,7 +157,7 @@ class UsernameExists(APIView):
             return Response(
                 {
                     "status_code": 404,
-                    "message": "Username does not exist.",
+                    "message": "Does not exist.",
                     "result": None,
                 },
                 status=HTTP_404_NOT_FOUND,
