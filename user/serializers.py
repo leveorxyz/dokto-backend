@@ -10,7 +10,9 @@ from rest_framework.serializers import ListField, URLField, IntegerField
 
 from core.serializers import ReadWriteSerializerMethodField
 from .models import (
+    DoctorAvailableHours,
     DoctorEducation,
+    DoctorReview,
     User,
     DoctorInfo,
     DoctorExperience,
@@ -32,6 +34,20 @@ class UserSerializer(ModelSerializer):
 class UserLoginSerializer(Serializer):
     email = CharField(required=True)
     password = CharField(required=True)
+
+
+class DoctorInfoSerializer(ModelSerializer):
+    model = DoctorInfo
+    fields = [
+        "id",
+        "date_of_birth",
+        "country",
+        "gender",
+        "professional_bio",
+        "linkedin_url",
+        "facebook_url",
+        "twitter_url",
+    ]
 
 
 class DoctorEducationSerializer(ModelSerializer):
@@ -77,6 +93,30 @@ class DoctorSpecialtySerializer(ModelSerializer):
         model = DoctorSpecialty
         fields = ["doctor_info", "specialty"]
         extra_kwargs = {"doctor_info": {"required": False}}
+
+
+class DoctorAvailableHoursSerializer(ModelSerializer):
+    day_of_week = SerializerMethodField()
+
+    class Meta:
+        model = User
+
+    def get_day_of_week(self, instance):
+        return instance.get_day_of_week_display()
+
+    class Meta:
+        model = DoctorAvailableHours
+        fields = [
+            "day_of_week",
+            "start_time",
+            "end_time",
+        ]
+
+
+class DoctorReviewSerializer(ModelSerializer):
+    class Meta:
+        model = DoctorReview
+        fields = ("patient_name", "star_count", "comment")
 
 
 class DoctorRegistrationSerializer(ModelSerializer):
