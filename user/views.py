@@ -13,8 +13,9 @@ from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     DoctorRegistrationSerializer,
-    CollectiveRegistrationSerializer,
+    ClinicRegistrationSerializer,
     PharmacyRegistrationSerializer,
+    PatientRegistrationSerializer,
 )
 
 
@@ -123,19 +124,19 @@ class LogoutView(APIView):
         )
 
 
-class UsernameExists(APIView):
+class EmailExists(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request, username):
+    def get(self, request, email):
         """
-        Check if username exists
+        Check if email exists
 
         Request method: GET
 
         Response codes
         ---
-        - 200: Username exists
-        - 404: Username does not exist
+        - 200: Exists
+        - 404: Does not exist
 
         Response fields
         ---
@@ -144,11 +145,11 @@ class UsernameExists(APIView):
         """
 
         # Checking if username exists
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(email=email).exists():
             return Response(
                 {
                     "status_code": 200,
-                    "message": "Username exists.",
+                    "message": "Exists.",
                     "result": None,
                 }
             )
@@ -156,7 +157,7 @@ class UsernameExists(APIView):
             return Response(
                 {
                     "status_code": 404,
-                    "message": "Username does not exist.",
+                    "message": "Does not exist.",
                     "result": None,
                 },
                 status=HTTP_404_NOT_FOUND,
@@ -189,37 +190,9 @@ class DoctorSignupView(CustomCreateAPIView):
     serializer_class = DoctorRegistrationSerializer
 
 
-class PatientSignupView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        """
-        Patient signup endpoint
-
-        Request method: POST
-
-        Request fields
-        ---
-        - username: string
-        - email: string
-        - password: string
-        - first_name: string
-        - last_name: string
-        - phone_number: string
-        - address:
-            - street: string
-            - city: string
-            - state: string
-            - zip_code: string
-            - country: string
-        """
-
-        pass
-
-
-class CollectiveSignupView(CustomCreateAPIView):
+class PatientSignupView(CustomCreateAPIView):
     """
-    Collective signup endpoint
+    Patient signup endpoint
 
     Request method: POST
 
@@ -240,8 +213,35 @@ class CollectiveSignupView(CustomCreateAPIView):
     """
 
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.COLLECTIVE)
-    serializer_class = CollectiveRegistrationSerializer
+    queryset = User.objects.filter(user_type=User.UserType.PATIENT)
+    serializer_class = PatientRegistrationSerializer
+
+
+class ClinicSignupView(CustomCreateAPIView):
+    """
+    Clinic signup endpoint
+
+    Request method: POST
+
+    Request fields
+    ---
+    - username: string
+    - email: string
+    - password: string
+    - first_name: string
+    - last_name: string
+    - phone_number: string
+    - address:
+        - street: string
+        - city: string
+        - state: string
+        - zip_code: string
+        - country: string
+    """
+
+    permission_classes = [AllowAny]
+    queryset = User.objects.filter(user_type=User.UserType.CLINIC)
+    serializer_class = ClinicRegistrationSerializer
 
 
 class PharmacySignupView(CustomCreateAPIView):

@@ -22,7 +22,7 @@ class User(AbstractUser, CoreModel):
         DOCTOR = "DOCTOR", _("doctor")
         PATIENT = "PATIENT", _("patient")
         PHARMACY = "PHARMACY", _("pharmacy")
-        COLLECTIVE = "COLLECTIVE", _("collective")
+        CLINIC = "CLINIC", _("clinic")
 
     username_validator = UnicodeUsernameValidator()
 
@@ -70,14 +70,6 @@ class UserIp(CoreModel):
         return f"{self.user.username}-{self.ip_address}"
 
 
-class UserLanguage(CoreModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    language = models.CharField(max_length=20)
-
-    def __str__(self):
-        return f"{self.user.username}-{self.language}"
-
-
 class DoctorInfo(CoreModel):
     class Gender(models.TextChoices):
         MALE = "MALE", _("male")
@@ -108,6 +100,14 @@ class DoctorInfo(CoreModel):
     twitter_url = models.URLField(blank=True, null=True)
 
 
+class DoctorLanguage(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    language = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.doctor_info.user.username}-{self.language}"
+
+
 class DoctorEducation(CoreModel):
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
     course = models.CharField(max_length=50)
@@ -130,16 +130,82 @@ class DoctorSpecialty(CoreModel):
     specialty = models.CharField(max_length=50)
 
 
-class CollectiveInfo(CoreModel):
-    class CollectiveType(models.TextChoices):
+class DoctorAvailableHours(CoreModel):
+    class DayOfWeek(models.TextChoices):
+        SUNDAY = "SUN", _("sunday")
+        MONDAY = "MON", _("monday")
+        TUESDAY = "TUE", _("tuesday")
+        WEDNESDAY = "WED", _("wednesday")
+        THURSDAY = "THU", _("thursday")
+        FRIDAY = "FRI", _("friday")
+        SATURDAY = "SAT", _("saturday")
+
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    day_of_week = models.CharField(
+        max_length=3, choices=DayOfWeek.choices, blank=True, null=True
+    )
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+
+
+class DoctorReview(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    patient_name = models.CharField(max_length=80, null=True, blank=True)
+    star_count = models.FloatField(null=True, blank=True)
+    comment = models.TextField(max_length=5000, null=True, blank=True)
+
+
+class ClinicInfo(CoreModel):
+    class ClinicType(models.TextChoices):
         HOSPITAL = "HOSPITAL", _("hospital")
         CLINIC = "CLINIC", _("clinic")
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    collective_type = models.CharField(max_length=20, choices=CollectiveType.choices)
+    clinic_type = models.CharField(max_length=20, choices=ClinicType.choices)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
 
 
 class PharmacyInfo(CoreModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+
+
+class PatientInfo(CoreModel):
+    class Gender(models.TextChoices):
+        MALE = "MALE", _("male")
+        FEMALE = "FEMALE", _("female")
+        OTHER = "OTHER", _("other")
+
+    class IdentificationType(models.TextChoices):
+        PASSPORT = "PASSPORT", _("passport")
+        DRIVER_LICENSE = "DRIVER'S LICENSE", _("driver's license")
+        STATE_ID = "STATE ID", _("state id")
+        STUDENT_ID = "STUDENT ID", _("student id")
+
+    class InsuranceType(models.TextChoices):
+        SELF_PAID = "SELF PAID", _("self paid")
+        INSURANCE_VERIFIED = "INSURANCE VERIFIED", _("insurance verified")
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    gender = models.CharField(max_length=7, choices=Gender.choices)
+    date_of_birth = models.DateField()
+    social_security_number = models.CharField(max_length=12, null=True, blank=True)
+    identification_type = models.CharField(
+        max_length=20, choices=IdentificationType.choices
+    )
+    identification_number = models.CharField(max_length=50)
+
+    # Insurance Info
+    insurance_type = models.CharField(max_length=20, choices=InsuranceType.choices)
+    insurance_name = models.CharField(max_length=50, null=True, blank=True)
+    insurance_number = models.CharField(max_length=50, null=True, blank=True)
+    insurance_policy_holder_name = models.CharField(
+        max_length=50, null=True, blank=True
+    )
+
+    # Insurance reference
+    referring_doctor_full_name = models.CharField(max_length=50, null=True, blank=True)
+    referring_doctor_phone_number = models.CharField(
+        max_length=20, null=True, blank=True
+    )
+    referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
