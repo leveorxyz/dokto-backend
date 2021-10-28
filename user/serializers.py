@@ -18,7 +18,7 @@ from .models import (
     DoctorExperience,
     DoctorSpecialty,
     DoctorLanguage,
-    CollectiveInfo,
+    ClinicInfo,
     PharmacyInfo,
     PatientInfo,
 )
@@ -287,6 +287,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "date_of_birth",
         ]
 
+    extra_kwargs = {
+        "username": {"read_only": True},
+    }
+
 
 class PharmacyRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
@@ -336,17 +340,20 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             "profile_photo",
             "number_of_practitioners",
         ]
+        extra_kwargs = {
+            "username": {"read_only": True},
+        }
 
 
-class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
-    collective_type = CharField(write_only=True)
+class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
+    clinic_type = CharField(write_only=True)
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.COLLECTIVE)
+        user: User = create_user(validated_data, User.UserType.CLINIC)
 
-        # Extract collective info
+        # Extract clinic info
         try:
-            CollectiveInfo.objects.create(user=user, **validated_data)
+            ClinicInfo.objects.create(user=user, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -355,7 +362,10 @@ class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
 
     class Meta:
         model = User
-        fields = PharmacyRegistrationSerializer.Meta.fields + ["collective_type"]
+        fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
+        extra_kwargs = {
+            "username": {"read_only": True},
+        }
 
 
 class PatientRegistrationSerializer(ModelSerializer):
@@ -432,3 +442,6 @@ class PatientRegistrationSerializer(ModelSerializer):
             "referring_doctor_phone_number",
             "referring_doctor_address",
         ]
+        extra_kwargs = {
+            "username": {"read_only": True},
+        }

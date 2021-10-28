@@ -17,9 +17,9 @@ class AdminPermission(BasePermission):
         return bool(request.user and request.user.user_type == User.UserType.ADMIN)
 
 
-class CollectivePermission(BasePermission):
+class ClinicPermission(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.user_type == User.UserType.COLLECTIVE)
+        return bool(request.user and request.user.user_type == User.UserType.CLINIC)
 
 
 class PharmacyPermission(BasePermission):
