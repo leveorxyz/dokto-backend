@@ -115,6 +115,14 @@ class DoctorEducation(CoreModel):
     college = models.CharField(max_length=60)
     certificate = models.ImageField(upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY)
 
+    def delete(self, *args, **kwargs):
+        """
+        Deletes the image file in the storage manually before deletion of an instance
+        """
+        storage, path = self.certificate.storage, self.certificate.path
+        super(DoctorEducation, self).delete(*args, **kwargs)
+        storage.delete(path)
+
 
 class DoctorExperience(CoreModel):
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE, default=None)

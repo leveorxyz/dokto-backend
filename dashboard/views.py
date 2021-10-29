@@ -2,11 +2,13 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 
 from core.views import CustomRetrieveAPIView, CustomRetrieveUpdateAPIView
-from user.models import DoctorInfo, User
+from user.models import DoctorExperience, DoctorInfo, User
 from .serializers import (
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
     DoctorSpecialtySettingsSerializer,
+    DoctorExperienceEducationSerializer,
+    DoctorExperienceEducationUpdateSerializer,
 )
 from .permissions import OwnProfilePermission
 
@@ -16,7 +18,7 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
     serializer_class = DoctorProfileSerializer
     queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
 
-    def get_object(self):
+    def get_object(self) -> DoctorInfo:
         return get_object_or_404(self.get_queryset(), **self.kwargs)
 
 
@@ -28,6 +30,27 @@ class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
         return DoctorInfo.objects.all()
 
     def get_object(self):
+        obj = get_object_or_404(
+            self.get_queryset(), user__username=self.kwargs.get("username")
+        )
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
+    permission_classes = [OwnProfilePermission]
+    serializer_class = DoctorExperienceEducationSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return DoctorExperienceEducationUpdateSerializer
+        else:
+            return DoctorExperienceEducationSerializer
+
+    def get_queryset(self):
+        return DoctorInfo.objects.all()
+
+    def get_object(self) -> DoctorInfo:
         obj = get_object_or_404(
             self.get_queryset(), user__username=self.kwargs.get("username")
         )
