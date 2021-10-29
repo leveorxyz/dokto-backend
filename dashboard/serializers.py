@@ -3,6 +3,8 @@ from django.db.models import Sum
 from rest_framework.serializers import (
     ModelSerializer,
     SerializerMethodField,
+    CharField,
+    ListField,
 )
 
 from core.serializers import ReadWriteSerializerMethodField
@@ -11,6 +13,7 @@ from user.models import (
     DoctorReview,
     User,
     DoctorInfo,
+    DoctorSpecialty,
 )
 from user.serializers import (
     DoctorInfoSerializer,
@@ -18,7 +21,9 @@ from user.serializers import (
     DoctorExpericenceSerializer,
     DoctorAvailableHoursSerializer,
     DoctorReviewSerializer,
+    DoctorSpecialtySerializer,
 )
+from user.utils import generate_image_file_and_name
 
 
 class DoctorProfileSerializer(ModelSerializer):
@@ -112,3 +117,76 @@ class DoctorProfileSerializer(ModelSerializer):
             "available_hours",
             "review",
         ]
+
+
+class DoctorProfileDetailsSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
+    profile_photo = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_profile_photo(self, doctor_info: DoctorInfo) -> str:
+        return doctor_info.user.profile_photo.url
+
+    def update(self, instance, validated_data):
+        if "user" in validated_data:
+            user_data = validated_data.pop("user")
+            user = instance.user
+            full_name = user_data.get("full_name", user.full_name)
+            contact_no = user_data.get("contact_no", user.contact_no)
+            user.full_name = full_name
+            user.contact_no = contact_no
+            user.save()
+        if "profile_photo" in validated_data:
+            profile_photo_data = validated_data.pop("profile_photo")
+            user = instance.user
+            file_name, file = generate_image_file_and_name(profile_photo_data, user.id)
+            user.profile_photo.delete(save=True)
+            user.profile_photo.save(file_name, file, save=True)
+            user.save()
+        instance = super().update(instance, validated_data)
+        return instance
+
+    class Meta:
+        model = DoctorInfo
+        fields = [
+            "full_name",
+            "gender",
+            "contact_no",
+            "profile_photo",
+            "professional_bio",
+        ]
+
+
+class DoctorSpecialtySettingsSerializer(ModelSerializer):
+    specialty = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_specialty(self, doctor_info: DoctorInfo):
+        return list(
+            doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
+        )
+
+    def update(self, doctor_info: DoctorInfo, validated_data: dict):
+        if "specialty" in validated_data:
+            specialty = validated_data.pop("specialty")
+            new_specialty = set(specialty)
+            old_specialty = set(
+                doctor_info.doctorspecialty_set.all().values_list(
+                    "specialty", flat=True
+                )
+            )
+            added_specialty = new_specialty - old_specialty
+            removed_specialty = old_specialty - new_specialty
+            DoctorSpecialty.objects.filter(
+                doctor_info=doctor_info, specialty__in=removed_specialty
+            ).delete()
+            DoctorSpecialty.objects.bulk_create(
+                [
+                    DoctorSpecialty(doctor_info=doctor_info, specialty=spec)
+                    for spec in added_specialty
+                ]
+            )
+            return doctor_info
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["id", "specialty"]
