@@ -5,13 +5,10 @@ from rest_framework.serializers import (
     ModelSerializer,
     SerializerMethodField,
     CharField,
-    ListField,
 )
 
 from core.serializers import ReadWriteSerializerMethodField
 from user.models import (
-    DoctorAvailableHours,
-    DoctorReview,
     User,
     DoctorInfo,
     DoctorSpecialty,
@@ -19,12 +16,10 @@ from user.models import (
     DoctorExperience,
 )
 from user.serializers import (
-    DoctorInfoSerializer,
     DoctorEducationSerializer,
     DoctorExpericenceSerializer,
     DoctorAvailableHoursSerializer,
     DoctorReviewSerializer,
-    DoctorSpecialtySerializer,
 )
 from user.utils import generate_image_file_and_name
 

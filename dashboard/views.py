@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.views import CustomRetrieveAPIView, CustomRetrieveUpdateAPIView
 from core.permissions import OwnProfilePermission
-from user.models import DoctorExperience, DoctorInfo, User
+from user.models import DoctorInfo, User
 from .serializers import (
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
