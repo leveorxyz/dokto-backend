@@ -177,7 +177,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
         identification_photo = validated_data.pop("identification_photo")
 
         # Creating doctor info
-        print(validated_data)
         try:
             doctor_info: DoctorInfo = DoctorInfo.objects.create(
                 user=user, **validated_data

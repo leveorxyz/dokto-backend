@@ -12,7 +12,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path("<int:pk>", UserRetrieveAPIView.as_view(), name="user-retrieve"),
+    path("<uuid:pk>", UserRetrieveAPIView.as_view(), name="user-retrieve"),
     path("login/", LoginView.as_view(), name="login"),
     path("doctor-signup/", DoctorSignupView.as_view(), name="doctor-signup"),
     path("clinic-signup/", ClinicSignupView.as_view(), name="clinic-signup"),
