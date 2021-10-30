@@ -8,17 +8,6 @@ from django.utils.text import get_valid_filename
 from .models import User
 
 
-def generate_username(full_name: str):
-    """
-    This method is used to generate a username for the user.
-    """
-    username_count = User.objects.filter(full_name=full_name).count()
-    username = full_name.lower().replace(" ", ".")
-    if username_count > 0:
-        username = f"{username}.{username_count+1}"
-    return username
-
-
 def create_user(validated_data: dict, user_type: str):
     """
     This method is used to take the user input and create a new user.
@@ -39,11 +28,7 @@ def create_user(validated_data: dict, user_type: str):
         if field not in validated_data:
             raise ValueError(f"{field} is required")
 
-    username = generate_username(validated_data["full_name"])
-    print(username)
-
     user = User.objects.create(
-        username=username,
         email=validated_data.pop("email"),
         password=make_password(validated_data.pop("password")),
         full_name=validated_data.pop("full_name"),
