@@ -121,6 +121,7 @@ class DoctorReviewSerializer(ModelSerializer):
 
 class DoctorRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
+    username = ReadWriteSerializerMethodField(required=True, allow_null=False)
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
@@ -144,6 +145,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
     identification_type = CharField(write_only=True)
     identification_photo = CharField(write_only=True)
     date_of_birth = DateField(write_only=True)
+
+    def get_username(self, user: User) -> str:
+        return DoctorInfo.objects.get(user=user).username
 
     def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
@@ -173,6 +177,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         identification_photo = validated_data.pop("identification_photo")
 
         # Creating doctor info
+        print(validated_data)
         try:
             doctor_info: DoctorInfo = DoctorInfo.objects.create(
                 user=user, **validated_data

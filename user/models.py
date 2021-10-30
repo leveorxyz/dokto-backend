@@ -26,6 +26,7 @@ class User(AbstractUser, CoreModel):
         PHARMACY = "PHARMACY", _("pharmacy")
         CLINIC = "CLINIC", _("clinic")
 
+    username = None
     full_name = models.CharField(_("full name"), max_length=180, blank=True)
     email = models.EmailField(_("email"), unique=True)
     user_type = models.CharField(
