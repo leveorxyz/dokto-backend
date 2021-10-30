@@ -194,7 +194,7 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
     `dashboard > profile settings > experience and education`.
     """
 
-    operation = CharField(required=False, allow_null=True, write_only=True)
+    operation = CharField(required=True, allow_null=False, write_only=True)
     certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
     def get_certificate(self, doctor_education: DoctorEducation):
@@ -247,7 +247,7 @@ class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
     `dashboard > profile settings > experience and education`.
     """
 
-    operation = CharField(required=False, allow_null=True, write_only=True)
+    operation = CharField(required=True, allow_null=False, write_only=True)
 
     class Meta:
         model = DoctorExperience
