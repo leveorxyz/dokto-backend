@@ -1,7 +1,8 @@
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from core.views import CustomRetrieveAPIView, CustomRetrieveUpdateAPIView
+from core.permissions import OwnProfilePermission
 from user.models import DoctorExperience, DoctorInfo, User
 from .serializers import (
     DoctorProfileDetailsSerializer,
@@ -10,7 +11,6 @@ from .serializers import (
     DoctorExperienceEducationSerializer,
     DoctorExperienceEducationUpdateSerializer,
 )
-from .permissions import OwnProfilePermission
 
 
 class DoctorProfileAPIView(CustomRetrieveAPIView):
@@ -23,7 +23,7 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
 
 
 class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [OwnProfilePermission]
+    permission_classes = [IsAuthenticated, OwnProfilePermission]
     serializer_class = DoctorProfileDetailsSerializer
 
     def get_queryset(self, *args, **kwargs):
@@ -38,7 +38,7 @@ class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [OwnProfilePermission]
+    permission_classes = [IsAuthenticated, OwnProfilePermission]
     serializer_class = DoctorExperienceEducationSerializer
 
     def get_serializer_class(self):
@@ -59,7 +59,7 @@ class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [OwnProfilePermission]
+    permission_classes = [IsAuthenticated, OwnProfilePermission]
     serializer_class = DoctorSpecialtySettingsSerializer
 
     def get_queryset(self, *args, **kwargs):
