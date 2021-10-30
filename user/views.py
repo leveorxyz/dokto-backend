@@ -152,7 +152,7 @@ class UsernameExists(APIView):
         }
 
         try:
-            if user_model[user_type].objects.get(username=username).exists():
+            if user_model[user_type].objects.filter(username=username).exists():
                 return Response(
                     {
                         "status_code": 200,
