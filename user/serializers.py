@@ -142,7 +142,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
     )
     specialty = ListField(child=CharField(), write_only=True)
     identification_type = CharField(write_only=True)
-    identification_number = CharField(write_only=True)
     identification_photo = CharField(write_only=True)
     date_of_birth = DateField(write_only=True)
 
@@ -282,7 +281,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "experience",
             "specialty",
             "identification_type",
-            "identification_number",
             "identification_photo",
             "date_of_birth",
         ]
