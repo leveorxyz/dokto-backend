@@ -28,7 +28,7 @@ from .utils import create_user, generate_image_file_and_name
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "email")
+        fields = ("id", "email")
 
 
 class UserLoginSerializer(Serializer):
@@ -287,10 +287,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "date_of_birth",
         ]
 
-    extra_kwargs = {
-        "username": {"read_only": True},
-    }
-
 
 class PharmacyRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
@@ -340,9 +336,6 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             "profile_photo",
             "number_of_practitioners",
         ]
-        extra_kwargs = {
-            "username": {"read_only": True},
-        }
 
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
@@ -363,9 +356,6 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
     class Meta:
         model = User
         fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
-        extra_kwargs = {
-            "username": {"read_only": True},
-        }
 
 
 class PatientRegistrationSerializer(ModelSerializer):
@@ -419,7 +409,6 @@ class PatientRegistrationSerializer(ModelSerializer):
         fields = [
             "id",
             "email",
-            "username",
             "token",
             "password",
             "full_name",
@@ -442,6 +431,3 @@ class PatientRegistrationSerializer(ModelSerializer):
             "referring_doctor_phone_number",
             "referring_doctor_address",
         ]
-        extra_kwargs = {
-            "username": {"read_only": True},
-        }
