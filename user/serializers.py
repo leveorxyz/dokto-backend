@@ -291,6 +291,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
 
 class PharmacyRegistrationSerializer(ModelSerializer):
+    username = ReadWriteSerializerMethodField(required=True, allow_null=False)
     token = SerializerMethodField()
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
@@ -301,6 +302,9 @@ class PharmacyRegistrationSerializer(ModelSerializer):
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
     number_of_practitioners = IntegerField(write_only=True)
+
+    def get_username(self, user: User) -> str:
+        return PharmacyInfo.objects.get(user=user).username
 
     def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
@@ -342,6 +346,9 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
     clinic_type = CharField(write_only=True)
+
+    def get_username(self, user: User) -> str:
+        return ClinicInfo.objects.get(user=user).username
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.CLINIC)
