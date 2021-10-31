@@ -443,7 +443,7 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
                     for spec in added_specialty
                 ]
             )
-            return doctor_info
+        return doctor_info
 
     class Meta:
         model = DoctorInfo
