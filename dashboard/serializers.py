@@ -418,7 +418,7 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
     specialty = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
-    def get_specialty(self, doctor_info: DoctorInfo) -> list[str]:
+    def get_specialty(self, doctor_info: DoctorInfo) -> list:
         return list(
             doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
         )
