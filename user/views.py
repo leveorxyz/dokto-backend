@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_404_NOT_FOUND
@@ -8,12 +8,12 @@ from django.contrib.auth import authenticate, logout
 
 from core.views import CustomRetrieveAPIView, CustomCreateAPIView
 from core.utils import set_user_ip
-from .models import User
+from .models import User, DoctorInfo, PharmacyInfo, ClinicInfo
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
     DoctorRegistrationSerializer,
-    CollectiveRegistrationSerializer,
+    ClinicRegistrationSerializer,
     PharmacyRegistrationSerializer,
     PatientRegistrationSerializer,
 )
@@ -46,8 +46,8 @@ class LoginView(APIView):
 
         Response fields
         ---
+        - id: int
         - token: string
-        - username: string
         - email: string
         """
 
@@ -64,7 +64,6 @@ class LoginView(APIView):
                     "message": "Login successful.",
                     "result": {
                         "id": request.user.id,
-                        "username": request.user.get_username(),
                         "email": request.user.email,
                         "token": request.auth.key,
                     },
@@ -91,7 +90,6 @@ class LoginView(APIView):
                     "message": "Login successful.",
                     "result": {
                         "id": user.id,
-                        "username": user.get_username(),
                         "email": user.email,
                         "token": token.key,
                     },
@@ -127,41 +125,52 @@ class LogoutView(APIView):
 class UsernameExists(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request, username):
+    def get(self, request, user_type=None, username=None):
         """
-        Check if username exists
+        Check if email exists
 
         Request method: GET
 
         Response codes
         ---
-        - 200: Username exists
-        - 404: Username does not exist
+        - 200: Exists
+        - 404: Does not exist
 
         Response fields
         ---
         - status_code: int
         - message: string
         """
+        if not user_type or not username:
+            raise ValidationError("Invalid request parameters.")
 
         # Checking if username exists
-        if User.objects.filter(username=username).exists():
-            return Response(
-                {
-                    "status_code": 200,
-                    "message": "Username exists.",
-                    "result": None,
-                }
-            )
-        else:
-            return Response(
-                {
-                    "status_code": 404,
-                    "message": "Username does not exist.",
-                    "result": None,
-                },
-                status=HTTP_404_NOT_FOUND,
-            )
+        user_model = {
+            "doctor": DoctorInfo,
+            "pharmacy": PharmacyInfo,
+            "clinic": ClinicInfo,
+        }
+
+        try:
+            if user_model[user_type].objects.filter(username=username).exists():
+                return Response(
+                    {
+                        "status_code": 200,
+                        "message": "Exists.",
+                        "result": None,
+                    }
+                )
+        except KeyError:
+            raise ValidationError("Invalid user type.")
+
+        return Response(
+            {
+                "status_code": 404,
+                "message": "Does not exist.",
+                "result": None,
+            },
+            status=HTTP_404_NOT_FOUND,
+        )
 
 
 class DoctorSignupView(CustomCreateAPIView):
@@ -198,7 +207,6 @@ class PatientSignupView(CustomCreateAPIView):
 
     Request fields
     ---
-    - username: string
     - email: string
     - password: string
     - first_name: string
@@ -217,9 +225,9 @@ class PatientSignupView(CustomCreateAPIView):
     serializer_class = PatientRegistrationSerializer
 
 
-class CollectiveSignupView(CustomCreateAPIView):
+class ClinicSignupView(CustomCreateAPIView):
     """
-    Collective signup endpoint
+    Clinic signup endpoint
 
     Request method: POST
 
@@ -240,8 +248,8 @@ class CollectiveSignupView(CustomCreateAPIView):
     """
 
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.COLLECTIVE)
-    serializer_class = CollectiveRegistrationSerializer
+    queryset = User.objects.filter(user_type=User.UserType.CLINIC)
+    serializer_class = ClinicRegistrationSerializer
 
 
 class PharmacySignupView(CustomCreateAPIView):
@@ -252,7 +260,6 @@ class PharmacySignupView(CustomCreateAPIView):
 
     Request fields
     ---
-    - username: string
     - email: string
     - password: string
     - first_name: string

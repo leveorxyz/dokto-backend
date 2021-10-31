@@ -27,7 +27,7 @@ class VideoChatTokenCreateAPIView(generics.CreateAPIView):
             settings.TWILIO_ACCOUNT_SID,
             settings.TWILIO_API_KEY,
             settings.TWILIO_API_SECRET,
-            identity=validated_data.get("username"),
+            identity=validated_data.get("id"),
         )
 
         token.add_grant(VideoGrant(room=validated_data.get("room_name")))
