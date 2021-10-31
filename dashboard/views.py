@@ -1,6 +1,5 @@
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
 
 from core.views import (
     CustomRetrieveAPIView,
@@ -9,8 +8,6 @@ from core.views import (
 )
 from core.permissions import OwnProfilePermission
 from user.models import DoctorInfo, User
-from core.utils import set_user_ip
-from core.views import custom_response
 from .serializers import (
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
@@ -83,7 +80,7 @@ class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
 
     def get_queryset(self):
         doctor_info = get_object_or_404(
-            DoctorInfo, user__username=self.kwargs.get("username")
+            DoctorInfo, username=self.kwargs.get("username")
         )
         self.check_object_permissions(self.request, doctor_info)
         return doctor_info.doctoravailablehours_set.all()
