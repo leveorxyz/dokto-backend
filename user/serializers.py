@@ -18,7 +18,7 @@ from .models import (
     DoctorExperience,
     DoctorSpecialty,
     DoctorLanguage,
-    CollectiveInfo,
+    ClinicInfo,
     PharmacyInfo,
     PatientInfo,
 )
@@ -28,7 +28,7 @@ from .utils import create_user, generate_image_file_and_name
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "email")
+        fields = ("id", "email")
 
 
 class UserLoginSerializer(Serializer):
@@ -121,6 +121,7 @@ class DoctorReviewSerializer(ModelSerializer):
 
 class DoctorRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
+    username = ReadWriteSerializerMethodField(required=True, allow_null=False)
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
@@ -142,9 +143,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
     )
     specialty = ListField(child=CharField(), write_only=True)
     identification_type = CharField(write_only=True)
-    identification_number = CharField(write_only=True)
     identification_photo = CharField(write_only=True)
     date_of_birth = DateField(write_only=True)
+
+    def get_username(self, user: User) -> str:
+        return DoctorInfo.objects.get(user=user).username
 
     def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
@@ -282,13 +285,13 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "experience",
             "specialty",
             "identification_type",
-            "identification_number",
             "identification_photo",
             "date_of_birth",
         ]
 
 
 class PharmacyRegistrationSerializer(ModelSerializer):
+    username = ReadWriteSerializerMethodField(required=True, allow_null=False)
     token = SerializerMethodField()
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
@@ -299,6 +302,9 @@ class PharmacyRegistrationSerializer(ModelSerializer):
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
     number_of_practitioners = IntegerField(write_only=True)
+
+    def get_username(self, user: User) -> str:
+        return PharmacyInfo.objects.get(user=user).username
 
     def get_token(self, user: User) -> str:
         token, _ = Token.objects.get_or_create(user=user)
@@ -338,15 +344,18 @@ class PharmacyRegistrationSerializer(ModelSerializer):
         ]
 
 
-class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
-    collective_type = CharField(write_only=True)
+class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
+    clinic_type = CharField(write_only=True)
+
+    def get_username(self, user: User) -> str:
+        return ClinicInfo.objects.get(user=user).username
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.COLLECTIVE)
+        user: User = create_user(validated_data, User.UserType.CLINIC)
 
-        # Extract collective info
+        # Extract clinic info
         try:
-            CollectiveInfo.objects.create(user=user, **validated_data)
+            ClinicInfo.objects.create(user=user, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -355,7 +364,7 @@ class CollectiveRegistrationSerializer(PharmacyRegistrationSerializer):
 
     class Meta:
         model = User
-        fields = PharmacyRegistrationSerializer.Meta.fields + ["collective_type"]
+        fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
 
 
 class PatientRegistrationSerializer(ModelSerializer):
@@ -409,7 +418,6 @@ class PatientRegistrationSerializer(ModelSerializer):
         fields = [
             "id",
             "email",
-            "username",
             "token",
             "password",
             "full_name",

@@ -31,6 +31,7 @@ class DoctorProfileSerializer(ModelSerializer):
     """
 
     ## TODO: implement using DoctorInfo Model
+    username = SerializerMethodField()
     avg_rating = SerializerMethodField(required=False, allow_null=True)
     qualification_suffix = SerializerMethodField(required=False, allow_null=True)
     date_of_birth = SerializerMethodField(required=False, allow_null=True)
@@ -42,6 +43,9 @@ class DoctorProfileSerializer(ModelSerializer):
     specialty = SerializerMethodField(required=False, allow_null=True)
     available_hours = SerializerMethodField(required=False, allow_null=True)
     review = SerializerMethodField(required=False, allow_null=True)
+
+    def get_username(self, doctor: User) -> str:
+        return doctor.doctorinfo_set.first().username
 
     def get_avg_rating(self, doctor: User) -> str:
         doctor_info = doctor.doctorinfo_set.first()
@@ -461,7 +465,7 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
     specialty = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
-    def get_specialty(self, doctor_info: DoctorInfo) -> list[str]:
+    def get_specialty(self, doctor_info: DoctorInfo) -> list:
         return list(
             doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
         )
@@ -486,7 +490,7 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
                     for spec in added_specialty
                 ]
             )
-            return doctor_info
+        return doctor_info
 
     class Meta:
         model = DoctorInfo

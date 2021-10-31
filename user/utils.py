@@ -14,7 +14,6 @@ def create_user(validated_data: dict, user_type: str):
     Common for all users.
     """
     fields = [
-        "username",
         "email",
         "password",
         "full_name",
@@ -30,7 +29,6 @@ def create_user(validated_data: dict, user_type: str):
             raise ValueError(f"{field} is required")
 
     user = User.objects.create(
-        username=validated_data.pop("username"),
         email=validated_data.pop("email"),
         password=make_password(validated_data.pop("password")),
         full_name=validated_data.pop("full_name"),
