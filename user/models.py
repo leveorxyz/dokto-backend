@@ -58,7 +58,7 @@ class UserIp(CoreModel):
     ip_address = models.GenericIPAddressField()
 
     def __str__(self):
-        return f"{self.user.username}-{self.ip_address}"
+        return f"{self.user.id}-{self.ip_address}"
 
 
 class DoctorInfo(CoreModel):
@@ -105,7 +105,7 @@ class DoctorLanguage(CoreModel):
     language = models.CharField(max_length=20)
 
     def __str__(self):
-        return f"{self.doctor_info.user.username}-{self.language}"
+        return f"{self.doctor_info.username}-{self.language}"
 
 
 class DoctorEducation(CoreModel):
