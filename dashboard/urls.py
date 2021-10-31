@@ -5,6 +5,7 @@ from .views import (
     DoctorProfileDetailsAPIView,
     DoctorSpecialtySettingsAPIView,
     DoctorEducationExperienceSettingsAPIView,
+    DoctorAvailableHoursSettingsAPIView,
 )
 
 urlpatterns = [
@@ -20,6 +21,11 @@ urlpatterns = [
         "doctor/profile-settings/education-experience/<str:username>",
         DoctorEducationExperienceSettingsAPIView.as_view(),
         name="doctor-education-experience",
+    ),
+    path(
+        "doctor/profile-settings/available-hours/<str:username>",
+        DoctorAvailableHoursSettingsAPIView.as_view(),
+        name="doctor-available-hours",
     ),
     path(
         "doctor/specialty-settings/<str:username>",
