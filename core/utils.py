@@ -23,21 +23,20 @@ def send_mail(subject=None, message=None, from_email=None, to_email=None, cc_lis
     # activate_link_url = settings.EMAIL_ACTIVATION_LINK
     # confirmation_token = default_token_generator.make_token(self)
 
-    # context = {
-    #     "site": "dokto",
-    #     "link": "https://example.com",
-    #     "provider_name": "test",
-    #     "signature": "dummy",
-    # }
-    # # render email text
-    # email_html_message = render_to_string("email/provider_verification.html", context)
+    context = {
+        "site": "dokto",
+        "link": "https://example.com",
+        "provider_name": "test",
+        "signature": "dummy",
+    }
+    # render email text
+    email_html_message = render_to_string("email/provider_verification.html", context)
 
-    # msg = EmailMultiAlternatives(
-    #     subject=f"Welcome to {context['site']}, please verify your email address",
-    #     body=email_html_message,
-    #     from_email=settings.EMAIL_HOST_USER,
-    #     to=["sihantawsik@gmail.com"],
-    # )
-    # msg.attach_alternative(email_html_message, "text/html")
-    # msg.send()
-    snd_ml("a", "abc", "doktotest@gmail.com", ["sihantawsik@gmail.com"])
+    msg = EmailMultiAlternatives(
+        subject=f"Welcome to {context['site']}, please verify your email address",
+        body=email_html_message,
+        from_email=settings.EMAIL_HOST_USER,
+        to=["sihantawsik@gmail.com"],
+    )
+    msg.attach_alternative(email_html_message, "text/html")
+    msg.send()
