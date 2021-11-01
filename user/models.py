@@ -58,7 +58,7 @@ class UserIp(CoreModel):
     ip_address = models.GenericIPAddressField()
 
     def __str__(self):
-        return f"{self.user.username}-{self.ip_address}"
+        return f"{self.user.id}-{self.ip_address}"
 
 
 class DoctorInfo(CoreModel):
@@ -105,7 +105,7 @@ class DoctorLanguage(CoreModel):
     language = models.CharField(max_length=20)
 
     def __str__(self):
-        return f"{self.doctor_info.user.username}-{self.language}"
+        return f"{self.doctor_info.username}-{self.language}"
 
 
 class DoctorEducation(CoreModel):
@@ -114,6 +114,14 @@ class DoctorEducation(CoreModel):
     year = models.CharField(max_length=15)
     college = models.CharField(max_length=60)
     certificate = models.ImageField(upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY)
+
+    def delete(self, *args, **kwargs):
+        """
+        Deletes the image file in the storage manually before deletion of an instance
+        """
+        storage, path = self.certificate.storage, self.certificate.path
+        super(DoctorEducation, self).delete(*args, **kwargs)
+        storage.delete(path)
 
 
 class DoctorExperience(CoreModel):
