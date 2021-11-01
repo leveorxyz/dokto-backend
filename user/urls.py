@@ -9,6 +9,7 @@ from .views import (
     ClinicSignupView,
     PharmacySignupView,
     PatientSignupView,
+    VerifyEmailView,
 )
 
 urlpatterns = [
@@ -24,4 +25,5 @@ urlpatterns = [
         UsernameExists.as_view(),
         name="username-exists",
     ),
+    path("activate/<str:token>", VerifyEmailView.as_view(), name="verify-email"),
 ]

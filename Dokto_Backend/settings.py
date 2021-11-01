@@ -166,12 +166,12 @@ USE_X_FORWARDED_HOST = True
 SITE_ID = 1
 
 # Email Configuration
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_HOST_USER = 'your email'
-# EMAIL_HOST_PASSWORD = 'your password'
-# EMAIL_USE_TLS = True
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -209,6 +209,8 @@ USER_AUTH_TOKEN_EXPIRATION_SECONDS = 3600 * 24 * 30
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+BACKEND_URL = config("BACKEND_URL", "http://127.0.0.1:8000")
+FERNET_KEY = config("FERNET_KEY", "MnMxhswjMy2vpJOt9B1qSS8ZZNZ8WTr5Pet3UePaLQU=")
 
 # Stripe Credenentials
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")

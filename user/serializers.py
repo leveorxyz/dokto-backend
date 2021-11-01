@@ -7,8 +7,13 @@ from rest_framework.serializers import (
 )
 from rest_framework.authtoken.models import Token
 from rest_framework.serializers import ListField, URLField, IntegerField
+from rest_framework.exceptions import ValidationError
+from django.conf import settings
+from cryptography.fernet import InvalidToken
 
 from core.serializers import ReadWriteSerializerMethodField
+from core.classes import ExpiringActivationTokenGenerator
+from core.utils import send_mail
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
@@ -257,6 +262,26 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
+        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+            text=user.email
+        )
+
+        link = "/".join(
+            [
+                settings.BACKEND_URL,
+                "user",
+                "activate",
+                confirmation_token.decode("utf-8"),
+            ]
+        )
+
+        send_mail(
+            to_email=user.email,
+            subject=f"Welcome to Dokto, please verify your email address",
+            template_name="email/patient_verification.html",
+            input_context={"provider_name": user.full_name, "link": link},
+        )
+
         return user
 
     class Meta:
@@ -411,6 +436,26 @@ class PatientRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
+        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+            text=user.email
+        )
+
+        link = "/".join(
+            [
+                settings.BACKEND_URL,
+                "user",
+                "activate",
+                confirmation_token.decode("utf-8"),
+            ]
+        )
+
+        send_mail(
+            to_email=user.email,
+            subject=f"Welcome to Dokto, please verify your email address",
+            template_name="email/patient_verification.html",
+            input_context={"name": user.full_name, "link": link},
+        )
+
         return user
 
     class Meta:
@@ -440,3 +485,26 @@ class PatientRegistrationSerializer(ModelSerializer):
             "referring_doctor_phone_number",
             "referring_doctor_address",
         ]
+
+
+class VerifyEmailSerializer(Serializer):
+    token = CharField(required=True, write_only=True)
+
+    def validate(self, data):
+        try:
+            email = ExpiringActivationTokenGenerator().get_token_value(data["token"])
+        except InvalidToken:
+            raise ValidationError("Invalid token")
+
+        try:
+            user = User.objects.get(email=email)
+            data["user"] = user
+        except User.DoesNotExist:
+            raise ValidationError("User does not exist")
+
+        if not user.is_active:
+            user.is_active = True
+            user.is_verified = True
+            user.save()
+
+        return data
