@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.serializers import ListField, URLField, IntegerField
 
 from core.serializers import ReadWriteSerializerMethodField
+from core.utils import send_mail
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
@@ -256,6 +257,8 @@ class DoctorRegistrationSerializer(ModelSerializer):
             doctor_info.delete()
             user.delete()
             raise e
+
+        send_mail()
 
         return user
 
