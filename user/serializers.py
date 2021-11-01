@@ -7,8 +7,10 @@ from rest_framework.serializers import (
 )
 from rest_framework.authtoken.models import Token
 from rest_framework.serializers import ListField, URLField, IntegerField
+from django.conf import settings
 
 from core.serializers import ReadWriteSerializerMethodField
+from core.classes import ExpiringActivationTokenGenerator
 from core.utils import send_mail
 from .models import (
     DoctorAvailableHours,
@@ -258,11 +260,20 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
+        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+            text=user.email
+        )
+
+        link = "/".join(
+            [settings.BACKEND_URL, "activate", confirmation_token.decode("utf-8")]
+        )
+
+
         send_mail(
             to_email=user.email,
             subject=f"Welcome to Dokto, please verify your email address",
-            template_name="email/provider_verification.html",
-            input_context={"provider_name": user.full_name},
+            template_name="email/patient_verification.html",
+            input_context={"provider_name": user.full_name, "link": link},
         )
 
         return user
@@ -418,6 +429,22 @@ class PatientRegistrationSerializer(ModelSerializer):
         except Exception as e:
             user.delete()
             raise e
+
+        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+            text=user.email
+        )
+
+        link = "/".join(
+            [settings.BACKEND_URL, "activate", confirmation_token.decode("utf-8")]
+        )
+
+
+        send_mail(
+            to_email=user.email,
+            subject=f"Welcome to Dokto, please verify your email address",
+            template_name="email/patient_verification.html",
+            input_context={"name": user.full_name, "link": link},
+        )
 
         return user
 

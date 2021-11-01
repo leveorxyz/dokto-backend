@@ -1,9 +1,8 @@
-from django.core.mail import EmailMultiAlternatives, send_mail as snd_ml
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 
 from user.models import UserIp
-from core.classes import ExpiringActivationTokenGenerator
 
 
 def set_user_ip(request):
@@ -21,18 +20,10 @@ def send_mail(subject, to_email, input_context, template_name, cc_list=[], bcc_l
     """
     Send Activation Email To User
     """
-    confirmation_token = ExpiringActivationTokenGenerator().generate_token(
-        text=to_email
-    )
-
-    link = "/".join(
-        [settings.BACKEND_URL, "activate", confirmation_token.decode("utf-8")]
-    )
 
     context = {
         "site": "dokto",
-        "link": link,
-        "MEDIA_URL": settings.MEDIA_URL,
+        "MEDIA_URL": settings.BACKEND_URL + settings.MEDIA_URL,
         **input_context,
     }
 
