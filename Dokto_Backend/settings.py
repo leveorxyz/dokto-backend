@@ -209,6 +209,8 @@ USER_AUTH_TOKEN_EXPIRATION_SECONDS = 3600 * 24 * 30
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+BACKEND_URL = config("BACKEND_URL", "http://127.0.0.1:8000")
+FERNET_KEY = config("FERNET_KEY", "MnMxhswjMy2vpJOt9B1qSS8ZZNZ8WTr5Pet3UePaLQU=")
 
 # Stripe Credenentials
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_4eC39HqLyjWDarjtT1zdp7dc")

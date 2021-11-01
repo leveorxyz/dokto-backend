@@ -258,7 +258,12 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        send_mail()
+        send_mail(
+            to_email=user.email,
+            subject=f"Welcome to Dokto, please verify your email address",
+            template_name="email/provider_verification.html",
+            input_context={"provider_name": user.full_name},
+        )
 
         return user
 

@@ -3,6 +3,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 from user.models import UserIp
+from core.classes import ExpiringActivationTokenGenerator
 
 
 def set_user_ip(request):
@@ -16,27 +17,33 @@ def set_user_ip(request):
         UserIp.objects.update_or_create(user=user, ip_address=ip)
 
 
-def send_mail(subject=None, message=None, from_email=None, to_email=None, cc_list=[], bcc_list=[]):
+def send_mail(subject, to_email, input_context, template_name, cc_list=[], bcc_list=[]):
     """
     Send Activation Email To User
     """
-    # activate_link_url = settings.EMAIL_ACTIVATION_LINK
-    # confirmation_token = default_token_generator.make_token(self)
+    confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+        text=to_email
+    )
+
+    link = "/".join(
+        [settings.BACKEND_URL, "activate", confirmation_token.decode("utf-8")]
+    )
 
     context = {
         "site": "dokto",
-        "link": "https://example.com",
-        "provider_name": "test",
-        "signature": "dummy",
+        "link": link,
+        "MEDIA_URL": settings.MEDIA_URL,
+        **input_context,
     }
+
     # render email text
-    email_html_message = render_to_string("email/provider_verification.html", context)
+    email_html_message = render_to_string(template_name, context)
 
     msg = EmailMultiAlternatives(
-        subject=f"Welcome to {context['site']}, please verify your email address",
+        subject=subject,
         body=email_html_message,
         from_email=settings.EMAIL_HOST_USER,
-        to=["sihantawsik@gmail.com"],
+        to=[to_email],
     )
     msg.attach_alternative(email_html_message, "text/html")
     msg.send()
