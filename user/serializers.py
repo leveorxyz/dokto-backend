@@ -7,7 +7,9 @@ from rest_framework.serializers import (
 )
 from rest_framework.authtoken.models import Token
 from rest_framework.serializers import ListField, URLField, IntegerField
+from rest_framework.exceptions import ValidationError
 from django.conf import settings
+from cryptography.fernet import InvalidToken
 
 from core.serializers import ReadWriteSerializerMethodField
 from core.classes import ExpiringActivationTokenGenerator
@@ -265,9 +267,13 @@ class DoctorRegistrationSerializer(ModelSerializer):
         )
 
         link = "/".join(
-            [settings.BACKEND_URL, "activate", confirmation_token.decode("utf-8")]
+            [
+                settings.BACKEND_URL,
+                "user",
+                "activate",
+                confirmation_token.decode("utf-8"),
+            ]
         )
-
 
         send_mail(
             to_email=user.email,
@@ -435,9 +441,13 @@ class PatientRegistrationSerializer(ModelSerializer):
         )
 
         link = "/".join(
-            [settings.BACKEND_URL, "activate", confirmation_token.decode("utf-8")]
+            [
+                settings.BACKEND_URL,
+                "user",
+                "activate",
+                confirmation_token.decode("utf-8"),
+            ]
         )
-
 
         send_mail(
             to_email=user.email,
@@ -475,3 +485,26 @@ class PatientRegistrationSerializer(ModelSerializer):
             "referring_doctor_phone_number",
             "referring_doctor_address",
         ]
+
+
+class VerifyEmailSerializer(Serializer):
+    token = CharField(required=True, write_only=True)
+
+    def validate(self, data):
+        try:
+            email = ExpiringActivationTokenGenerator().get_token_value(data["token"])
+        except InvalidToken:
+            raise ValidationError("Invalid token")
+
+        try:
+            user = User.objects.get(email=email)
+            data["user"] = user
+        except User.DoesNotExist:
+            raise ValidationError("User does not exist")
+
+        if not user.is_active:
+            user.is_active = True
+            user.is_verified = True
+            user.save()
+
+        return data

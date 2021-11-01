@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
 
 class OverwriteFileSystemStorage(FileSystemStorage):
@@ -84,18 +84,15 @@ class ExpiringActivationTokenGenerator:
         Returns None if the token is invalid or has expired.
         """
         try:
-            value = self.fernet.decrypt(bytes(token))
+            value = self.fernet.decrypt(bytes(token, encoding="utf-8")).decode("utf-8")
             separator_pos = value.rfind("|")
 
             text = value[:separator_pos]
             token_time = self._parse_time(value[separator_pos + 1 :])
 
             if token_time + timedelta(self.EXPIRATION_DAYS) < datetime.utcnow():
-                return None
+                raise InvalidToken("Token expired.")
         except InvalidToken:
-            return None
+            raise ValidationError("Invalid token.")
 
         return text
-
-    def is_valid_token(self, token):
-        return self.get_token_value(token) is not None
