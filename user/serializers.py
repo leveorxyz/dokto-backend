@@ -278,7 +278,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         send_mail(
             to_email=user.email,
             subject=f"Welcome to Dokto, please verify your email address",
-            template_name="email/patient_verification.html",
+            template_name="email/doctor_verification.html",
             input_context={"provider_name": user.full_name, "link": link},
         )
 
