@@ -214,16 +214,6 @@ class PatientInfo(CoreModel):
         SELF_PAID = "SELF PAID", _("self paid")
         INSURANCE_VERIFIED = "INSURANCE VERIFIED", _("insurance verified")
 
-    username = models.CharField(
-        _("username"),
-        max_length=150,
-        unique=True,
-        help_text=_("Required. 150 characters or fewer. Letters and digits only."),
-        validators=[username_validator],
-        error_messages={
-            "unique": _("A user with that username already exists."),
-        },
-    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     gender = models.CharField(max_length=7, choices=Gender.choices)
     date_of_birth = models.DateField()
