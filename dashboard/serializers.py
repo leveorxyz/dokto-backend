@@ -9,6 +9,7 @@ from rest_framework.serializers import (
 
 from core.serializers import ReadWriteSerializerMethodField
 from user.models import (
+    DoctorAvailableHours,
     User,
     DoctorInfo,
     DoctorSpecialty,
@@ -198,7 +199,7 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
     `dashboard > profile settings > experience and education`.
     """
 
-    operation = CharField(required=False, allow_null=True, write_only=True)
+    operation = CharField(required=True, allow_null=False, write_only=True)
     certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
     def get_certificate(self, doctor_education: DoctorEducation):
@@ -251,7 +252,7 @@ class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
     `dashboard > profile settings > experience and education`.
     """
 
-    operation = CharField(required=False, allow_null=True, write_only=True)
+    operation = CharField(required=True, allow_null=False, write_only=True)
 
     class Meta:
         model = DoctorExperience
@@ -409,6 +410,52 @@ class DoctorExperienceEducationUpdateSerializer(ModelSerializer):
     class Meta:
         model = DoctorInfo
         fields = ("experience", "education")
+
+
+class DoctorAvailableHoursSerializerWithID(DoctorAvailableHoursSerializer):
+    class Meta(DoctorAvailableHoursSerializer.Meta):
+        fields = [
+            "id",
+            "doctor_info",
+            "day_of_week",
+            "start_time",
+            "end_time",
+        ]
+
+
+class DoctorAvailableHoursUpdateSerializerWithID(ModelSerializer):
+    operation = CharField(required=True, allow_null=False, write_only=True)
+
+    def update(self, instance: DoctorAvailableHours, validated_data):
+        operation = validated_data.pop("operation", None)
+        if operation == "add":
+            instance = DoctorAvailableHours.objects.create(**validated_data)
+        elif operation == "update":
+            for key, value in validated_data.items():
+                setattr(instance, key, value)
+            instance.save()
+        elif operation == "delete":
+            if instance:
+                instance.delete()
+        return instance
+
+    class Meta:
+        model = DoctorAvailableHours
+        fields = [
+            "id",
+            "doctor_info",
+            "day_of_week",
+            "start_time",
+            "end_time",
+            "operation",
+        ]
+        extra_kwargs = {
+            "id": {"read_only": False, "required": False},
+            "doctor_info": {"required": False},
+            "day_of_week": {"required": False},
+            "start_time": {"required": False},
+            "end_time": {"required": False},
+        }
 
 
 class DoctorSpecialtySettingsSerializer(ModelSerializer):
