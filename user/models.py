@@ -9,9 +9,10 @@ from django.utils.translation import gettext_lazy as _
 from core.models import CoreModel
 from core.literals import (
     PROFILE_PHOTO_DIRECTORY,
-    IDENTIFICATION_PHOTO_DIRECTORY,
+    DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY,
     DOCTOR_EDUCATION_PHOTO_DIRECTORY,
     DOCTOR_LICENSE_FILE_DIRECTORY,
+    PATIENT_IDENTIFICATION_PHOTO_DIRECTORY,
 )
 
 # Create your models here.
@@ -95,7 +96,7 @@ class DoctorInfo(CoreModel):
     )
     identification_number = models.CharField(max_length=50, blank=True, null=True)
     identification_photo = models.ImageField(
-        upload_to=IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
+        upload_to=DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
     professional_bio = models.TextField(max_length=512, blank=True, null=True)
     linkedin_url = models.URLField(blank=True, null=True)
@@ -230,6 +231,9 @@ class PatientInfo(CoreModel):
         max_length=20, choices=IdentificationType.choices
     )
     identification_number = models.CharField(max_length=50)
+    identification_photo = models.ImageField(
+        upload_to=PATIENT_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
+    )
 
     # Insurance Info
     insurance_type = models.CharField(max_length=20, choices=InsuranceType.choices)
