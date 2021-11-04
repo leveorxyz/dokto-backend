@@ -151,6 +151,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     identification_number = CharField(write_only=True)
     identification_photo = CharField(write_only=True)
     date_of_birth = DateField(write_only=True)
+    awards = CharField(write_only=True, required=False)
 
     def get_username(self, user: User) -> str:
         return DoctorInfo.objects.get(user=user).username
@@ -314,6 +315,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "identification_number",
             "identification_photo",
             "date_of_birth",
+            "awards",
         ]
 
 

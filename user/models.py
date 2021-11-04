@@ -11,6 +11,7 @@ from core.literals import (
     PROFILE_PHOTO_DIRECTORY,
     IDENTIFICATION_PHOTO_DIRECTORY,
     DOCTOR_EDUCATION_PHOTO_DIRECTORY,
+    DOCTOR_LICENSE_FILE_DIRECTORY,
 )
 
 # Create your models here.
@@ -100,6 +101,7 @@ class DoctorInfo(CoreModel):
     linkedin_url = models.URLField(blank=True, null=True)
     facebook_url = models.URLField(blank=True, null=True)
     twitter_url = models.URLField(blank=True, null=True)
+    awards = models.TextField(max_length=512, blank=True, null=True)
 
 
 class DoctorLanguage(CoreModel):
