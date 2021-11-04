@@ -273,7 +273,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 "activate",
                 confirmation_token.decode("utf-8"),
             ]
-        )
+        ) + "/"
 
         send_mail(
             to_email=user.email,
@@ -447,7 +447,7 @@ class PatientRegistrationSerializer(ModelSerializer):
                 "activate",
                 confirmation_token.decode("utf-8"),
             ]
-        )
+        ) + "/"
 
         send_mail(
             to_email=user.email,
