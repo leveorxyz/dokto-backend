@@ -108,3 +108,4 @@ venv.bak/
 .vscode
 
 media/*_photo
+media/*_file

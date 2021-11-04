@@ -102,6 +102,9 @@ class DoctorInfo(CoreModel):
     facebook_url = models.URLField(blank=True, null=True)
     twitter_url = models.URLField(blank=True, null=True)
     awards = models.TextField(max_length=512, blank=True, null=True)
+    license_file = models.FileField(
+        upload_to=DOCTOR_LICENSE_FILE_DIRECTORY, blank=True, null=True
+    )
 
 
 class DoctorLanguage(CoreModel):

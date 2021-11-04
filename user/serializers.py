@@ -152,6 +152,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     identification_photo = CharField(write_only=True)
     date_of_birth = DateField(write_only=True)
     awards = CharField(write_only=True, required=False)
+    license_file = CharField(write_only=True)
 
     def get_username(self, user: User) -> str:
         return DoctorInfo.objects.get(user=user).username
@@ -183,6 +184,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
         # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
 
+        # Extract license data
+        license_file = validated_data.pop("license_file")
+
         # Creating doctor info
         try:
             doctor_info: DoctorInfo = DoctorInfo.objects.create(
@@ -194,6 +198,12 @@ class DoctorRegistrationSerializer(ModelSerializer):
             ) = generate_image_file_and_name(identification_photo, doctor_info.id)
             doctor_info.identification_photo.save(
                 identification_photo_name, identification_photo, save=True
+            )
+            license_file_name, license_file_object = generate_image_file_and_name(
+                license_file, doctor_info.id
+            )
+            doctor_info.license_file.save(
+                license_file_name, license_file_object, save=True
             )
             doctor_info.save()
         except Exception as e:
@@ -268,14 +278,17 @@ class DoctorRegistrationSerializer(ModelSerializer):
             text=user.email
         )
 
-        link = "/".join(
-            [
-                settings.BACKEND_URL,
-                "user",
-                "activate",
-                confirmation_token.decode("utf-8"),
-            ]
-        ) + "/"
+        link = (
+            "/".join(
+                [
+                    settings.BACKEND_URL,
+                    "user",
+                    "activate",
+                    confirmation_token.decode("utf-8"),
+                ]
+            )
+            + "/"
+        )
 
         send_mail(
             to_email=user.email,
@@ -316,6 +329,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "identification_photo",
             "date_of_birth",
             "awards",
+            "license_file",
         ]
 
 
@@ -444,14 +458,17 @@ class PatientRegistrationSerializer(ModelSerializer):
             text=user.email
         )
 
-        link = "/".join(
-            [
-                settings.BACKEND_URL,
-                "user",
-                "activate",
-                confirmation_token.decode("utf-8"),
-            ]
-        ) + "/"
+        link = (
+            "/".join(
+                [
+                    settings.BACKEND_URL,
+                    "user",
+                    "activate",
+                    confirmation_token.decode("utf-8"),
+                ]
+            )
+            + "/"
+        )
 
         send_mail(
             to_email=user.email,
