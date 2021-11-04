@@ -66,6 +66,7 @@ class DoctorInfo(CoreModel):
         MALE = "MALE", _("male")
         FEMALE = "FEMALE", _("female")
         OTHER = "OTHER", _("other")
+        PREFER_NOT_TO_SAY = "PREFER NOT TO SAY", _("preder not to say")
 
     class IdentificationType(models.TextChoices):
         PASSPORT = "PASSPORT", _("passport")
@@ -86,7 +87,7 @@ class DoctorInfo(CoreModel):
     date_of_birth = models.DateField(blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(
-        max_length=7, choices=Gender.choices, blank=True, null=True
+        max_length=30, choices=Gender.choices, blank=True, null=True
     )
     identification_type = models.CharField(
         max_length=20, choices=IdentificationType.choices, null=True, blank=True
