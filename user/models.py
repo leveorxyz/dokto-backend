@@ -92,6 +92,7 @@ class DoctorInfo(CoreModel):
     identification_type = models.CharField(
         max_length=20, choices=IdentificationType.choices, null=True, blank=True
     )
+    identification_number = models.CharField(max_length=50, blank=True, null=True)
     identification_photo = models.ImageField(
         upload_to=IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
