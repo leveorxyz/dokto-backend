@@ -205,6 +205,7 @@ class PatientInfo(CoreModel):
         MALE = "MALE", _("male")
         FEMALE = "FEMALE", _("female")
         OTHER = "OTHER", _("other")
+        PREFER_NOT_TO_SAY = "PREFER NOT TO SAY", _("preder not to say")
 
     class IdentificationType(models.TextChoices):
         PASSPORT = "PASSPORT", _("passport")
@@ -217,7 +218,7 @@ class PatientInfo(CoreModel):
         INSURANCE_VERIFIED = "INSURANCE VERIFIED", _("insurance verified")
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    gender = models.CharField(max_length=7, choices=Gender.choices)
+    gender = models.CharField(max_length=20, choices=Gender.choices)
     date_of_birth = models.DateField()
     social_security_number = models.CharField(max_length=12, null=True, blank=True)
     identification_type = models.CharField(
