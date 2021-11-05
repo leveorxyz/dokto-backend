@@ -10,7 +10,9 @@ from .views import (
 
 urlpatterns = [
     path(
-        "doctor/<str:username>/", DoctorProfileAPIView.as_view(), name="doctor-profile"
+        "doctor/profile/<str:username>/",
+        DoctorProfileAPIView.as_view(),
+        name="doctor-profile",
     ),
     path(
         "doctor/profile-settings/profile-detail/<str:username>/",
