@@ -9,7 +9,7 @@ from core.views import (
     CustomRetrieveUpdateAPIView,
     CustomListUpdateAPIView,
 )
-from core.permissions import OwnProfilePermission
+from core.permissions import OwnProfilePermission, DoctorPermission
 from user.models import DoctorInfo, User
 from .serializers import (
     DoctorProfileDetailsSerializer,
@@ -38,7 +38,7 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
 
 
 class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorProfileDetailsSerializer
 
     def get_queryset(self, *args, **kwargs):
@@ -53,7 +53,7 @@ class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorExperienceEducationSerializer
 
     def get_serializer_class(self):
@@ -74,7 +74,7 @@ class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
-    permission_classes = [IsAuthenticated, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -97,7 +97,7 @@ class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
 
 
 class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorSpecialtySettingsSerializer
 
     def get_queryset(self, *args, **kwargs):
@@ -113,7 +113,7 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
 
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
     # TODO: create new fields in DoctorInfo: `notification_email`, `deletion_reason`, `temporary_disable`
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny, DoctorPermission]
     serializer_class = DoctorAccountSettingsSerializer
 
     def retrieve(self, request, *args, **kwargs):
