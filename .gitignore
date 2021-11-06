@@ -107,4 +107,5 @@ venv.bak/
 #vscode local files
 .vscode
 
-media/
+media/*_photo
+media/*_file

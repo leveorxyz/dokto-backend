@@ -12,6 +12,7 @@ from .models import User, DoctorInfo, PharmacyInfo, ClinicInfo
 from .serializers import (
     UserSerializer,
     UserLoginSerializer,
+    VerifyEmailSerializer,
     DoctorRegistrationSerializer,
     ClinicRegistrationSerializer,
     PharmacyRegistrationSerializer,
@@ -65,6 +66,7 @@ class LoginView(APIView):
                     "result": {
                         "id": request.user.id,
                         "email": request.user.email,
+                        "profile_photo": request.user.profile_photo.url,
                         "token": request.auth.key,
                     },
                 }
@@ -91,6 +93,7 @@ class LoginView(APIView):
                     "result": {
                         "id": user.id,
                         "email": user.email,
+                        "profile_photo": user.profile_photo.url,
                         "token": token.key,
                     },
                 }
@@ -276,3 +279,32 @@ class PharmacySignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
     queryset = User.objects.filter(user_type=User.UserType.PHARMACY)
     serializer_class = PharmacyRegistrationSerializer
+
+
+class VerifyEmailView(APIView):
+    """
+    Verify email endpoint
+
+    Request method: POST
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        serializer = VerifyEmailSerializer(data={"token": kwargs["token"]})
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        user = validated_data["user"]
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response(
+            {
+                "status_code": 200,
+                "message": "Email verified successfully.",
+                "result": {
+                    "id": user.id,
+                    "email": user.email,
+                    "profile_photo": user.profile_photo.url,
+                    "token": token.key,
+                },
+            }
+        )
