@@ -106,6 +106,12 @@ class DoctorInfo(CoreModel):
     license_file = models.FileField(
         upload_to=DOCTOR_LICENSE_FILE_DIRECTORY, blank=True, null=True
     )
+    notification_email = models.EmailField(blank=True, null=True)
+    reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
+    temporary_disable = models.BooleanField(blank=True, default=False)
+
+    def __str__(self):
+        return f"{self.user.id}-{self.username}"
 
 
 class DoctorLanguage(CoreModel):
