@@ -1,7 +1,7 @@
-from django.core.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.hashers import make_password
 
 from core.views import (
@@ -112,7 +112,6 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
-    # TODO: create new fields in DoctorInfo: `notification_email`, `deletion_reason`, `temporary_disable`
     permission_classes = [AllowAny, DoctorPermission]
     serializer_class = DoctorAccountSettingsSerializer
 
@@ -123,7 +122,7 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
         notification_email = doctor_info.notification_email
         data = {
             "notification_email": notification_email,
-            "temporarily_disable": temporary_disable,
+            "temporary_disable": temporary_disable,
         }
         serializer = self.serializer_class(data=data)
         serializer.is_valid(raise_exception=True)
@@ -142,23 +141,23 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
             old_password = validated_data.pop("reset_old_password")
             new_password = validated_data.pop("reset_new_password")
             if not user.check_password(old_password):
-                raise ValidationError("Incorrect password")
+                raise AuthenticationFailed("Incorrect password")
             else:
                 password = make_password(new_password)
                 user.password = password
         if validated_data.get("delete_old_password"):
             if not user.check_password(validated_data.pop("delete_old_password")):
-                raise ValidationError("Incorrect password")
+                raise AuthenticationFailed("Incorrect password")
             else:
                 user.is_active = False
-                if validated_data.get("delete_reason"):
-                    doctor_info.deletion_reason = validated_data.pop("delete_reason")
+                if validated_data.get("reason_to_delete"):
+                    doctor_info.reason_to_delete = validated_data.pop(
+                        "reason_to_delete"
+                    )
         if validated_data.get("notification_email"):
             doctor_info.notification_email = validated_data.pop("notification_email")
-        if validated_data.get("temporarily_disable"):
-            doctor_info.temporary_disable = not validated_data.pop(
-                "temporarily_disable"
-            )
+        if validated_data.get("temporary_disable"):
+            doctor_info.temporary_disable = validated_data.pop("temporary_disable")
         user.save()
         doctor_info.save()
         return Response({"message": "Updated successfully!"}, status=200)

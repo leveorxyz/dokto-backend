@@ -6,6 +6,7 @@ from .views import (
     DoctorSpecialtySettingsAPIView,
     DoctorEducationExperienceSettingsAPIView,
     DoctorAvailableHoursSettingsAPIView,
+    DoctorAccountSettingsAPIView,
 )
 
 urlpatterns = [
@@ -33,5 +34,10 @@ urlpatterns = [
         "doctor/specialty-settings/<str:username>/",
         DoctorSpecialtySettingsAPIView.as_view(),
         name="doctor-specialty-settings",
+    ),
+    path(
+        "doctor/account-settings/",
+        DoctorAccountSettingsAPIView.as_view(),
+        name="doctor-account-settings",
     ),
 ]
