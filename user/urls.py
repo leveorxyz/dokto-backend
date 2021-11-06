@@ -9,10 +9,11 @@ from .views import (
     ClinicSignupView,
     PharmacySignupView,
     PatientSignupView,
+    VerifyEmailView,
 )
 
 urlpatterns = [
-    path("<uuid:pk>", UserRetrieveAPIView.as_view(), name="user-retrieve"),
+    path("<uuid:pk>/", UserRetrieveAPIView.as_view(), name="user-retrieve"),
     path("login/", LoginView.as_view(), name="login"),
     path("doctor-signup/", DoctorSignupView.as_view(), name="doctor-signup"),
     path("clinic-signup/", ClinicSignupView.as_view(), name="clinic-signup"),
@@ -20,8 +21,9 @@ urlpatterns = [
     path("patient-signup/", PatientSignupView.as_view(), name="patient-signup"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path(
-        "exists/<str:user_type>/<str:username>",
+        "exists/<str:user_type>/<str:username>/",
         UsernameExists.as_view(),
         name="username-exists",
     ),
+    path("activate/<str:token>/", VerifyEmailView.as_view(), name="verify-email"),
 ]

@@ -9,8 +9,10 @@ from django.utils.translation import gettext_lazy as _
 from core.models import CoreModel
 from core.literals import (
     PROFILE_PHOTO_DIRECTORY,
-    IDENTIFICATION_PHOTO_DIRECTORY,
+    DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY,
     DOCTOR_EDUCATION_PHOTO_DIRECTORY,
+    DOCTOR_LICENSE_FILE_DIRECTORY,
+    PATIENT_IDENTIFICATION_PHOTO_DIRECTORY,
 )
 
 # Create your models here.
@@ -58,7 +60,7 @@ class UserIp(CoreModel):
     ip_address = models.GenericIPAddressField()
 
     def __str__(self):
-        return f"{self.user.username}-{self.ip_address}"
+        return f"{self.user.id}-{self.ip_address}"
 
 
 class DoctorInfo(CoreModel):
@@ -66,6 +68,7 @@ class DoctorInfo(CoreModel):
         MALE = "MALE", _("male")
         FEMALE = "FEMALE", _("female")
         OTHER = "OTHER", _("other")
+        PREFER_NOT_TO_SAY = "PREFER NOT TO SAY", _("preder not to say")
 
     class IdentificationType(models.TextChoices):
         PASSPORT = "PASSPORT", _("passport")
@@ -86,18 +89,23 @@ class DoctorInfo(CoreModel):
     date_of_birth = models.DateField(blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(
-        max_length=7, choices=Gender.choices, blank=True, null=True
+        max_length=30, choices=Gender.choices, blank=True, null=True
     )
     identification_type = models.CharField(
         max_length=20, choices=IdentificationType.choices, null=True, blank=True
     )
+    identification_number = models.CharField(max_length=50, blank=True, null=True)
     identification_photo = models.ImageField(
-        upload_to=IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
+        upload_to=DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
     professional_bio = models.TextField(max_length=512, blank=True, null=True)
     linkedin_url = models.URLField(blank=True, null=True)
     facebook_url = models.URLField(blank=True, null=True)
     twitter_url = models.URLField(blank=True, null=True)
+    awards = models.TextField(max_length=512, blank=True, null=True)
+    license_file = models.FileField(
+        upload_to=DOCTOR_LICENSE_FILE_DIRECTORY, blank=True, null=True
+    )
 
 
 class DoctorLanguage(CoreModel):
@@ -105,7 +113,7 @@ class DoctorLanguage(CoreModel):
     language = models.CharField(max_length=20)
 
     def __str__(self):
-        return f"{self.doctor_info.user.username}-{self.language}"
+        return f"{self.doctor_info.username}-{self.language}"
 
 
 class DoctorEducation(CoreModel):
@@ -203,6 +211,7 @@ class PatientInfo(CoreModel):
         MALE = "MALE", _("male")
         FEMALE = "FEMALE", _("female")
         OTHER = "OTHER", _("other")
+        PREFER_NOT_TO_SAY = "PREFER NOT TO SAY", _("preder not to say")
 
     class IdentificationType(models.TextChoices):
         PASSPORT = "PASSPORT", _("passport")
@@ -214,24 +223,17 @@ class PatientInfo(CoreModel):
         SELF_PAID = "SELF PAID", _("self paid")
         INSURANCE_VERIFIED = "INSURANCE VERIFIED", _("insurance verified")
 
-    username = models.CharField(
-        _("username"),
-        max_length=150,
-        unique=True,
-        help_text=_("Required. 150 characters or fewer. Letters and digits only."),
-        validators=[username_validator],
-        error_messages={
-            "unique": _("A user with that username already exists."),
-        },
-    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    gender = models.CharField(max_length=7, choices=Gender.choices)
+    gender = models.CharField(max_length=20, choices=Gender.choices)
     date_of_birth = models.DateField()
     social_security_number = models.CharField(max_length=12, null=True, blank=True)
     identification_type = models.CharField(
         max_length=20, choices=IdentificationType.choices
     )
     identification_number = models.CharField(max_length=50)
+    identification_photo = models.ImageField(
+        upload_to=PATIENT_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
+    )
 
     # Insurance Info
     insurance_type = models.CharField(max_length=20, choices=InsuranceType.choices)

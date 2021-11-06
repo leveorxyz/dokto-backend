@@ -7,8 +7,13 @@ from rest_framework.serializers import (
 )
 from rest_framework.authtoken.models import Token
 from rest_framework.serializers import ListField, URLField, IntegerField
+from rest_framework.exceptions import ValidationError
+from django.conf import settings
+from cryptography.fernet import InvalidToken
 
 from core.serializers import ReadWriteSerializerMethodField
+from core.classes import ExpiringActivationTokenGenerator
+from core.utils import send_mail
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
@@ -125,8 +130,8 @@ class DoctorRegistrationSerializer(ModelSerializer):
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
-    state = CharField(write_only=True)
-    city = CharField(write_only=True)
+    state = CharField(write_only=True, required=False)
+    city = CharField(write_only=True, required=False)
     zip_code = CharField(write_only=True)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
@@ -143,8 +148,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
     )
     specialty = ListField(child=CharField(), write_only=True)
     identification_type = CharField(write_only=True)
+    identification_number = CharField(write_only=True)
     identification_photo = CharField(write_only=True)
     date_of_birth = DateField(write_only=True)
+    awards = CharField(write_only=True, required=False)
+    license_file = CharField(write_only=True)
 
     def get_username(self, user: User) -> str:
         return DoctorInfo.objects.get(user=user).username
@@ -176,6 +184,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
         # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
 
+        # Extract license data
+        license_file = validated_data.pop("license_file")
+
         # Creating doctor info
         try:
             doctor_info: DoctorInfo = DoctorInfo.objects.create(
@@ -187,6 +198,12 @@ class DoctorRegistrationSerializer(ModelSerializer):
             ) = generate_image_file_and_name(identification_photo, doctor_info.id)
             doctor_info.identification_photo.save(
                 identification_photo_name, identification_photo, save=True
+            )
+            license_file_name, license_file_object = generate_image_file_and_name(
+                license_file, doctor_info.id
+            )
+            doctor_info.license_file.save(
+                license_file_name, license_file_object, save=True
             )
             doctor_info.save()
         except Exception as e:
@@ -257,6 +274,29 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
+        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+            text=user.email
+        )
+
+        link = (
+            "/".join(
+                [
+                    settings.BACKEND_URL,
+                    "user",
+                    "activate",
+                    confirmation_token.decode("utf-8"),
+                ]
+            )
+            + "/"
+        )
+
+        send_mail(
+            to_email=user.email,
+            subject=f"Welcome to Dokto, please verify your email address",
+            template_name="email/provider_verification.html",
+            input_context={"provider_name": user.full_name, "link": link},
+        )
+
         return user
 
     class Meta:
@@ -285,8 +325,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "experience",
             "specialty",
             "identification_type",
+            "identification_number",
             "identification_photo",
             "date_of_birth",
+            "awards",
+            "license_file",
         ]
 
 
@@ -296,8 +339,8 @@ class PharmacyRegistrationSerializer(ModelSerializer):
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
-    state = CharField(write_only=True)
-    city = CharField(write_only=True)
+    state = CharField(write_only=True, required=False)
+    city = CharField(write_only=True, required=False)
     zip_code = CharField(write_only=True)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
@@ -372,8 +415,8 @@ class PatientRegistrationSerializer(ModelSerializer):
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
-    state = CharField(write_only=True)
-    city = CharField(write_only=True)
+    state = CharField(write_only=True, required=False)
+    city = CharField(write_only=True, required=False)
     zip_code = CharField(write_only=True)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
@@ -411,6 +454,29 @@ class PatientRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
+        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+            text=user.email
+        )
+
+        link = (
+            "/".join(
+                [
+                    settings.BACKEND_URL,
+                    "user",
+                    "activate",
+                    confirmation_token.decode("utf-8"),
+                ]
+            )
+            + "/"
+        )
+
+        send_mail(
+            to_email=user.email,
+            subject=f"Welcome to Dokto, please verify your email address",
+            template_name="email/patient_verification.html",
+            input_context={"name": user.full_name, "link": link},
+        )
+
         return user
 
     class Meta:
@@ -440,3 +506,26 @@ class PatientRegistrationSerializer(ModelSerializer):
             "referring_doctor_phone_number",
             "referring_doctor_address",
         ]
+
+
+class VerifyEmailSerializer(Serializer):
+    token = CharField(required=True, write_only=True)
+
+    def validate(self, data):
+        try:
+            email = ExpiringActivationTokenGenerator().get_token_value(data["token"])
+        except InvalidToken:
+            raise ValidationError("Invalid token")
+
+        try:
+            user = User.objects.get(email=email)
+            data["user"] = user
+        except User.DoesNotExist:
+            raise ValidationError("User does not exist")
+
+        if not user.is_active:
+            user.is_active = True
+            user.is_verified = True
+            user.save()
+
+        return data
