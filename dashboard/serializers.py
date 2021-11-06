@@ -502,18 +502,18 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
 
 class DoctorAccountSettingsSerializer(Serializer):
-    reset_old_password = CharField(required=False, allow_null=True, write_only=True)
-    reset_new_password = CharField(required=False, allow_null=True, write_only=True)
+    old_password = CharField(required=False, allow_null=True, write_only=True)
+    new_password = CharField(required=False, allow_null=True, write_only=True)
     notification_email = EmailField(required=False, allow_null=True)
     temporary_disable = BooleanField(required=False, allow_null=True)
-    delete_old_password = CharField(required=False, allow_null=True, write_only=True)
+    account_delete_password = CharField(required=False, allow_null=True, write_only=True)
     reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
 
     def validate(self, data):
-        if data.get("reset_old_password") and not data.get("reset_new_password"):
+        if data.get("old_password") and not data.get("new_password"):
             raise ValidationError("you need to provide new password!")
-        if data.get("reset_new_password") and not data.get("reset_old_password"):
+        if data.get("new_password") and not data.get("old_password"):
             raise ValidationError("you need to provide old password!")
-        if data.get("delete_old_password") and not data.get("reason_to_delete"):
+        if data.get("account_delete_password") and not data.get("reason_to_delete"):
             raise ValidationError("you need to provide the reason of account deletion!")
         return data

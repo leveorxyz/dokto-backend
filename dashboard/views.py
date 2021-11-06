@@ -135,18 +135,16 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        if validated_data.get("reset_old_password") and validated_data.get(
-            "reset_new_password"
-        ):
-            old_password = validated_data.pop("reset_old_password")
-            new_password = validated_data.pop("reset_new_password")
+        if validated_data.get("old_password") and validated_data.get("new_password"):
+            old_password = validated_data.pop("old_password")
+            new_password = validated_data.pop("new_password")
             if not user.check_password(old_password):
                 raise AuthenticationFailed("Incorrect password")
             else:
                 password = make_password(new_password)
                 user.password = password
-        if validated_data.get("delete_old_password"):
-            if not user.check_password(validated_data.pop("delete_old_password")):
+        if validated_data.get("account_delete_password"):
+            if not user.check_password(validated_data.pop("account_delete_password")):
                 raise AuthenticationFailed("Incorrect password")
             else:
                 user.is_active = False
@@ -156,7 +154,7 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
                     )
         if validated_data.get("notification_email"):
             doctor_info.notification_email = validated_data.pop("notification_email")
-        if validated_data.get("temporary_disable"):
+        if "temporary_disable" in validated_data:
             doctor_info.temporary_disable = validated_data.pop("temporary_disable")
         user.save()
         doctor_info.save()
