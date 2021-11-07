@@ -153,6 +153,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     date_of_birth = DateField(write_only=True)
     awards = CharField(write_only=True, required=False)
     license_file = CharField(write_only=True)
+    accepted_insurance = CharField(write_only=True, required=False)
 
     def get_username(self, user: User) -> str:
         return DoctorInfo.objects.get(user=user).username
@@ -330,6 +331,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "date_of_birth",
             "awards",
             "license_file",
+            "accepted_insurance",
         ]
 
 

@@ -109,6 +109,7 @@ class DoctorInfo(CoreModel):
     notification_email = models.EmailField(blank=True, null=True)
     reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
     temporary_disable = models.BooleanField(blank=True, default=False)
+    accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.id}-{self.username}"
