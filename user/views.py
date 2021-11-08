@@ -68,6 +68,7 @@ class LoginView(APIView):
                         "email": request.user.email,
                         "profile_photo": request.user.profile_photo.url,
                         "token": request.auth.key,
+                        "user_type": request.user.user_type,
                     },
                 }
             )
@@ -81,23 +82,19 @@ class LoginView(APIView):
             raise AuthenticationFailed()
 
         # Returning token
-        try:
-            token, _ = Token.objects.get_or_create(user=user)
-        except Token.DoesNotExist:
-            raise AuthenticationFailed("Token expired.")
-        else:
-            return Response(
-                {
-                    "status_code": 200,
-                    "message": "Login successful.",
-                    "result": {
-                        "id": user.id,
-                        "email": user.email,
-                        "profile_photo": user.profile_photo.url,
-                        "token": token.key,
-                    },
-                }
-            )
+        return Response(
+            {
+                "status_code": 200,
+                "message": "Login successful.",
+                "result": {
+                    "id": user.id,
+                    "email": user.email,
+                    "profile_photo": user.profile_photo.url,
+                    "token": user.token,
+                    "user_type": user.user_type,
+                },
+            }
+        )
 
 
 class LogoutView(APIView):
