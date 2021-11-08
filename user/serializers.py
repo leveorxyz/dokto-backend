@@ -157,7 +157,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     date_of_birth = DateField(write_only=True)
     awards = CharField(write_only=True, required=False)
     license_file = CharField(write_only=True)
-    accepted_insurance = CharField(write_only=True, required=False)
+    accepted_insurance = ListField(child=CharField(), write_only=True)
 
     def get_username(self, user: User) -> str:
         return DoctorInfo.objects.get(user=user).username
@@ -171,6 +171,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.DOCTOR)
+        
+        if "accepted_insurance" in validated_data:
+            validated_data.pop("accepted_insurance")
 
         # Extract education data
         education_data = validated_data.pop("education")
