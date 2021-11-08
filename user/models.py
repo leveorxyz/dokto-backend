@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
+from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import AuthenticationFailed
 
 from core.models import CoreModel
 from core.literals import (
@@ -53,6 +55,14 @@ class User(AbstractUser, CoreModel):
     )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    @property
+    def token(self):
+        try:
+            token, _ = Token.objects.get_or_create(user=self)
+            return token.key
+        except Token.DoesNotExist:
+            raise AuthenticationFailed("Token expired.")
 
 
 class UserIp(CoreModel):
