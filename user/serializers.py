@@ -36,9 +36,11 @@ class UserSerializer(ModelSerializer):
         fields = ("id", "email")
 
 
-class UserLoginSerializer(Serializer):
-    email = CharField(required=True)
-    password = CharField(required=True)
+class UserLoginSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = [field.name for field in model._meta.fields] + ["token"]
+        extra_kwargs = {"password": {"write_only": True}}
 
 
 class DoctorInfoSerializer(ModelSerializer):

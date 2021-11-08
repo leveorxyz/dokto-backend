@@ -53,46 +53,35 @@ class LoginView(APIView):
         """
 
         # Extracting data from request and validating it
-        serializer = UserLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        user = None
+        try:
+            user = User.objects.get(email=request.data["email"])
+        except User.DoesNotExist:
+            raise ValidationError("Invalid credentials")
+        serializer = UserLoginSerializer(user)
 
         # Checking if user is already logged in
+        result = None
         if request.user.is_authenticated:
             set_user_ip(request)
-            return Response(
-                {
-                    "status_code": 200,
-                    "message": "Login successful.",
-                    "result": {
-                        "id": request.user.id,
-                        "email": request.user.email,
-                        "profile_photo": request.user.profile_photo.url,
-                        "token": request.auth.key,
-                        "user_type": request.user.user_type,
-                    },
-                }
-            )
+            result = UserLoginSerializer(request.user).data
 
         # Authenticating user
-        user = authenticate(
-            email=serializer.validated_data["email"],
-            password=serializer.validated_data["password"],
-        )
-        if not user:
-            raise AuthenticationFailed()
+        else:
+            user = authenticate(
+                email=request.data["email"],
+                password=request.data["password"],
+            )
+            if not user:
+                raise AuthenticationFailed()
+            result = serializer.data
 
         # Returning token
         return Response(
             {
                 "status_code": 200,
                 "message": "Login successful.",
-                "result": {
-                    "id": user.id,
-                    "email": user.email,
-                    "profile_photo": user.profile_photo.url,
-                    "token": user.token,
-                    "user_type": user.user_type,
-                },
+                "result": result,
             }
         )
 
