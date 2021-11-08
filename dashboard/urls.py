@@ -6,11 +6,14 @@ from .views import (
     DoctorSpecialtySettingsAPIView,
     DoctorEducationExperienceSettingsAPIView,
     DoctorAvailableHoursSettingsAPIView,
+    DoctorAccountSettingsAPIView,
 )
 
 urlpatterns = [
     path(
-        "doctor/<str:username>/", DoctorProfileAPIView.as_view(), name="doctor-profile"
+        "doctor/profile/<str:username>/",
+        DoctorProfileAPIView.as_view(),
+        name="doctor-profile",
     ),
     path(
         "doctor/profile-settings/profile-detail/<str:username>/",
@@ -31,5 +34,10 @@ urlpatterns = [
         "doctor/specialty-settings/<str:username>/",
         DoctorSpecialtySettingsAPIView.as_view(),
         name="doctor-specialty-settings",
+    ),
+    path(
+        "doctor/account-settings/",
+        DoctorAccountSettingsAPIView.as_view(),
+        name="doctor-account-settings",
     ),
 ]

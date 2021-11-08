@@ -29,14 +29,16 @@ class VideoChatTokenCreateAPIView(generics.CreateAPIView):
             settings.TWILIO_API_SECRET,
             identity=validated_data.get("id"),
         )
-
-        token.add_grant(VideoGrant(room=validated_data.get("room_name")))
+        room = validated_data.get("room_name")
+        token.add_grant(VideoGrant(room=room))
 
         data = {
             "status_code": 201,
             "message": "Success",
             "result": {
                 "token": token.to_jwt(),
+                "identity": token.identity,
+                "room": room
             },
         }
         return Response(data=data, status=status.HTTP_201_CREATED)

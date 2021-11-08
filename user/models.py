@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
+from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import AuthenticationFailed
 
 from core.models import CoreModel
 from core.literals import (
@@ -29,6 +31,8 @@ class User(AbstractUser, CoreModel):
         CLINIC = "CLINIC", _("clinic")
 
     username = None
+    first_name = None
+    last_name = None
     full_name = models.CharField(_("full name"), max_length=180, blank=True)
     email = models.EmailField(_("email"), unique=True)
     user_type = models.CharField(
@@ -53,6 +57,14 @@ class User(AbstractUser, CoreModel):
     )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    @property
+    def token(self):
+        try:
+            token, _ = Token.objects.get_or_create(user=self)
+            return token.key
+        except Token.DoesNotExist:
+            raise AuthenticationFailed("Token expired.")
 
 
 class UserIp(CoreModel):
@@ -106,6 +118,13 @@ class DoctorInfo(CoreModel):
     license_file = models.FileField(
         upload_to=DOCTOR_LICENSE_FILE_DIRECTORY, blank=True, null=True
     )
+    notification_email = models.EmailField(blank=True, null=True)
+    reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
+    temporary_disable = models.BooleanField(blank=True, default=False)
+    accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.id}-{self.username}"
 
 
 class DoctorLanguage(CoreModel):

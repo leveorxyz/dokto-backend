@@ -36,9 +36,13 @@ class UserSerializer(ModelSerializer):
         fields = ("id", "email")
 
 
-class UserLoginSerializer(Serializer):
-    email = CharField(required=True)
-    password = CharField(required=True)
+class UserLoginSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = [field.name for field in model._meta.fields] + ["token"]
+        extra_kwargs = {field: {"read_only": True} for field in fields}
+        extra_kwargs["password"] = {"write_only": True}
+        del extra_kwargs["email"]
 
 
 class DoctorInfoSerializer(ModelSerializer):
@@ -153,6 +157,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     date_of_birth = DateField(write_only=True)
     awards = CharField(write_only=True, required=False)
     license_file = CharField(write_only=True)
+    accepted_insurance = ListField(child=CharField(), write_only=True)
 
     def get_username(self, user: User) -> str:
         return DoctorInfo.objects.get(user=user).username
@@ -166,6 +171,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.DOCTOR)
+        
+        if "accepted_insurance" in validated_data:
+            validated_data.pop("accepted_insurance")
 
         # Extract education data
         education_data = validated_data.pop("education")
@@ -330,6 +338,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "date_of_birth",
             "awards",
             "license_file",
+            "accepted_insurance",
         ]
 
 
