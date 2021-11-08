@@ -1,3 +1,4 @@
+from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
@@ -25,9 +26,10 @@ class UserRetrieveAPIView(CustomRetrieveAPIView):
     serializer_class = UserSerializer
 
 
-class LoginView(APIView):
+class LoginView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer
+    queryset = User.objects.all()
 
     def post(self, request):
         """

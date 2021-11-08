@@ -40,7 +40,9 @@ class UserLoginSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = [field.name for field in model._meta.fields] + ["token"]
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {field: {"read_only": True} for field in fields}
+        extra_kwargs["password"] = {"write_only": True}
+        del extra_kwargs["email"]
 
 
 class DoctorInfoSerializer(ModelSerializer):
