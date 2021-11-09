@@ -289,13 +289,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
         link = (
             "/".join(
                 [
-                    settings.BACKEND_URL,
-                    "user",
-                    "activate",
-                    confirmation_token.decode("utf-8"),
+                    settings.FRONTEND_URL,
+                    "email-verification",
                 ]
             )
-            + "/"
+            + f"?token={confirmation_token.decode('utf-8')}"
         )
 
         send_mail(
@@ -470,13 +468,11 @@ class PatientRegistrationSerializer(ModelSerializer):
         link = (
             "/".join(
                 [
-                    settings.BACKEND_URL,
-                    "user",
-                    "activate",
-                    confirmation_token.decode("utf-8"),
+                    settings.FRONTEND_URL,
+                    "email-verification",
                 ]
             )
-            + "/"
+            + f"?token={confirmation_token.decode('utf-8')}"
         )
 
         send_mail(
