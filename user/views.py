@@ -56,6 +56,10 @@ class LoginView(GenericAPIView):
 
         # Extracting data from request and validating it
         user = None
+        fields = ["email", "password"]
+        for field in fields:
+            if field not in request.data:
+                raise ValidationError(f"{field} is required")
         try:
             user = User.objects.get(email=request.data["email"])
         except User.DoesNotExist:
