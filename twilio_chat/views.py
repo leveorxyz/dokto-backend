@@ -73,7 +73,7 @@ class AppointmentVideoChatTokenCreateAPIView(generics.CreateAPIView):
             "result": {
                 "token": token.to_jwt(),
                 "identity": token.identity,
-                "room": rooms,
+                "room_name": rooms,
             },
         }
         return Response(data=data, status=status.HTTP_201_CREATED)
