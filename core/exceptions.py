@@ -4,6 +4,21 @@ from rest_framework.exceptions import ErrorDetail
 
 from .views import set_user_ip
 
+def recursive_error_message_creator(error_dict):
+    """
+    Recursively creates a string from a dictionary of errors.
+    """
+    print(error_dict)
+    if isinstance(error_dict, list):
+        return " ".join(error.__str__() for error in error_dict)
+    message_list = ""
+    for k, v in error_dict.items():
+        if isinstance(v, str):
+            message_list += v
+        else:
+            message_list += f"{k}: {recursive_error_message_creator(v)}"
+    return message_list
+    
 
 def custom_exception_handler(exception, context):
     response = exception_handler(exception, context)
@@ -12,17 +27,13 @@ def custom_exception_handler(exception, context):
         data = response.data
         message_list = []
         if isinstance(data, dict):
-            for k, v in data.items():
-                if isinstance(v, str):
-                    message_list.append(v)
-                else:
-                    message_list.append(" ".join([f"{k}: {str(exc)}" for exc in v]))
+            message_list.append(recursive_error_message_creator(data))
         elif isinstance(data, list):
             for item in data:
                 if isinstance(item, str):
                     message_list.append(item)
                 elif isinstance(item, ErrorDetail):
-                    message_list.append(item.detail)
+                    message_list.append(item.__str__())
         custom_response = {
             "status_code": response.status_code,
             "message": " ".join(message_list),
