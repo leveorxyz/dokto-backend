@@ -1,3 +1,4 @@
+import os
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -20,10 +21,13 @@ def send_mail(subject, to_email, input_context, template_name, cc_list=[], bcc_l
     """
     Send Activation Email To User
     """
+    base_url = input_context.pop("host_url").split("/")
+    base_url = base_url[0] + "//" + base_url[2]
 
+    print(base_url)
     context = {
         "site": "dokto",
-        "MEDIA_URL": settings.BACKEND_URL + settings.MEDIA_URL,
+        "MEDIA_URL": base_url + settings.MEDIA_URL[:-1],
         **input_context,
     }
 

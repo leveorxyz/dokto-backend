@@ -170,6 +170,8 @@ class DoctorRegistrationSerializer(ModelSerializer):
         return user.profile_photo.url
 
     def create(self, validated_data):
+        host_url = self.context["request"].build_absolute_uri()
+
         user: User = create_user(validated_data, User.UserType.DOCTOR)
         
         if "accepted_insurance" in validated_data:
@@ -300,7 +302,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
             to_email=user.email,
             subject=f"Welcome to Dokto, please verify your email address",
             template_name="email/provider_verification.html",
-            input_context={"provider_name": user.full_name, "link": link},
+            input_context={
+                "provider_name": user.full_name,
+                "link": link,
+                "host_url": host_url,
+            },
         )
 
         return user
@@ -452,6 +458,8 @@ class PatientRegistrationSerializer(ModelSerializer):
         return user.profile_photo.url
 
     def create(self, validated_data):
+        host_url = self.context["request"].build_absolute_uri()
+
         user: User = create_user(validated_data, User.UserType.PATIENT)
 
         # Extract patient info
@@ -479,7 +487,7 @@ class PatientRegistrationSerializer(ModelSerializer):
             to_email=user.email,
             subject=f"Welcome to Dokto, please verify your email address",
             template_name="email/patient_verification.html",
-            input_context={"name": user.full_name, "link": link},
+            input_context={"name": user.full_name, "link": link, "host_url": host_url},
         )
 
         return user
