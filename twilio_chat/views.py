@@ -63,9 +63,8 @@ class AppointmentVideoChatTokenCreateAPIView(generics.CreateAPIView):
             settings.TWILIO_API_SECRET,
             identity=validated_data.get("id"),
         )
-        rooms = validated_data.get("room_name")
-        for room in rooms:
-            token.add_grant(VideoGrant(room=room))
+
+        token.add_grant(VideoGrant())
 
         data = {
             "status_code": 201,
@@ -73,7 +72,6 @@ class AppointmentVideoChatTokenCreateAPIView(generics.CreateAPIView):
             "result": {
                 "token": token.to_jwt(),
                 "identity": token.identity,
-                "room_name": rooms,
             },
         }
         return Response(data=data, status=status.HTTP_201_CREATED)
