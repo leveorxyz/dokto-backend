@@ -1,3 +1,4 @@
+from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
@@ -25,9 +26,10 @@ class UserRetrieveAPIView(CustomRetrieveAPIView):
     serializer_class = UserSerializer
 
 
-class LoginView(APIView):
+class LoginView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer
+    queryset = User.objects.all()
 
     def post(self, request):
         """
@@ -53,51 +55,41 @@ class LoginView(APIView):
         """
 
         # Extracting data from request and validating it
-        serializer = UserLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        user = None
+        fields = ["email", "password"]
+        for field in fields:
+            if field not in request.data:
+                raise ValidationError(f"{field} is required")
+        try:
+            user = User.objects.get(email=request.data["email"])
+        except User.DoesNotExist:
+            raise ValidationError("Invalid credentials")
+        serializer = UserLoginSerializer(user)
 
         # Checking if user is already logged in
+        result = None
         if request.user.is_authenticated:
             set_user_ip(request)
-            return Response(
-                {
-                    "status_code": 200,
-                    "message": "Login successful.",
-                    "result": {
-                        "id": request.user.id,
-                        "email": request.user.email,
-                        "profile_photo": request.user.profile_photo.url,
-                        "token": request.auth.key,
-                    },
-                }
-            )
+            result = UserLoginSerializer(request.user).data
 
         # Authenticating user
-        user = authenticate(
-            email=serializer.validated_data["email"],
-            password=serializer.validated_data["password"],
-        )
-        if not user:
-            raise AuthenticationFailed()
+        else:
+            user = authenticate(
+                email=request.data["email"],
+                password=request.data["password"],
+            )
+            if not user:
+                raise AuthenticationFailed()
+            result = serializer.data
 
         # Returning token
-        try:
-            token, _ = Token.objects.get_or_create(user=user)
-        except Token.DoesNotExist:
-            raise AuthenticationFailed("Token expired.")
-        else:
-            return Response(
-                {
-                    "status_code": 200,
-                    "message": "Login successful.",
-                    "result": {
-                        "id": user.id,
-                        "email": user.email,
-                        "profile_photo": user.profile_photo.url,
-                        "token": token.key,
-                    },
-                }
-            )
+        return Response(
+            {
+                "status_code": 200,
+                "message": "Login successful.",
+                "result": result,
+            }
+        )
 
 
 class LogoutView(APIView):
