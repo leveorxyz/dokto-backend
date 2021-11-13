@@ -30,8 +30,7 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
 
     def get_queryset(self):
         username = self.kwargs.get("username")
-        doctor = get_object_or_404(DoctorInfo, username=username)
-        return User.objects.filter(id=doctor.user_id)
+        return DoctorInfo.objects.filter(username=username)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset())
