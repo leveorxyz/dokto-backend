@@ -60,7 +60,7 @@ class State(APIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("country_code", str),
+            OpenApiParameter("country_code", str, required=True),
         ],
         responses={
             200: OpenApiResponse(
@@ -99,8 +99,8 @@ class City(APIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("country_code", str),
-            OpenApiParameter("state_code", str),
+            OpenApiParameter("country_code", str, required=True),
+            OpenApiParameter("state_code", str, required=True),
         ],
         responses={
             200: OpenApiResponse(
