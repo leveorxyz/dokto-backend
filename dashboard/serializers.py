@@ -506,7 +506,9 @@ class DoctorAccountSettingsSerializer(Serializer):
     new_password = CharField(required=False, allow_null=True, write_only=True)
     notification_email = EmailField(required=False, allow_null=True)
     temporary_disable = BooleanField(required=False, allow_null=True)
-    account_delete_password = CharField(required=False, allow_null=True, write_only=True)
+    account_delete_password = CharField(
+        required=False, allow_null=True, write_only=True
+    )
     reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
 
     def validate(self, data):
