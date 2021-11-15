@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "user",
     "dashboard",
     "twilio_chat",
+    "constant",
 ]
 
 MIDDLEWARE = [
