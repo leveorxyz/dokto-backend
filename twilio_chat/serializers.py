@@ -8,4 +8,3 @@ class VideoChatTokenSerializer(serializers.Serializer):
 
 class AppointmentVideoChatTokenSerializer(serializers.Serializer):
     identity = serializers.CharField()
-    room_name = serializers.ListField(child=serializers.CharField())

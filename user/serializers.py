@@ -170,8 +170,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
         return user.profile_photo.url
 
     def create(self, validated_data):
+        host_url = self.context["request"].build_absolute_uri()
+
         user: User = create_user(validated_data, User.UserType.DOCTOR)
-        
+
         if "accepted_insurance" in validated_data:
             validated_data.pop("accepted_insurance")
 
@@ -300,7 +302,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
             to_email=user.email,
             subject=f"Welcome to Dokto, please verify your email address",
             template_name="email/provider_verification.html",
-            input_context={"provider_name": user.full_name, "link": link},
+            input_context={
+                "provider_name": user.full_name,
+                "link": link,
+                "host_url": host_url,
+            },
         )
 
         return user
@@ -432,6 +438,7 @@ class PatientRegistrationSerializer(ModelSerializer):
     social_security_number = CharField(write_only=True, required=False)
     identification_type = CharField(write_only=True)
     identification_number = CharField(write_only=True)
+    identification_photo = CharField(write_only=True)
 
     # Insurance details
     insurance_type = CharField(write_only=True)
@@ -452,11 +459,23 @@ class PatientRegistrationSerializer(ModelSerializer):
         return user.profile_photo.url
 
     def create(self, validated_data):
+        host_url = self.context["request"].build_absolute_uri()
+
         user: User = create_user(validated_data, User.UserType.PATIENT)
+
+        # Extract identification data
+        identification_photo = validated_data.pop("identification_photo")
 
         # Extract patient info
         try:
-            PatientInfo.objects.create(user=user, **validated_data)
+            patient_info = PatientInfo.objects.create(user=user, **validated_data)
+            (
+                identification_photo_name,
+                identification_photo,
+            ) = generate_image_file_and_name(identification_photo, patient_info.id)
+            patient_info.identification_photo.save(
+                identification_photo_name, identification_photo, save=True
+            )
         except Exception as e:
             user.delete()
             raise e
@@ -479,7 +498,7 @@ class PatientRegistrationSerializer(ModelSerializer):
             to_email=user.email,
             subject=f"Welcome to Dokto, please verify your email address",
             template_name="email/patient_verification.html",
-            input_context={"name": user.full_name, "link": link},
+            input_context={"name": user.full_name, "link": link, "host_url": host_url},
         )
 
         return user
@@ -503,6 +522,7 @@ class PatientRegistrationSerializer(ModelSerializer):
             "social_security_number",
             "identification_type",
             "identification_number",
+            "identification_photo",
             "insurance_type",
             "insurance_name",
             "insurance_number",

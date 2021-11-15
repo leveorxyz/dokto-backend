@@ -34,3 +34,12 @@ class OwnProfilePermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user
+
+
+class OwnProfileViewPermission(BasePermission):
+    """
+    Object-level permission to only allow viewing his own profile
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj == request.user

@@ -9,7 +9,11 @@ from core.views import (
     CustomRetrieveUpdateAPIView,
     CustomListUpdateAPIView,
 )
-from core.permissions import OwnProfilePermission, DoctorPermission
+from core.permissions import (
+    OwnProfilePermission,
+    DoctorPermission,
+    OwnProfileViewPermission,
+)
 from user.models import DoctorInfo, User
 from .serializers import (
     DoctorProfileDetailsSerializer,
@@ -23,7 +27,7 @@ from .serializers import (
 )
 
 
-class DoctorProfileAPIView(CustomRetrieveAPIView):
+class DoctorProfilePublicAPIView(CustomRetrieveAPIView):
     permission_classes = [AllowAny]
     serializer_class = DoctorProfileSerializer
     queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
@@ -32,6 +36,17 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
         username = self.kwargs.get("username")
         doctor = get_object_or_404(DoctorInfo, username=username)
         return User.objects.filter(id=doctor.user_id)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset())
+
+
+class DoctorProfileAPIView(CustomRetrieveAPIView):
+    permission_classes = [IsAuthenticated, OwnProfileViewPermission, DoctorPermission]
+    serializer_class = DoctorProfileSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset())
