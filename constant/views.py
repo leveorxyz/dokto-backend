@@ -4,6 +4,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import ValidationError
 from django.conf import settings
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiExample,
+    extend_schema,
+    OpenApiResponse,
+)
+from drf_spectacular.types import OpenApiTypes
 
 from core.literals import available_care
 
@@ -11,6 +18,15 @@ from core.literals import available_care
 class AvailableCare(APIView):
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[OpenApiExample(name="example 1", value=["string"])],
+                response=[OpenApiTypes.STR],
+            )
+        },
+    )
     def get(self, *args, **kwargs):
         return Response(
             {"status_code": 200, "message": "Success.", "result": available_care}
@@ -20,6 +36,20 @@ class AvailableCare(APIView):
 class Country(APIView):
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[
+                    OpenApiExample(
+                        name="example 1",
+                        value=[{"name": "string", "country_code": "string"}],
+                    )
+                ],
+                response=[OpenApiTypes.STR],
+            )
+        },
+    )
     def get(self, *args, **kwargs):
         data = json.load(open(settings.BASE_DIR / "constant" / "json" / "country.json"))
         return Response({"status_code": 200, "message": "Success.", "result": data})
@@ -28,6 +58,23 @@ class Country(APIView):
 class State(APIView):
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("country_code", str),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[
+                    OpenApiExample(
+                        name="example 1",
+                        value=[{"name": "string", "state_code": "string"}],
+                    )
+                ],
+                response=[OpenApiTypes.STR],
+            )
+        },
+    )
     def get(self, *args, **kwargs):
         data = json.load(open(settings.BASE_DIR / "constant" / "json" / "state.json"))
         query_params = self.request.query_params
@@ -50,6 +97,19 @@ class State(APIView):
 class City(APIView):
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("country_code", str),
+            OpenApiParameter("state_code", str),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[OpenApiExample(name="example 1", value=["string"])],
+                response=[OpenApiTypes.STR],
+            )
+        },
+    )
     def get(self, *args, **kwargs):
         data = json.load(open(settings.BASE_DIR / "constant" / "json" / "city.json"))
         query_params = self.request.query_params
