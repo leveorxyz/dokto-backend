@@ -26,9 +26,7 @@ class AvailableCare(APIView):
         },
     )
     def get(self, *args, **kwargs):
-        data = json.load(
-            open(settings.BASE_DIR / "constant" / "json" / "available_care.json")
-        )
+        data = json.load(open(settings.BASE_DIR / "json" / "available_care.json"))
         return Response({"status_code": 200, "message": "Success.", "result": data})
 
 
@@ -50,7 +48,7 @@ class Country(APIView):
         },
     )
     def get(self, *args, **kwargs):
-        data = json.load(open(settings.BASE_DIR / "constant" / "json" / "country.json"))
+        data = json.load(open(settings.BASE_DIR / "json" / "country.json"))
         return Response({"status_code": 200, "message": "Success.", "result": data})
 
 
@@ -75,7 +73,7 @@ class State(APIView):
         },
     )
     def get(self, *args, **kwargs):
-        data = json.load(open(settings.BASE_DIR / "constant" / "json" / "state.json"))
+        data = json.load(open(settings.BASE_DIR / "json" / "state.json"))
         query_params = self.request.query_params
         if "country_code" not in query_params:
             raise ValidationError("country_code is required.")
@@ -110,7 +108,7 @@ class City(APIView):
         },
     )
     def get(self, *args, **kwargs):
-        data = json.load(open(settings.BASE_DIR / "constant" / "json" / "city.json"))
+        data = json.load(open(settings.BASE_DIR / "json" / "city.json"))
         query_params = self.request.query_params
         if "country_code" not in query_params and "state_code" not in query_params:
             raise ValidationError("country_code and status_code are required.")
@@ -148,9 +146,7 @@ class PhoneCode(APIView):
         },
     )
     def get(self, *args, **kwargs):
-        data = json.load(
-            open(settings.BASE_DIR / "constant" / "json" / "country_phone_code.json")
-        )
+        data = json.load(open(settings.BASE_DIR / "json" / "country_phone_code.json"))
         return Response({"status_code": 200, "message": "Success.", "result": data})
 
 
@@ -172,7 +168,5 @@ class AcceptedInsurance(APIView):
         },
     )
     def get(self, *args, **kwargs):
-        data = json.load(
-            open(settings.BASE_DIR / "constant" / "json" / "accepted_insurance.json")
-        )
+        data = json.load(open(settings.BASE_DIR / "json" / "accepted_insurance.json"))
         return Response({"status_code": 200, "message": "Success.", "result": data})
