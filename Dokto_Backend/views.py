@@ -1,10 +1,13 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_404_NOT_FOUND
+from rest_framework.permissions import AllowAny
 from django.http import JsonResponse
 
 
 class Custom404(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, *args, **kwargs):
         response_data = {
             "message": ["Not found!"],
