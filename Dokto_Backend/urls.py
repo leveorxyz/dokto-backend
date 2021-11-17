@@ -16,7 +16,7 @@ Including another URLconf
 import debug_toolbar
 from django.contrib import admin
 from django.conf import settings
-from django.conf.urls import url
+from django.conf.urls import handler500, url
 from django.urls import path, include
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -27,7 +27,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.static import serve
 from rest_framework.documentation import include_docs_urls
 
-from .views import Custom404
+from .views import Custom404, ErrorView
 
 
 urlpatterns = [
@@ -60,3 +60,4 @@ urlpatterns = [
 urlpatterns += staticfiles_urlpatterns()
 
 handler404 = Custom404.as_view()
+handler500 = "Dokto_Backend.views.custom_500_handler"
