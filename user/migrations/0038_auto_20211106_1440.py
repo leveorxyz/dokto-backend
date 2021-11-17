@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('user', '0037_alter_doctorinfo_identification_photo'),
+        ("user", "0037_alter_doctorinfo_identification_photo"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='doctorinfo',
-            name='notification_email',
+            model_name="doctorinfo",
+            name="notification_email",
             field=models.EmailField(blank=True, max_length=254, null=True),
         ),
         migrations.AddField(
-            model_name='doctorinfo',
-            name='reason_to_delete',
+            model_name="doctorinfo",
+            name="reason_to_delete",
             field=models.CharField(blank=True, max_length=2000, null=True),
         ),
         migrations.AddField(
-            model_name='doctorinfo',
-            name='temporary_disable',
+            model_name="doctorinfo",
+            name="temporary_disable",
             field=models.BooleanField(blank=True, default=False),
         ),
     ]
