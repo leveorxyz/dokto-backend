@@ -55,7 +55,6 @@ urlpatterns = [
         serve,
         {"document_root": settings.MEDIA_ROOT, "show_indexes": True},
     ),
-    path("test_error/", ErrorView.as_view()),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

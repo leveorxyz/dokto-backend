@@ -28,10 +28,3 @@ def custom_500_handler(request, *args, **argv):
         {"status_code": 500, "message": "Internal Server Error!", "result": None},
         status=500,
     )
-
-
-class ErrorView(APIView):
-    permission_classes = []
-
-    def get(self, *args, **kwargs):
-        raise ValueError("This is a test error")
