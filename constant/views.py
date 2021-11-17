@@ -129,3 +129,27 @@ class City(APIView):
             return Response(
                 {"status_code": 404, "message": "Not found.", "result": []}, status=404
             )
+
+
+class PhoneCode(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[
+                    OpenApiExample(
+                        name="example 1",
+                        value=[{"name": "string", "phone_code": "string"}],
+                    )
+                ],
+                response=[OpenApiTypes.STR],
+            )
+        },
+    )
+    def get(self, *args, **kwargs):
+        data = json.load(
+            open(settings.BASE_DIR / "constant" / "json" / "country_phone_code.json")
+        )
+        return Response({"status_code": 200, "message": "Success.", "result": data})
