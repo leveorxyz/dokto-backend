@@ -17,6 +17,17 @@ Dokto-Backend
 │   ├── tests.py
 │   ├── urls.py
 │   └── views.py
+├── constant
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
 ├── core
 │   ├── admin.py
 │   ├── apps.py
@@ -31,9 +42,21 @@ Dokto-Backend
 │   │   └── __init__.py
 │   ├── models.py
 │   ├── pagination.py
+│   ├── permissions.py
 │   ├── serializers.py
 │   ├── tests.py
 │   ├── utils.py
+│   └── views.py
+├── dashboard
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
 │   └── views.py
 ├── Dokto_Backend
 │   ├── asgi.py
@@ -43,12 +66,35 @@ Dokto-Backend
 │   ├── views.py
 │   └── wsgi.py
 ├── example.env
+├── json
+│   ├── accepted_insurance.json
+│   ├── available_care.json
+│   ├── city.json
+│   ├── country.json
+│   ├── country_phone_code.json
+│   └── state.json
 ├── manage.py
 ├── Procfile
 ├── README.md
 ├── requirements.txt
 ├── scripts
+│   ├── deploy.sh
 │   └── fresh_init.sh
+├── templates
+│   └── email
+│       ├── patient_verification.html
+│       └── provider_verification.html
+├── twilio_chat
+│   ├── admin.py
+│   ├── apps.py
+│   ├── __init__.py
+│   ├── migrations
+│   │   └── __init__.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
 └── user
     ├── admin.py
     ├── apps.py
@@ -75,6 +121,25 @@ Dokto-Backend
     │   ├── 0019_collectiveinfo.py
     │   ├── 0020_alter_user_user_type.py
     │   ├── 0021_pharmacyinfo.py
+    │   ├── 0022_doctorexperience_doctor_info.py
+    │   ├── 0023_auto_20211023_1317.py
+    │   ├── 0024_patientinfo_squashed_0025_auto_20211023_1407.py
+    │   ├── 0025_alter_patientinfo_insurance_type.py
+    │   ├── 0026_doctoravailablehours_doctorreview.py
+    │   ├── 0027_auto_20211027_1708.py
+    │   ├── 0028_auto_20211030_1918.py
+    │   ├── 0029_auto_20211030_1948.py
+    │   ├── 0030_remove_patientinfo_username.py
+    │   ├── 0031_alter_doctorinfo_gender.py
+    │   ├── 0032_doctorinfo_identification_number.py
+    │   ├── 0033_alter_patientinfo_gender.py
+    │   ├── 0034_doctorinfo_awards.py
+    │   ├── 0035_doctorinfo_license_file.py
+    │   ├── 0036_patientinfo_identification_photo.py
+    │   ├── 0037_alter_doctorinfo_identification_photo.py
+    │   ├── 0038_auto_20211106_1440.py
+    │   ├── 0039_doctorinfo_accepted_insurance.py
+    │   ├── 0040_auto_20211108_1054.py
     │   └── __init__.py
     ├── models.py
     ├── serializers.py
@@ -83,7 +148,7 @@ Dokto-Backend
     ├── utils.py
     └── views.py
 
-10 directories, 66 files
+19 directories, 122 files
 ```
 
 ## Requirements
