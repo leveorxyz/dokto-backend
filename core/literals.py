@@ -8,7 +8,6 @@ PATIENT_IDENTIFICATION_PHOTO_DIRECTORY = "patient_identification_photo"
 # Available care for doctor registration
 
 available_care = [
-    "Any Speciality",
     "Allergy Specialist",
     "Andrology",
     "Anesthesiologist/Chronic Pain Specialist",
