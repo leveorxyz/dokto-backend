@@ -12,8 +12,6 @@ from drf_spectacular.utils import (
 )
 from drf_spectacular.types import OpenApiTypes
 
-from core.literals import available_care
-
 
 class AvailableCare(APIView):
     permission_classes = (AllowAny,)
@@ -28,9 +26,10 @@ class AvailableCare(APIView):
         },
     )
     def get(self, *args, **kwargs):
-        return Response(
-            {"status_code": 200, "message": "Success.", "result": available_care}
+        data = json.load(
+            open(settings.BASE_DIR / "constant" / "json" / "available_care.json")
         )
+        return Response({"status_code": 200, "message": "Success.", "result": data})
 
 
 class Country(APIView):
