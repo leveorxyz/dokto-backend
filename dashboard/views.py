@@ -111,7 +111,7 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [AllowAny, DoctorPermission]
+    permission_classes = [IsAuthenticated, DoctorPermission]
     serializer_class = DoctorAccountSettingsSerializer
 
     def retrieve(self, request, *args, **kwargs):
