@@ -469,6 +469,9 @@ class PatientRegistrationSerializer(ModelSerializer):
 
         # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
+        
+        if "full_name" in validated_data:
+            validated_data.pop("full_name")
 
         # Extract patient info
         try:
