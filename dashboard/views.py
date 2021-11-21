@@ -34,8 +34,18 @@ class DoctorProfilePublicAPIView(CustomRetrieveAPIView):
 
     def get_queryset(self):
         username = self.kwargs.get("username")
-        doctor = get_object_or_404(DoctorInfo, username=username)
-        return User.objects.filter(id=doctor.user_id)
+        return DoctorInfo.objects.filter(username=username)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset())
+
+
+class DoctorProfileAPIView(CustomRetrieveAPIView):
+    permission_classes = [IsAuthenticated, OwnProfilePermission, DoctorPermission]
+    serializer_class = DoctorProfileSerializer
+
+    def get_queryset(self):
+        return DoctorInfo.objects.filter(user=self.request.user)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset())
@@ -127,7 +137,7 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [AllowAny, DoctorPermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorAccountSettingsSerializer
 
     def retrieve(self, request, *args, **kwargs):
