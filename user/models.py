@@ -1,13 +1,18 @@
 import os
+from re import template
+import re
 
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
+from django.contrib.sites.models import Site
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
 
+from core.classes import ExpiringActivationTokenGenerator
 from core.models import CoreModel
 from core.literals import (
     PROFILE_PHOTO_DIRECTORY,
@@ -16,6 +21,8 @@ from core.literals import (
     DOCTOR_LICENSE_FILE_DIRECTORY,
     PATIENT_IDENTIFICATION_PHOTO_DIRECTORY,
 )
+from core.modelutils import send_mail
+from .utils import generate_file_and_name
 
 # Create your models here.
 
@@ -50,13 +57,22 @@ class User(AbstractUser, CoreModel):
     city = models.CharField(_("city"), max_length=50, blank=True, null=True)
     zip_code = models.CharField(_("zip code"), max_length=15, blank=True, null=True)
     contact_no = models.CharField(_("contact no"), max_length=20, blank=True, null=True)
-    profile_photo = models.ImageField(
+    _profile_photo = models.ImageField(
         upload_to=PROFILE_PHOTO_DIRECTORY,
         blank=True,
         null=True,
     )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+    
+    @classmethod
+    def from_validated_data(cls, validated_data: dict):
+        fields = [field.name for field in User._meta.fields]
+
+        password = make_password(validated_data.pop("password"))
+        constructor_kwargs = {field: validated_data.pop(field) for field in fields}
+        constructor_kwargs["password"] = password
+        return cls(**constructor_kwargs)
 
     @property
     def token(self):
@@ -65,6 +81,70 @@ class User(AbstractUser, CoreModel):
             return token.key
         except Token.DoesNotExist:
             raise AuthenticationFailed("Token expired.")
+
+    @property
+    def profile_photo(self):
+        domain = Site.objects.get_current().domain
+        if self._profile_photo:
+            return domain + self._profile_photo.url
+
+    @profile_photo.setter
+    def profile_photo(self, profile_photo_data):
+        file_name, file = generate_file_and_name(profile_photo_data, self.id)
+        self._profile_photo.save(file_name, file, save=True)
+        self.save()
+
+    @profile_photo.deleter
+    def profile_photo(self):
+        self._profile_photo.delete(save=True)
+
+    def delete(self, *args, **kwargs):
+        del self.profile_photo
+        return super(User, self).delete(*args, **kwargs)
+
+    def send_email_verification_mail(self):
+        template = {
+            User.UserType.DOCTOR: "email/provider_verification.html",
+            User.UserType.PATIENT: "email/patient_verification.html",
+        }
+
+        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
+            text=self.email
+        )
+
+        link = (
+            "/".join(
+                [
+                    settings.FRONTEND_URL,
+                    "email-verification",
+                ]
+            )
+            + f"?token={confirmation_token.decode('utf-8')}"
+        )
+
+        send_mail(
+            to_email=self.email,
+            subject=f"Welcome to Dokto, please verify your email address",
+            template_name=template[self.user.user_type],
+            input_context={
+                "name": self.full_name,
+                "link": link,
+                "host_url": Site.objects.get_current().domain,
+            },
+        )
+
+    def get_username(self) -> str:
+        if (
+            self.user_type == User.UserType.PATIENT
+            or self.user_type == User.UserType.ADMIN
+        ):
+            return None
+        user_type_map = {
+            User.UserType.DOCTOR: "doctor_info",
+            User.UserType.PHARMACY: "pharmacy_info",
+            User.UserType.CLINIC: "clinic_info",
+        }
+        return getattr(self, user_type_map[self.user_type]).username
 
 
 class UserIp(CoreModel):
@@ -97,7 +177,9 @@ class DoctorInfo(CoreModel):
             "unique": _("A user with that username already exists."),
         },
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="doctor_info"
+    )
     date_of_birth = models.DateField(blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(
@@ -107,7 +189,7 @@ class DoctorInfo(CoreModel):
         max_length=20, choices=IdentificationType.choices, null=True, blank=True
     )
     identification_number = models.CharField(max_length=50, blank=True, null=True)
-    identification_photo = models.ImageField(
+    _identification_photo = models.ImageField(
         upload_to=DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
     professional_bio = models.TextField(max_length=512, blank=True, null=True)
@@ -115,7 +197,7 @@ class DoctorInfo(CoreModel):
     facebook_url = models.URLField(blank=True, null=True)
     twitter_url = models.URLField(blank=True, null=True)
     awards = models.TextField(max_length=512, blank=True, null=True)
-    license_file = models.FileField(
+    _license_file = models.FileField(
         upload_to=DOCTOR_LICENSE_FILE_DIRECTORY, blank=True, null=True
     )
     notification_email = models.EmailField(blank=True, null=True)
@@ -123,8 +205,54 @@ class DoctorInfo(CoreModel):
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
 
+    @classmethod
+    def from_validated_data(cls, validated_data: dict, *args, **kwargs):
+        fields = [field.name for field in DoctorInfo._meta.fields]
+
+        user = validated_data.pop("user")
+        constructor_kwargs = {field: validated_data.pop(field) for field in fields}
+        constructor_kwargs["user"] = user
+        return cls(**constructor_kwargs)
+
+    @property
+    def identification_photo(self):
+        domain = Site.objects.get_current().domain
+        if self._identification_photo:
+            return domain + self._identification_photo.url
+
+    @identification_photo.setter
+    def identification_photo(self, identification_photo_data):
+        file_name, file = generate_file_and_name(identification_photo_data, self.id)
+        self._identification_photo.save(file_name, file, save=True)
+        self.save()
+
+    @identification_photo.deleter
+    def identification_photo(self):
+        self._identification_photo.delete(save=True)
+
+    @property
+    def license_file(self):
+        domain = Site.objects.get_current().domain
+        if self._license_file:
+            return domain + self._license_file.url
+
+    @license_file.setter
+    def license_file(self, license_file_data):
+        file_name, file = generate_file_and_name(license_file_data, self.id)
+        self._license_file.save(file_name, file, save=True)
+        self.save()
+
+    @license_file.deleter
+    def license_file(self):
+        self._license_file.delete(save=True)
+
+    def delete(self, *args, **kwargs):
+        del self.identification_photo
+        del self.license_file
+        return super(DoctorInfo, self).delete(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.user.id}-{self.username}"
+        return f"{self.id}-{self.username}"
 
 
 class DoctorLanguage(CoreModel):
@@ -140,7 +268,19 @@ class DoctorEducation(CoreModel):
     course = models.CharField(max_length=50)
     year = models.CharField(max_length=15)
     college = models.CharField(max_length=60)
-    certificate = models.ImageField(upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY)
+    _certificate = models.ImageField(upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY)
+
+    @property
+    def certificate(self):
+        domain = Site.objects.get_current().domain
+        if self._certificate:
+            return domain + self._certificate.url
+
+    @certificate.setter
+    def certificate(self, certificate_data):
+        filename, file = generate_file_and_name(certificate_data, self.id)
+        self._certificate.save(filename, file, save=True)
+        self.save()
 
     def delete(self, *args, **kwargs):
         """
@@ -205,7 +345,9 @@ class ClinicInfo(CoreModel):
             "unique": _("A user with that username already exists."),
         },
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="clinic_info"
+    )
     clinic_type = models.CharField(max_length=20, choices=ClinicType.choices)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
 
@@ -221,7 +363,9 @@ class PharmacyInfo(CoreModel):
             "unique": _("A user with that username already exists."),
         },
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="pharmacy_info"
+    )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
 
 

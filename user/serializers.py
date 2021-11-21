@@ -1,3 +1,4 @@
+from django.db.models import fields
 from rest_framework.serializers import (
     ModelSerializer,
     Serializer,
@@ -6,14 +7,14 @@ from rest_framework.serializers import (
     DateField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, URLField, IntegerField
+from rest_framework.serializers import ListField, IntegerField
 from rest_framework.exceptions import ValidationError
 from django.conf import settings
 from cryptography.fernet import InvalidToken
 
 from core.serializers import ReadWriteSerializerMethodField
 from core.classes import ExpiringActivationTokenGenerator
-from core.utils import send_mail
+from core.modelutils import send_mail
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
@@ -27,7 +28,7 @@ from .models import (
     PharmacyInfo,
     PatientInfo,
 )
-from .utils import create_user, generate_image_file_and_name, generate_username
+from .utils import generate_username, generate_file_and_name
 
 
 class UserSerializer(ModelSerializer):
@@ -68,13 +69,7 @@ class DoctorEducationSerializer(ModelSerializer):
         doctor_education = DoctorEducation.objects.create(
             doctor_info=doctor_info, **validated_data
         )
-        certificate_file_name, certificate_file = generate_image_file_and_name(
-            certificate, doctor_info.id
-        )
-        doctor_education.certificate.save(
-            certificate_file_name, certificate_file, save=True
-        )
-        doctor_education.save()
+        doctor_education.certificate = certificate
         return doctor_education
 
     class Meta:
@@ -129,50 +124,27 @@ class DoctorReviewSerializer(ModelSerializer):
 
 
 class DoctorRegistrationSerializer(ModelSerializer):
-    token = SerializerMethodField()
-    username = SerializerMethodField()
-    password = CharField(write_only=True)
-    full_name = CharField(write_only=True)
-    street = CharField(write_only=True)
-    state = CharField(write_only=True, required=False)
-    city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True)
-    contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
-    country = CharField(write_only=True)
-    gender = CharField(write_only=True)
+    username = CharField(read_only=True, source="get_username")
+    profile_photo = CharField(source="user.profile_photo")
     language = ListField(child=CharField(), write_only=True)
     education = ListField(child=DoctorEducationSerializer(), write_only=True)
-    professional_bio = CharField(write_only=True)
-    linkedin_url = URLField(write_only=True, required=False)
-    facebook_url = URLField(write_only=True, required=False)
-    twitter_url = URLField(write_only=True, required=False)
     experience = ListField(
         child=DoctorExpericenceSerializer(), write_only=True, required=False
     )
     specialty = ListField(child=CharField(), write_only=True)
-    identification_type = CharField(write_only=True)
-    identification_number = CharField(write_only=True)
-    identification_photo = CharField(write_only=True)
-    date_of_birth = DateField(write_only=True)
-    awards = CharField(write_only=True, required=False)
-    license_file = CharField(write_only=True)
-    accepted_insurance = ListField(child=CharField(), write_only=True)
-
-    def get_username(self, user: User) -> str:
-        return DoctorInfo.objects.get(user=user).username
-
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
-
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
+    identification_photo = CharField(source="identification_photo")
+    license_file = CharField(source="license_file")
+    accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
 
     def create(self, validated_data):
-        host_url = self.context["request"].build_absolute_uri()
+        # Generate username
+        username = generate_username(DoctorInfo, validated_data.get("full_name"))
 
-        user: User = create_user(validated_data, User.UserType.DOCTOR)
+        user: User = User.from_validated_data(
+            validated_data=validated_data.update({"user_type": User.UserType.DOCTOR})
+        )
+        user.save()
+        user.profile_photo = validated_data.pop("profile_photo")
 
         if "accepted_insurance" in validated_data:
             validated_data.pop("accepted_insurance")
@@ -196,30 +168,17 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
         # Extract license data
         license_file = validated_data.pop("license_file")
-        
-        # Generate username
-        username = generate_username(DoctorInfo, validated_data.pop("full_name"))
-        print(username)
 
         # Creating doctor info
         try:
-            doctor_info: DoctorInfo = DoctorInfo.objects.create(
-                user=user, username=username, **validated_data
-            )
-            (
-                identification_photo_name,
-                identification_photo,
-            ) = generate_image_file_and_name(identification_photo, doctor_info.id)
-            doctor_info.identification_photo.save(
-                identification_photo_name, identification_photo, save=True
-            )
-            license_file_name, license_file_object = generate_image_file_and_name(
-                license_file, doctor_info.id
-            )
-            doctor_info.license_file.save(
-                license_file_name, license_file_object, save=True
+            doctor_info: DoctorInfo = DoctorInfo.from_validated_data(
+                validated_data=validated_data.update(
+                    {"user": user, "username": username}
+                )
             )
             doctor_info.save()
+            doctor_info.identification_photo = identification_photo
+            doctor_info.license_file = license_file
         except Exception as e:
             user.delete()
             raise e
@@ -233,8 +192,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 doctor_education_serializer.is_valid(raise_exception=True)
                 doctor_education_serializer.save()
         except Exception as e:
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
             user.delete()
             raise e
 
@@ -247,9 +204,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 doctor_experience_serializer.is_valid(raise_exception=True)
                 doctor_experience_serializer.save()
         except Exception as e:
-            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
             user.delete()
             raise e
 
@@ -262,10 +216,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 doctor_specialty_serializer.is_valid(raise_exception=True)
                 doctor_specialty_serializer.save()
         except Exception as e:
-            DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
-            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
             user.delete()
             raise e
 
@@ -280,74 +230,44 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 ]
             )
         except Exception as e:
-            DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
-            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            DoctorLanguage.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
             user.delete()
             raise e
 
-        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
-            text=user.email
-        )
-
-        link = (
-            "/".join(
-                [
-                    settings.FRONTEND_URL,
-                    "email-verification",
-                ]
-            )
-            + f"?token={confirmation_token.decode('utf-8')}"
-        )
-
-        send_mail(
-            to_email=user.email,
-            subject=f"Welcome to Dokto, please verify your email address",
-            template_name="email/provider_verification.html",
-            input_context={
-                "provider_name": user.full_name,
-                "link": link,
-                "host_url": host_url,
-            },
-        )
+        user.send_email_verification_mail()
 
         return user
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "username",
-            "email",
-            "password",
-            "token",
-            "full_name",
-            "street",
+        main_fields = [
+            field.name
+            for field in model._meta.fields
+            if not field.name.startswith("_") and field.name != "password"
+        ]
+        extra_fields = [
+            field.name
+            for field in DoctorInfo._meta.fields
+            if not field.name.startswith("_") and field.name not in ["id", "user"]
+        ]
+        fields = (
+            main_fields + extra_fields + ["username", "token", "accepted_insurance"]
+        )
+
+        read_only_fields = ["token", "username"]
+        write_only_fields = ["password"]
+        required_false_fields = [
             "state",
             "city",
-            "zip_code",
-            "contact_no",
-            "profile_photo",
-            "country",
-            "gender",
-            "language",
-            "education",
-            "professional_bio",
             "linkedin_url",
             "facebook_url",
             "twitter_url",
-            "experience",
-            "specialty",
-            "identification_type",
-            "identification_number",
-            "identification_photo",
-            "date_of_birth",
             "awards",
-            "license_file",
-            "accepted_insurance",
         ]
+        extra_kwargs = {
+            **{key: {"required": False} for key in required_false_fields},
+            **{key: {"write_only": True} for key in write_only_fields},
+            **{key: {"read_only": True} for key in read_only_fields},
+        }
 
 
 class PharmacyRegistrationSerializer(ModelSerializer):
@@ -374,11 +294,18 @@ class PharmacyRegistrationSerializer(ModelSerializer):
         return user.profile_photo.url
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.PHARMACY)
+        # Generate username
+        username = generate_username(DoctorInfo, validated_data.get("full_name"))
+
+        user: User = User.from_validated_data(
+            validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
+        )
+        user.save()
+        user.profile_photo = validated_data.pop("profile_photo")
 
         # Extract pharmacy info
         try:
-            PharmacyInfo.objects.create(user=user, **validated_data)
+            PharmacyInfo.objects.create(user=user, username=username, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -411,11 +338,18 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
         return ClinicInfo.objects.get(user=user).username
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.CLINIC)
+        # Generate username
+        username = generate_username(DoctorInfo, validated_data.get("full_name"))
+
+        user: User = User.from_validated_data(
+            validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
+        )
+        user.save()
+        user.profile_photo = validated_data.pop("profile_photo")
 
         # Extract clinic info
         try:
-            ClinicInfo.objects.create(user=user, **validated_data)
+            ClinicInfo.objects.create(user=user, username=username, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -464,12 +398,15 @@ class PatientRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         host_url = self.context["request"].build_absolute_uri()
-
-        user: User = create_user(validated_data, User.UserType.PATIENT)
+        user: User = User.from_validated_data(
+            validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
+        )
+        user.save()
+        user.profile_photo = validated_data.pop("profile_photo")
 
         # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
-        
+
         if "full_name" in validated_data:
             validated_data.pop("full_name")
 
@@ -479,7 +416,7 @@ class PatientRegistrationSerializer(ModelSerializer):
             (
                 identification_photo_name,
                 identification_photo,
-            ) = generate_image_file_and_name(identification_photo, patient_info.id)
+            ) = generate_file_and_name(identification_photo, patient_info.id)
             patient_info.identification_photo.save(
                 identification_photo_name, identification_photo, save=True
             )

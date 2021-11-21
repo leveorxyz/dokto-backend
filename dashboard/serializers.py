@@ -26,7 +26,7 @@ from user.serializers import (
     DoctorAvailableHoursSerializer,
     DoctorReviewSerializer,
 )
-from user.utils import generate_image_file_and_name
+from user.utils import generate_file_and_name
 
 
 class DoctorProfileSerializer(ModelSerializer):
@@ -155,7 +155,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
         if "profile_photo" in validated_data:
             profile_photo_data = validated_data.pop("profile_photo")
             user = instance.user
-            file_name, file = generate_image_file_and_name(profile_photo_data, user.id)
+            file_name, file = generate_file_and_name(profile_photo_data, user.id)
             user.profile_photo.delete(save=True)
             user.profile_photo.save(file_name, file, save=True)
             user.save()
@@ -361,7 +361,7 @@ class DoctorExperienceEducationUpdateSerializer(ModelSerializer):
                     for key, value in education_data.items():
                         if key == "certificate":
                             certificate_data = education_data.get("certificate")
-                            file_name, file = generate_image_file_and_name(
+                            file_name, file = generate_file_and_name(
                                 certificate_data, doctor_info.id
                             )
                             education_instance.certificate.delete(save=True)
