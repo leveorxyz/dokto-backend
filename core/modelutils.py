@@ -3,6 +3,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 
+
 def send_mail(subject, to_email, input_context, template_name, cc_list=[], bcc_list=[]):
     """
     Send Activation Email To User

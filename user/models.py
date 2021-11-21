@@ -64,7 +64,7 @@ class User(AbstractUser, CoreModel):
     )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
-    
+
     @classmethod
     def from_validated_data(cls, validated_data: dict):
         fields = [field.name for field in User._meta.fields]
