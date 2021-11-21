@@ -406,7 +406,6 @@ class DoctorProfileSerializer(ModelSerializer):
     """
 
     ## TODO: implement using DoctorInfo Model
-    id = CharField(source="user.id")
     full_name = CharField(source="user.full_name", allow_null=True)
     email = EmailField(source="user.email", allow_null=True)
     is_verified = BooleanField(
