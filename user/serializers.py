@@ -1,4 +1,5 @@
-from django.db.models import fields
+from typing import Union, List, Dict
+
 from rest_framework.serializers import (
     ModelSerializer,
     Serializer,
@@ -16,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 from django.conf import settings
 from cryptography.fernet import InvalidToken
 from stripe.api_resources import source
+from core.models import CoreModel
 
 from core.serializers import ReadWriteSerializerMethodField
 from core.classes import ExpiringActivationTokenGenerator
@@ -156,6 +158,23 @@ class DoctorRegistrationSerializer(ModelSerializer):
     gender = CharField(required=True, source="doctor_info.gender")
     date_of_birth = DateField(required=True, source="doctor_info.date_of_birth")
 
+    def from_serializer(
+        self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
+    ) -> None:
+        if not isinstance(data, list):
+            data = [data]
+        for item in data:
+            serializer_instance = serializer_class(**item, **extra_info)
+            serializer_instance.is_valid(raise_exception=True)
+            serializer_instance.save()
+
+    def from_list(
+        self, data: List, model: CoreModel, keyword: str, **extra_info
+    ) -> None:
+        model.objects.bulk_create(
+            [model(**{keyword: item, **extra_info}) for item in data]
+        )
+
     def create(self, validated_data):
         # Generate username
         username = generate_username(DoctorInfo, validated_data.get("full_name"))
@@ -205,53 +224,24 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
         # Add doctor education
         try:
-            for education in education_data:
-                doctor_education_serializer = DoctorEducationSerializer(
-                    data={"doctor_info": doctor_info.id, **education}
-                )
-                doctor_education_serializer.is_valid(raise_exception=True)
-                doctor_education_serializer.save()
+            self.from_serializer(
+                education_data, DoctorEducationSerializer, doctor_info=doctor_info
+            )
         except Exception as e:
             user.delete()
             raise e
 
         # Add doctor experience
         try:
-            for experience in experience_data:
-                doctor_experience_serializer = DoctorExpericenceSerializer(
-                    data={"doctor_info": doctor_info.id, **experience}
-                )
-                doctor_experience_serializer.is_valid(raise_exception=True)
-                doctor_experience_serializer.save()
-        except Exception as e:
-            user.delete()
-            raise e
-
-        # Add doctor specialty
-        try:
-            for specialty in specialty_data:
-                doctor_specialty_serializer = DoctorSpecialtySerializer(
-                    data={"doctor_info": doctor_info.id, "specialty": specialty}
-                )
-                doctor_specialty_serializer.is_valid(raise_exception=True)
-                doctor_specialty_serializer.save()
-        except Exception as e:
-            user.delete()
-            raise e
-
-        # Add doctor language
-        try:
-            if isinstance(language, str):
-                language = [language]
-            DoctorLanguage.objects.bulk_create(
-                [
-                    DoctorLanguage(doctor_info=doctor_info, language=lang)
-                    for lang in language
-                ]
+            self.from_serializer(
+                experience_data, DoctorExpericenceSerializer, doctor_info=doctor_info
             )
         except Exception as e:
             user.delete()
             raise e
+
+        self.from_list(specialty_data, DoctorSpecialty, "specialty", doctor_info=doctor_info)
+        self.from_list(language, DoctorLanguage, "language", doctor_info=doctor_info)
 
         user.send_email_verification_mail()
 
