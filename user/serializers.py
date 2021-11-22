@@ -185,27 +185,15 @@ class DoctorRegistrationSerializer(ModelSerializer):
         user.save()
         user.profile_photo = validated_data.pop("profile_photo")
 
-        if "accepted_insurance" in validated_data:
-            validated_data.pop("accepted_insurance")
-
-        # Extract education data
-        education_data = validated_data.pop("education")
-
-        # Extract experience data
         experience_data = []
         if "experience" in validated_data:
             experience_data = validated_data.pop("experience")
-
-        # Extract specialty data
+        if "accepted_insurance" in validated_data:
+            validated_data.pop("accepted_insurance")
+        education_data = validated_data.pop("education")
         specialty_data = validated_data.pop("specialty")
-
-        # Extract language data
         language = validated_data.pop("language")
-
-        # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
-
-        # Extract license data
         license_file = validated_data.pop("license_file")
 
         # Creating doctor info
@@ -222,7 +210,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        # Add doctor education
         try:
             self.from_serializer(
                 education_data, DoctorEducationSerializer, doctor_info=doctor_info
@@ -230,8 +217,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
         except Exception as e:
             user.delete()
             raise e
-
-        # Add doctor experience
         try:
             self.from_serializer(
                 experience_data, DoctorExpericenceSerializer, doctor_info=doctor_info
@@ -240,7 +225,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        self.from_list(specialty_data, DoctorSpecialty, "specialty", doctor_info=doctor_info)
+        self.from_list(
+            specialty_data, DoctorSpecialty, "specialty", doctor_info=doctor_info
+        )
         self.from_list(language, DoctorLanguage, "language", doctor_info=doctor_info)
 
         user.send_email_verification_mail()
