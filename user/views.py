@@ -169,26 +169,6 @@ class UsernameExists(APIView):
 
 
 class DoctorSignupView(CustomCreateAPIView):
-    """
-    Doctor signup endpoint
-
-    Request method: POST
-
-    Request fields
-    ---
-    - username: string
-    - email: string
-    - password: string
-    - full_name: string
-    - contact_no: string
-    - address:
-        - street: string
-        - city: string
-        - state: string
-        - zip_code: string
-        - country: string
-    """
-
     permission_classes = [AllowAny]
     queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
     serializer_class = DoctorRegistrationSerializer
