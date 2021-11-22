@@ -1,6 +1,4 @@
-import os
-from re import template
-import re
+from __future__ import annotations
 
 from django.db import models
 from django.conf import settings
@@ -73,6 +71,19 @@ class User(AbstractUser, CoreModel):
         constructor_kwargs = {field: validated_data.pop(field) for field in fields}
         constructor_kwargs["password"] = password
         return cls(**constructor_kwargs)
+
+    @classmethod
+    def get_hidden_fields(cls) -> list:
+        return [
+            "is_staff",
+            "is_superuser",
+            "is_verified",
+            "_profile_photo",
+            "is_active",
+            "is_deleted",
+            "date_joined",
+            "deleted_at",
+        ]
 
     @property
     def token(self):
@@ -204,6 +215,23 @@ class DoctorInfo(CoreModel):
     reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
+
+    @classmethod
+    def get_hidden_fields(self, *args, **kwargs) -> list:
+        return [
+            "_identification_photo",
+            "_license_file",
+            "id",
+            "user",
+            "reason_to_delete",
+            "temporary_disable",
+            "linkedin_url",
+            "facebook_url",
+            "twitter_url",
+            "notification_email",
+            "is_deleted",
+            "deleted_at",
+        ]
 
     @classmethod
     def from_validated_data(cls, validated_data: dict, *args, **kwargs):

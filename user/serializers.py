@@ -7,10 +7,15 @@ from rest_framework.serializers import (
     DateField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, IntegerField
+from rest_framework.serializers import (
+    ListField,
+    IntegerField,
+    DateField,
+)
 from rest_framework.exceptions import ValidationError
 from django.conf import settings
 from cryptography.fernet import InvalidToken
+from stripe.api_resources import source
 
 from core.serializers import ReadWriteSerializerMethodField
 from core.classes import ExpiringActivationTokenGenerator
@@ -125,16 +130,31 @@ class DoctorReviewSerializer(ModelSerializer):
 
 class DoctorRegistrationSerializer(ModelSerializer):
     username = CharField(read_only=True, source="get_username")
-    profile_photo = CharField(source="user.profile_photo")
+    profile_photo = CharField(required=True)
     language = ListField(child=CharField(), write_only=True)
     education = ListField(child=DoctorEducationSerializer(), write_only=True)
     experience = ListField(
         child=DoctorExpericenceSerializer(), write_only=True, required=False
     )
     specialty = ListField(child=CharField(), write_only=True)
-    identification_photo = CharField(source="identification_photo")
-    license_file = CharField(source="license_file")
     accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
+
+    # Doctor fields
+    identification_photo = CharField(
+        required=True, source="doctor_info.identification_photo"
+    )
+    identification_type = CharField(
+        required=True, source="doctor_info.identification_type"
+    )
+    identification_number = CharField(
+        required=True, source="doctor_info.identification_number"
+    )
+    license_file = CharField(required=True, source="doctor_info.license_file")
+    awards = CharField(source="doctor_info.awards")
+    country = CharField(required=True, source="doctor_info.country")
+    professional_bio = CharField(required=True, source="doctor_info.professional_bio")
+    gender = CharField(required=True, source="doctor_info.gender")
+    date_of_birth = DateField(required=True, source="doctor_info.date_of_birth")
 
     def create(self, validated_data):
         # Generate username
@@ -239,22 +259,33 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        main_fields = [
-            field.name
-            for field in model._meta.fields
-            if not field.name.startswith("_") and field.name != "password"
-        ]
-        extra_fields = [
-            field.name
-            for field in DoctorInfo._meta.fields
-            if not field.name.startswith("_") and field.name not in ["id", "user"]
-        ]
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(User.get_hidden_fields())
+        )
+        extra_fields = list(
+            set(field.name for field in DoctorInfo._meta.fields)
+            - set(DoctorInfo.get_hidden_fields())
+        )
         fields = (
-            main_fields + extra_fields + ["username", "token", "accepted_insurance"]
+            main_fields
+            + extra_fields
+            + [
+                "username",
+                "token",
+                "accepted_insurance",
+                "license_file",
+                "language",
+                "profile_photo",
+                "identification_photo",
+                "specialty",
+                "education",
+                "experience",
+            ]
         )
 
-        read_only_fields = ["token", "username"]
-        write_only_fields = ["password"]
+        read_only_fields = ["token", "username", "last_login"]
+        write_only_fields = ["password", "identification_photo", "license_file"]
         required_false_fields = [
             "state",
             "city",
