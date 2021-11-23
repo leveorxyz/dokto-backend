@@ -10,7 +10,6 @@ def send_mail(subject, to_email, input_context, template_name, cc_list=[], bcc_l
     """
     base_url = input_context.pop("host_url")
 
-    print(base_url)
     context = {
         "site": "dokto",
         "MEDIA_URL": "/".join((base_url, settings.MEDIA_URL[:-1])),

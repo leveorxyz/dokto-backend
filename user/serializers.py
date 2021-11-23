@@ -6,13 +6,11 @@ from rest_framework.serializers import (
     CharField,
     SerializerMethodField,
     DateField,
-)
-from rest_framework.authtoken.models import Token
-from rest_framework.serializers import (
     ListField,
     IntegerField,
-    DateField,
+    URLField,
 )
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 from django.conf import settings
 from cryptography.fernet import InvalidToken
@@ -135,23 +133,23 @@ class DoctorRegistrationSerializer(ModelSerializer):
     profile_photo = CharField(required=True)
     language = ListField(child=CharField(), write_only=True)
     education = ListField(child=DoctorEducationSerializer(), write_only=True)
-    experience = ListField(
-        child=DoctorExpericenceSerializer(), write_only=True, required=False
-    )
+    experience = ListField(child=DoctorExpericenceSerializer(), required=False, write_only=True)
     specialty = ListField(child=CharField(), write_only=True)
     accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
 
     # Doctor fields
     identification_photo = CharField(
-        required=True, source="doctor_info.identification_photo"
-    )
+        required=True, write_only=True)
     identification_type = CharField(
         required=True, source="doctor_info.identification_type"
     )
     identification_number = CharField(
         required=True, source="doctor_info.identification_number"
     )
-    license_file = CharField(required=True, source="doctor_info.license_file")
+    facebook_url = URLField(required=False, source="doctor_info.facebook_url")
+    linkedin_url = URLField(required=False, source="doctor_info.linkedin_url")
+    twitter_url = URLField(required=False, source="doctor_info.twitter_url")
+    license_file = CharField(required=True, write_only=True)
     awards = CharField(source="doctor_info.awards")
     country = CharField(required=True, source="doctor_info.country")
     professional_bio = CharField(required=True, source="doctor_info.professional_bio")
@@ -164,7 +162,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         if not isinstance(data, list):
             data = [data]
         for item in data:
-            serializer_instance = serializer_class(**item, **extra_info)
+            serializer_instance = serializer_class(data={**item, **extra_info})
             serializer_instance.is_valid(raise_exception=True)
             serializer_instance.save()
 
@@ -175,13 +173,12 @@ class DoctorRegistrationSerializer(ModelSerializer):
             [model(**{keyword: item, **extra_info}) for item in data]
         )
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict):
         # Generate username
         username = generate_username(DoctorInfo, validated_data.get("full_name"))
 
-        user: User = User.from_validated_data(
-            validated_data=validated_data.update({"user_type": User.UserType.DOCTOR})
-        )
+        validated_data.update({"user_type": User.UserType.DOCTOR})
+        user: User = User.from_validated_data(validated_data=validated_data)
         user.save()
         user.profile_photo = validated_data.pop("profile_photo")
 
@@ -197,11 +194,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
         license_file = validated_data.pop("license_file")
 
         # Creating doctor info
+        validated_data.update({"user": user, "username": username})
         try:
             doctor_info: DoctorInfo = DoctorInfo.from_validated_data(
-                validated_data=validated_data.update(
-                    {"user": user, "username": username}
-                )
+                validated_data=validated_data
             )
             doctor_info.save()
             doctor_info.identification_photo = identification_photo
@@ -212,14 +208,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
         try:
             self.from_serializer(
-                education_data, DoctorEducationSerializer, doctor_info=doctor_info
+                education_data, DoctorEducationSerializer, doctor_info=doctor_info.id
             )
         except Exception as e:
             user.delete()
             raise e
         try:
             self.from_serializer(
-                experience_data, DoctorExpericenceSerializer, doctor_info=doctor_info
+                experience_data, DoctorExpericenceSerializer, doctor_info=doctor_info.id
             )
         except Exception as e:
             user.delete()
@@ -238,7 +234,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         model = User
         main_fields = list(
             set(field.name for field in model._meta.fields)
-            - set(User.get_hidden_fields())
+            - set(User.get_hidden_fields() + ["user_type"])
         )
         extra_fields = list(
             set(field.name for field in DoctorInfo._meta.fields)
@@ -262,13 +258,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
         )
 
         read_only_fields = ["token", "username", "last_login"]
-        write_only_fields = ["password", "identification_photo", "license_file"]
+        write_only_fields = ["password"]
         required_false_fields = [
             "state",
             "city",
-            "linkedin_url",
-            "facebook_url",
-            "twitter_url",
             "awards",
         ]
         extra_kwargs = {

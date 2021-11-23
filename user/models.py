@@ -67,13 +67,12 @@ class User(AbstractUser, CoreModel):
     def from_validated_data(cls, validated_data: dict):
         fields = [field.name for field in User._meta.fields]
 
-        password = make_password(validated_data.pop("password"))
-        constructor_kwargs = {field: validated_data.pop(field) for field in fields}
-        constructor_kwargs["password"] = password
+        validated_data["password"] = make_password(validated_data.pop("password"))
+        constructor_kwargs = {field: validated_data.pop(field) for field in fields if field in validated_data}
         return cls(**constructor_kwargs)
 
     @classmethod
-    def get_hidden_fields(cls) -> list:
+    def get_hidden_fields(self) -> list:
         return [
             "is_staff",
             "is_superuser",
@@ -132,11 +131,10 @@ class User(AbstractUser, CoreModel):
             )
             + f"?token={confirmation_token.decode('utf-8')}"
         )
-
         send_mail(
             to_email=self.email,
             subject=f"Welcome to Dokto, please verify your email address",
-            template_name=template[self.user.user_type],
+            template_name=template[self.user_type],
             input_context={
                 "name": self.full_name,
                 "link": link,
@@ -225,9 +223,6 @@ class DoctorInfo(CoreModel):
             "user",
             "reason_to_delete",
             "temporary_disable",
-            "linkedin_url",
-            "facebook_url",
-            "twitter_url",
             "notification_email",
             "is_deleted",
             "deleted_at",
@@ -238,7 +233,7 @@ class DoctorInfo(CoreModel):
         fields = [field.name for field in DoctorInfo._meta.fields]
 
         user = validated_data.pop("user")
-        constructor_kwargs = {field: validated_data.pop(field) for field in fields}
+        constructor_kwargs = {field: validated_data.pop(field) for field in fields if field in validated_data}
         constructor_kwargs["user"] = user
         return cls(**constructor_kwargs)
 
