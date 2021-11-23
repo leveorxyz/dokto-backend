@@ -68,7 +68,11 @@ class User(AbstractUser, CoreModel):
         fields = [field.name for field in User._meta.fields]
 
         validated_data["password"] = make_password(validated_data.pop("password"))
-        constructor_kwargs = {field: validated_data.pop(field) for field in fields if field in validated_data}
+        constructor_kwargs = {
+            field: validated_data.pop(field)
+            for field in fields
+            if field in validated_data
+        }
         return cls(**constructor_kwargs)
 
     @classmethod
@@ -233,7 +237,11 @@ class DoctorInfo(CoreModel):
         fields = [field.name for field in DoctorInfo._meta.fields]
 
         user = validated_data.pop("user")
-        constructor_kwargs = {field: validated_data.pop(field) for field in fields if field in validated_data}
+        constructor_kwargs = {
+            field: validated_data.pop(field)
+            for field in fields
+            if field in validated_data
+        }
         constructor_kwargs["user"] = user
         return cls(**constructor_kwargs)
 

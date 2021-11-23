@@ -133,13 +133,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
     profile_photo = CharField(required=True)
     language = ListField(child=CharField(), write_only=True)
     education = ListField(child=DoctorEducationSerializer(), write_only=True)
-    experience = ListField(child=DoctorExpericenceSerializer(), required=False, write_only=True)
+    experience = ListField(
+        child=DoctorExpericenceSerializer(), required=False, write_only=True
+    )
     specialty = ListField(child=CharField(), write_only=True)
     accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
 
     # Doctor fields
-    identification_photo = CharField(
-        required=True, write_only=True)
+    identification_photo = CharField(required=True, write_only=True)
     identification_type = CharField(
         required=True, source="doctor_info.identification_type"
     )
