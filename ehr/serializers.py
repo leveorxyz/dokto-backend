@@ -14,12 +14,9 @@ from user.models import (
     User,
     PatientInfo,
 )
-from .models import(
-    AssessmentDiagnosis,
-    MedicalNotes,
-    PatientEncounters
-)
+from .models import AssessmentDiagnosis, MedicalNotes, PatientEncounters
 from user.utils import create_user
+
 
 class PatientSerializer(ModelSerializer):
     token = SerializerMethodField()
@@ -97,27 +94,26 @@ class PatientSerializer(ModelSerializer):
             "referring_doctor_address",
         ]
 
+
 #
 #
 #
 class PatientEncounterSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientEncounters
-        fields = '__all__'
-
+        fields = "__all__"
 
 
 class AssessmentDiagnosisSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssessmentDiagnosis
-        fields = '__all__'
+        fields = "__all__"
+
 
 class MedicalNotesSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicalNotes
-        fields = '__all__'
-
-
+        fields = "__all__"
 
 
 # class PatientEncounterOSerializer(serializers.Serializer):
@@ -148,5 +144,3 @@ class MedicalNotesSerializer(serializers.ModelSerializer):
 #         instance.signed = validated_data.get('signed', instance.signed)
 #         instance.save()
 #         return instance
-
-

@@ -196,7 +196,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
         # Extract license data
         license_file = validated_data.pop("license_file")
-        
+
         # Generate username
         username = generate_username(DoctorInfo, validated_data.pop("full_name"))
         print(username)
@@ -469,7 +469,7 @@ class PatientRegistrationSerializer(ModelSerializer):
 
         # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
-        
+
         if "full_name" in validated_data:
             validated_data.pop("full_name")
 

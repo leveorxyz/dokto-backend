@@ -5,7 +5,13 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.decorators import api_view
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView, get_object_or_404
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView,
+    UpdateAPIView,
+    get_object_or_404,
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
@@ -17,13 +23,19 @@ from django.contrib.auth import authenticate, logout
 
 from core.views import CustomRetrieveAPIView, CustomCreateAPIView
 from core.utils import set_user_ip
-from ehr.models import (MedicalNotes, PatientEncounters,AssessmentDiagnosis)
+from ehr.models import MedicalNotes, PatientEncounters, AssessmentDiagnosis
 from user.models import User, PatientInfo
 from user.serializers import (
     UserSerializer,
     PatientRegistrationSerializer,
 )
-from .serializers import (AssessmentDiagnosisSerializer, MedicalNotesSerializer, PatientEncounterSerializer, PatientSerializer)
+from .serializers import (
+    AssessmentDiagnosisSerializer,
+    MedicalNotesSerializer,
+    PatientEncounterSerializer,
+    PatientSerializer,
+)
+
 # Create your views here.
 
 
@@ -43,7 +55,7 @@ class AllEncounters(ListCreateAPIView):
         - visit_reason: string
         - signed: boolean
 
-    """    
+    """
     queryset = PatientEncounters.objects.all()
     serializer_class = PatientEncounterSerializer
 
@@ -84,7 +96,7 @@ class AssessmentDiagnosisView(ListCreateAPIView):
         - patient_encounter: uuid
         
 
-    """    
+    """
     queryset = AssessmentDiagnosis.objects.all()
     serializer_class = AssessmentDiagnosisSerializer
 
@@ -113,9 +125,6 @@ class AssessmentDiagnosisUpdateView(RetrieveUpdateDestroyAPIView):
         return self.destroy(request, *args, **kwargs)
 
 
-
-
-
 class MedicalNotesView(ListCreateAPIView):
     permission_classes = [AllowAny]
     """
@@ -128,7 +137,7 @@ class MedicalNotesView(ListCreateAPIView):
         - patient_encounter: uuid
         
 
-    """    
+    """
     queryset = MedicalNotes.objects.all()
     serializer_class = MedicalNotesSerializer
 
@@ -137,8 +146,6 @@ class MedicalNotesView(ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-
-
 
 
 class MedicalNotesUpdateView(RetrieveUpdateDestroyAPIView):
@@ -159,12 +166,7 @@ class MedicalNotesUpdateView(RetrieveUpdateDestroyAPIView):
         return self.destroy(request, *args, **kwargs)
 
 
-
-
-
-
-
-#@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+# @api_view(['GET', 'POST', 'PUT', 'DELETE'])
 # class AllEncounters1(ListCreateAPIView):
 #     """
 #     List all code patientEncounter, or create a new snippet.
@@ -184,8 +186,6 @@ class MedicalNotesUpdateView(RetrieveUpdateDestroyAPIView):
 #         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 # @csrf_exempt
 # def PatientEncountersFun(request, pid):
 #     """
@@ -203,7 +203,6 @@ class MedicalNotesUpdateView(RetrieveUpdateDestroyAPIView):
 #             serializer.save()
 #             return JsonResponse(serializer.data, status=201)
 #         return JsonResponse(serializer.errors, status=400)
-
 
 
 # @csrf_exempt
@@ -233,7 +232,6 @@ class MedicalNotesUpdateView(RetrieveUpdateDestroyAPIView):
 #         return HttpResponse(status=204)
 
 
-
 # @api_view(['GET', 'POST', 'PUT', 'DELETE'])
 # def hello_world(request):
 #     if request.method == 'POST':
@@ -245,5 +243,3 @@ class MedicalNotesUpdateView(RetrieveUpdateDestroyAPIView):
 #     elif request.method == 'DELETE':
 #         return Response({"message": "Got some data!", "data": request.data})
 #     return Response({"message": "Hello, world!"})
-
-
