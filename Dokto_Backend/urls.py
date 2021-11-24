@@ -51,6 +51,7 @@ urlpatterns = [
     path("docs/", include_docs_urls(title="Dokto API")),
     path("__debug__/", include(debug_toolbar.urls)),
     path("constant/", include("constant.urls")),
+    path("appointment/", include("appointment.urls")),
     url(
         r"^media/(?P<path>.*)$",
         serve,
