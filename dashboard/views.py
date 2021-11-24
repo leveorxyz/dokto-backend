@@ -70,9 +70,7 @@ class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
         return DoctorInfo.objects.all()
 
     def get_object(self):
-        obj = get_object_or_404(
-            self.get_queryset(), username=self.kwargs.get("username")
-        )
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -91,9 +89,7 @@ class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
         return DoctorInfo.objects.all()
 
     def get_object(self) -> DoctorInfo:
-        obj = get_object_or_404(
-            self.get_queryset(), username=self.kwargs.get("username")
-        )
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -108,9 +104,7 @@ class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
             return DoctorAvailableHoursSerializerWithID
 
     def get_queryset(self):
-        doctor_info = get_object_or_404(
-            DoctorInfo, username=self.kwargs.get("username")
-        )
+        doctor_info = get_object_or_404(DoctorInfo, user=self.request.user)
         self.check_object_permissions(self.request, doctor_info)
         return doctor_info.doctoravailablehours_set.all()
 
@@ -129,9 +123,7 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
         return DoctorInfo.objects.all()
 
     def get_object(self):
-        obj = get_object_or_404(
-            self.get_queryset(), username=self.kwargs.get("username")
-        )
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
 
