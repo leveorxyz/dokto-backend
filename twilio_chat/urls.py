@@ -12,4 +12,9 @@ urlpatterns = [
         views.AppointmentVideoChatTokenCreateAPIView.as_view(),
         name="appointment_video_token",
     ),
+    path(
+        "create-conversation/",
+        views.CreateConversationAPIView.as_view(),
+        name="create_conversation",
+    ),
 ]
