@@ -375,7 +375,8 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.PHARMACY)
-
+        if "full_name" in validated_data:
+            validated_data.pop("full_name")
         # Extract pharmacy info
         try:
             PharmacyInfo.objects.create(user=user, **validated_data)
@@ -412,7 +413,8 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.CLINIC)
-
+        if "full_name" in validated_data:
+            validated_data.pop("full_name")
         # Extract clinic info
         try:
             ClinicInfo.objects.create(user=user, **validated_data)
