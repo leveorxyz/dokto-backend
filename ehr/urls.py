@@ -9,9 +9,6 @@ from .views import (
     MedicalNotesView,
     PatientEncounters
 )
-from rest_framework_swagger.views import get_swagger_view
-
-schema_view = get_swagger_view(title='EHR API')
 
 urlpatterns = [
     #path("<uuid:pk>", UserRetrieveAPIView.as_view(), name="user-retrieve"),
@@ -30,5 +27,5 @@ urlpatterns = [
     #path('encounters/<uuid:pk>/', PatientEncounters.as_view(), name="patient-encounters"),
     
 ]
-urlpatterns = format_suffix_patterns(urlpatterns)
+# urlpatterns = format_suffix_patterns(urlpatterns)
 

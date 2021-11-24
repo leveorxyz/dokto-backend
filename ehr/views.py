@@ -143,8 +143,8 @@ class MedicalNotesView(ListCreateAPIView):
 
 class MedicalNotesUpdateView(RetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = AssessmentDiagnosis.objects.all()
-    serializer_class = AssessmentDiagnosisSerializer
+    queryset = MedicalNotes.objects.all()
+    serializer_class = MedicalNotesSerializer
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
