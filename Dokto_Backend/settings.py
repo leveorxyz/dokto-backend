@@ -60,8 +60,8 @@ INSTALLED_APPS = [
     "dashboard",
     "twilio_chat",
     "constant",
-    "ehr"
-    "appointment"
+    "ehr",
+    "appointment",
 ]
 
 MIDDLEWARE = [
