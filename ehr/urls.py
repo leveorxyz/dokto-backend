@@ -1,6 +1,4 @@
 from django.urls import path
-from rest_framework.urlpatterns import format_suffix_patterns
-from ehr import views
 from .views import (
     AllEncounters,
     AssessmentDiagnosisUpdateView,
@@ -11,10 +9,7 @@ from .views import (
 )
 
 urlpatterns = [
-    # path("<uuid:pk>", UserRetrieveAPIView.as_view(), name="user-retrieve"),
     path("encounters/", AllEncounters.as_view(), name="encounter-list"),
-    # path('encounters/', AllEncounters.as_view(), name="encounters"),
-    # path('encounters/<int:pk>/', PatientEncounters.as_view()),
     path(
         "patient-encounters/<uuid:pk>/",
         PatientEncounters.as_view(),
@@ -40,6 +35,4 @@ urlpatterns = [
         MedicalNotesUpdateView.as_view(),
         name="patient-encounter-medical-notes-update",
     ),
-    # path('encounters/<uuid:pk>/', PatientEncounters.as_view(), name="patient-encounters"),
 ]
-# urlpatterns = format_suffix_patterns(urlpatterns)
