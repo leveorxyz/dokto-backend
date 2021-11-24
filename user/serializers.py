@@ -105,13 +105,8 @@ class DoctorSpecialtySerializer(ModelSerializer):
 
 
 class DoctorAvailableHoursSerializer(ModelSerializer):
-    day_of_week = SerializerMethodField()
-
     class Meta:
         model = User
-
-    def get_day_of_week(self, instance):
-        return instance.get_day_of_week_display()
 
     class Meta:
         model = DoctorAvailableHours

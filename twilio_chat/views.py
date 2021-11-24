@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from twilio.jwt.access_token import AccessToken
-from twilio.jwt.access_token.grants import VideoGrant
+from twilio.jwt.access_token.grants import VideoGrant, ChatGrant
 from django.conf import settings
 
 
@@ -65,6 +65,7 @@ class AppointmentVideoChatTokenCreateAPIView(generics.CreateAPIView):
         )
 
         token.add_grant(VideoGrant())
+        token.add_grant(ChatGrant(service_sid=settings.TWILIO_CONVERSATION_SERVICE_SID))
 
         data = {
             "status_code": 201,
