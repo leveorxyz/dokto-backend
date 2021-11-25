@@ -30,7 +30,6 @@ from .serializers import (
 class DoctorProfilePublicAPIView(CustomRetrieveAPIView):
     permission_classes = [AllowAny]
     serializer_class = DoctorProfileSerializer
-    queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
 
     def get_queryset(self):
         username = self.kwargs.get("username")
@@ -46,17 +45,6 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
 
     def get_queryset(self):
         return DoctorInfo.objects.filter(user=self.request.user)
-
-    def get_object(self):
-        return get_object_or_404(self.get_queryset())
-
-
-class DoctorProfileAPIView(CustomRetrieveAPIView):
-    permission_classes = [IsAuthenticated, OwnProfileViewPermission, DoctorPermission]
-    serializer_class = DoctorProfileSerializer
-
-    def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset())
