@@ -156,7 +156,14 @@ class CreateConversationAPIView(generics.CreateAPIView):
                 )
             participant_data.append(participant._properties)
         return Response(
-            data={"status_code": 201, "message": "Success", "result": participant_data},
+            data={
+                "status_code": 201,
+                "message": "Success",
+                "result": {
+                    "channel": conversation._properties,
+                    "participants": participant_data,
+                },
+            },
             status=status.HTTP_201_CREATED,
         )
 
