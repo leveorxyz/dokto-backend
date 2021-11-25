@@ -19,7 +19,6 @@ def create_user(validated_data: dict, user_type: str):
         "password",
         "full_name",
         "street",
-        "zip_code",
         "profile_photo",
     ]
 
@@ -34,7 +33,7 @@ def create_user(validated_data: dict, user_type: str):
         street=validated_data.pop("street"),
         state=validated_data.pop("state", None),
         city=validated_data.pop("city", None),
-        zip_code=validated_data.pop("zip_code"),
+        zip_code=validated_data.pop("zip_code", None),
         contact_no=validated_data.pop("contact_no"),
         user_type=user_type,
     )
