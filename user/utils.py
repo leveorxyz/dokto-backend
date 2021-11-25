@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile
 from django.utils.text import get_valid_filename
+from django.db import models
 
 from .models import User
 
@@ -29,7 +30,7 @@ def create_user(validated_data: dict, user_type: str):
     user = User.objects.create(
         email=validated_data.pop("email"),
         password=make_password(validated_data.pop("password")),
-        full_name=validated_data.pop("full_name"),
+        full_name=validated_data.get("full_name"),
         street=validated_data.pop("street"),
         state=validated_data.pop("state", None),
         city=validated_data.pop("city", None),
@@ -57,3 +58,14 @@ def generate_image_file_and_name(image_data: str, user_id: int):
     image_name = get_valid_filename(f"{user_id}_{current_timestamp}.{file_extention}")
     image_file = ContentFile(base64.b64decode(data), name=image_name)
     return image_name, image_file
+
+
+def generate_username(model: models.Model, full_name: str):
+    """
+    This method is used to generate a username for the user.
+    """
+    converted_name = full_name.replace(" ", ".").lower()
+    username_count = model.objects.filter(username__startswith=converted_name).count()
+    if username_count == 0:
+        return converted_name
+    return f"{converted_name}.{username_count}"

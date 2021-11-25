@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     "dashboard",
     "twilio_chat",
     "constant",
+    "ehr",
+    "appointment",
 ]
 
 MIDDLEWARE = [
@@ -239,3 +241,7 @@ TWILIO_ACCOUNT_SID = os.getenv(
 )
 TWILIO_API_KEY = os.getenv("TWILIO_API_KEY", "SKc6c3595b92ee19b21596509fc6fc92ac")
 TWILIO_API_SECRET = os.getenv("TWILIO_API_SECRET", "ailiJJeASuRZu7nggDkT9hyoOKBDYN9m")
+TWILIO_CONVERSATION_SERVICE_SID = os.getenv(
+    "TWILIO_CONVERSATION_SERVICE_ID", "IS9a972e4c9e51450dbb01e279a8884198"
+)
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "16b13bbf3ea90cad35f2a5191bcfe32c")

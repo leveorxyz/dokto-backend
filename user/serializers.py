@@ -27,7 +27,7 @@ from .models import (
     PharmacyInfo,
     PatientInfo,
 )
-from .utils import create_user, generate_image_file_and_name
+from .utils import create_user, generate_image_file_and_name, generate_username
 
 
 class UserSerializer(ModelSerializer):
@@ -105,13 +105,8 @@ class DoctorSpecialtySerializer(ModelSerializer):
 
 
 class DoctorAvailableHoursSerializer(ModelSerializer):
-    day_of_week = SerializerMethodField()
-
     class Meta:
         model = User
-
-    def get_day_of_week(self, instance):
-        return instance.get_day_of_week_display()
 
     class Meta:
         model = DoctorAvailableHours
@@ -130,7 +125,7 @@ class DoctorReviewSerializer(ModelSerializer):
 
 class DoctorRegistrationSerializer(ModelSerializer):
     token = SerializerMethodField()
-    username = ReadWriteSerializerMethodField(required=True, allow_null=False)
+    username = SerializerMethodField()
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
@@ -197,10 +192,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
         # Extract license data
         license_file = validated_data.pop("license_file")
 
+        # Generate username
+        username = generate_username(DoctorInfo, validated_data.pop("full_name"))
+        print(username)
+
         # Creating doctor info
         try:
             doctor_info: DoctorInfo = DoctorInfo.objects.create(
-                user=user, **validated_data
+                user=user, username=username, **validated_data
             )
             (
                 identification_photo_name,
@@ -371,7 +370,8 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.PHARMACY)
-
+        if "full_name" in validated_data:
+            validated_data.pop("full_name")
         # Extract pharmacy info
         try:
             PharmacyInfo.objects.create(user=user, **validated_data)
@@ -408,7 +408,8 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.CLINIC)
-
+        if "full_name" in validated_data:
+            validated_data.pop("full_name")
         # Extract clinic info
         try:
             ClinicInfo.objects.create(user=user, **validated_data)
@@ -465,6 +466,9 @@ class PatientRegistrationSerializer(ModelSerializer):
 
         # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
+
+        if "full_name" in validated_data:
+            validated_data.pop("full_name")
 
         # Extract patient info
         try:

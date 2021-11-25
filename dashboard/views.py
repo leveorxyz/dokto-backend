@@ -34,8 +34,18 @@ class DoctorProfilePublicAPIView(CustomRetrieveAPIView):
 
     def get_queryset(self):
         username = self.kwargs.get("username")
-        doctor = get_object_or_404(DoctorInfo, username=username)
-        return User.objects.filter(id=doctor.user_id)
+        return DoctorInfo.objects.filter(username=username)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset())
+
+
+class DoctorProfileAPIView(CustomRetrieveAPIView):
+    permission_classes = [IsAuthenticated, OwnProfilePermission, DoctorPermission]
+    serializer_class = DoctorProfileSerializer
+
+    def get_queryset(self):
+        return DoctorInfo.objects.filter(user=self.request.user)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset())
@@ -60,9 +70,7 @@ class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
         return DoctorInfo.objects.all()
 
     def get_object(self):
-        obj = get_object_or_404(
-            self.get_queryset(), username=self.kwargs.get("username")
-        )
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -81,9 +89,7 @@ class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
         return DoctorInfo.objects.all()
 
     def get_object(self) -> DoctorInfo:
-        obj = get_object_or_404(
-            self.get_queryset(), username=self.kwargs.get("username")
-        )
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -98,9 +104,7 @@ class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
             return DoctorAvailableHoursSerializerWithID
 
     def get_queryset(self):
-        doctor_info = get_object_or_404(
-            DoctorInfo, username=self.kwargs.get("username")
-        )
+        doctor_info = get_object_or_404(DoctorInfo, user=self.request.user)
         self.check_object_permissions(self.request, doctor_info)
         return doctor_info.doctoravailablehours_set.all()
 
@@ -119,15 +123,13 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
         return DoctorInfo.objects.all()
 
     def get_object(self):
-        obj = get_object_or_404(
-            self.get_queryset(), username=self.kwargs.get("username")
-        )
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
 
 
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [AllowAny, DoctorPermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorAccountSettingsSerializer
 
     def retrieve(self, request, *args, **kwargs):
