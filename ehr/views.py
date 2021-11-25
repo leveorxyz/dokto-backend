@@ -7,7 +7,9 @@ from .serializers import (
     MedicalNotesSerializer,
     PatientEncounterSerializer,
 )
+
 # Create your views here.
+
 
 class AllEncounters(CustomListCreateAPIView):
     permission_classes = [AllowAny]
