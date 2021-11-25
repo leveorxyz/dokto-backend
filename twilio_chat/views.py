@@ -100,25 +100,27 @@ class CreateConversationAPIView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.data
 
+        patient_user: User = None
+        doctor_user: User = None
+
         if self.request.user.user_type == User.UserType.DOCTOR:
-            unique_name = f"{self.request.user.doctorinfo_set.first().id}_{validated_data['patient_id']}"
-            friendly_name = PatientInfo.objects.get(
-                id=validated_data["patient_id"]
-            ).user.full_name
-            doctor_id = self.request.user.doctorinfo_set.first().id
+            unique_name = f"{self.request.user.id}_{validated_data['patient_id']}"
+            patient_user = User.objects.get(id=validated_data["patient_id"])
+            friendly_name = patient_user.full_name
+            doctor_user = self.request.user
 
         if self.request.user.user_type == User.UserType.PATIENT:
             doctor = DoctorInfo.objects.get(username=validated_data["doctor_username"])
-            unique_name = f"{doctor.id}_{self.request.user.patientinfo_set.first().id}"
+            unique_name = f"{doctor.user.id}_{self.request.user.id}"
             friendly_name = self.request.user.full_name
-            validated_data["patient_id"] = self.request.user.patientinfo_set.first().id
-            doctor_id = doctor.id
+            validated_data["patient_id"] = self.request.user.id
+            patient_user = self.request.user
+            doctor_user = doctor.user
 
         validated_data.update(
             {
                 "friendly_name": friendly_name,
                 "unique_name": unique_name,
-                "doctor_id": doctor_id,
             }
         )
 
@@ -137,8 +139,8 @@ class CreateConversationAPIView(generics.CreateAPIView):
                 validated_data.get("unique_name")
             ).fetch()
         participant_unique_names = [
-            str(validated_data.get("patient_id")),
-            str(validated_data.get("doctor_id")),
+            f"{patient_user.id}_{patient_user.full_name}",
+            f"{doctor_user.id}_{doctor_user.full_name}",
         ]
         print(participant_unique_names)
         participant_data = []
@@ -155,5 +157,26 @@ class CreateConversationAPIView(generics.CreateAPIView):
             participant_data.append(participant._properties)
         return Response(
             data={"status_code": 201, "message": "Success", "result": participant_data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class DeleteConversationAPIView(APIView):
+    """
+    View for handling twilio video chat access token generation.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        service = client.conversations.services(
+            settings.TWILIO_CONVERSATION_SERVICE_SID
+        )
+        conversation_list = service.conversations.list()
+        for conversation in conversation_list:
+            conversation.delete()
+        return Response(
+            data={"status_code": 200, "message": "Success", "result": None},
             status=status.HTTP_201_CREATED,
         )
