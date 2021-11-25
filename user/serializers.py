@@ -134,7 +134,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     street = CharField(write_only=True)
     state = CharField(write_only=True, required=False)
     city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True)
+    zip_code = CharField(write_only=True, required=False)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
     country = CharField(write_only=True)
