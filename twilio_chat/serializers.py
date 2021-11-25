@@ -18,9 +18,6 @@ class CreateConversessionSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        unique_name = ""
-        friendly_name = ""
-        doctor_id = ""
         if self.context["request"].user.user_type == User.UserType.DOCTOR:
             if "patient_id" not in data:
                 raise serializers.ValidationError("patient_id is required")
@@ -30,3 +27,8 @@ class CreateConversessionSerializer(serializers.Serializer):
                 raise serializers.ValidationError("doctor_username is required")
 
         return data
+
+
+class ConversationaAddParticipantSerializer(serializers.Serializer):
+    participant_identity = serializers.CharField()
+    channel_unique_name = serializers.CharField()

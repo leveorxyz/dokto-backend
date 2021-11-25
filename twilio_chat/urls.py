@@ -18,7 +18,12 @@ urlpatterns = [
         name="create_conversation",
     ),
     path(
-        "delete-conversation",
+        "add-participant-conversation/",
+        views.ConversationAddParticipantAPIView.as_view(),
+        name="add_participant_conversation",
+    ),
+    path(
+        "delete-conversation/",
         views.DeleteConversationAPIView.as_view(),
         name="conversation_delete",
     ),
