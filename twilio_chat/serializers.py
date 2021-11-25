@@ -35,5 +35,4 @@ class ConversationaAddParticipantSerializer(serializers.Serializer):
 
 
 class ConversationaRemoveParticipantSerializer(serializers.Serializer):
-    participant_sid = serializers.CharField()
     channel_unique_name = serializers.CharField()

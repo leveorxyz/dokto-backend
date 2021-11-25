@@ -234,12 +234,14 @@ class ConversationRemoveParticipantAPIView(generics.CreateAPIView):
             conversation = client.conversations.conversations(
                 validated_data.get("channel_unique_name")
             ).fetch()
-            participant = (
-                service.conversations(conversation.sid)
-                .participants(sid=validated_data.get("participant_sid"))
-                .delete()
-            )
-            print(participant)
+            participants = service.conversations(conversation.sid).participants.list()
+            result_dict = {}
+            for participant in participants:
+                result_dict[participant.sid] = (
+                    service.conversations(conversation.sid)
+                    .participants(sid=participant.sid)
+                    .delete()
+                )
         except TwilioRestException as e:
             return Response(
                 data={"status_code": 400, "message": e.msg, "result": None},
@@ -252,9 +254,7 @@ class ConversationRemoveParticipantAPIView(generics.CreateAPIView):
                     "message": "Success",
                     "result": {
                         "channel": conversation._properties,
-                        "participants": {
-                            validated_data.get("participant_sid"): participant
-                        },
+                        "participants": result_dict,
                     },
                 },
                 status=status.HTTP_201_CREATED,
