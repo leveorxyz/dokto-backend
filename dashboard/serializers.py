@@ -82,7 +82,10 @@ class DoctorEducationSerializerWithID(DoctorEducationSerializer):
     certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
     def get_certificate(self, doctor_education: DoctorEducation):
-        return doctor_education.certificate.url
+        try:
+            return doctor_education.certificate.url
+        except Exception:
+            return None
 
     class Meta(DoctorEducationSerializer.Meta):
         fields = [
@@ -106,7 +109,10 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
     certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
     def get_certificate(self, doctor_education: DoctorEducation):
-        return doctor_education.certificate.url
+        try:
+            return doctor_education.certificate.url
+        except Exception:
+            return None
 
     class Meta:
         model = DoctorEducation

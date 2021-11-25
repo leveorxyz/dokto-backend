@@ -32,4 +32,9 @@ urlpatterns = [
         views.DeleteConversationAPIView.as_view(),
         name="conversation_delete",
     ),
+    path(
+        "remove-participant-video/",
+        views.VideoRemoveParticipantAPIView.as_view(),
+        name="remove_participant_video",
+    ),
 ]

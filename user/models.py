@@ -140,15 +140,17 @@ class DoctorEducation(CoreModel):
     course = models.CharField(max_length=50)
     year = models.CharField(max_length=15)
     college = models.CharField(max_length=60)
-    certificate = models.ImageField(upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY)
+    certificate = models.ImageField(
+        upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY, null=True, blank=True
+    )
 
-    def delete(self, *args, **kwargs):
-        """
-        Deletes the image file in the storage manually before deletion of an instance
-        """
-        storage, path = self.certificate.storage, self.certificate.path
-        super(DoctorEducation, self).delete(*args, **kwargs)
-        storage.delete(path)
+    # def delete(self, *args, **kwargs):
+    #     """
+    #     Deletes the image file in the storage manually before deletion of an instance
+    #     """
+    #     storage, path = self.certificate.storage, self.certificate.path
+    #     super(DoctorEducation, self).delete(*args, **kwargs)
+    #     storage.delete(path)
 
 
 class DoctorExperience(CoreModel):

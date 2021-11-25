@@ -36,3 +36,8 @@ class ConversationaAddParticipantSerializer(serializers.Serializer):
 
 class ConversationaRemoveParticipantSerializer(serializers.Serializer):
     channel_unique_name = serializers.CharField()
+
+
+class VideoRemoveParticipantSerializer(serializers.Serializer):
+    room_name = serializers.CharField()
+    participant_sid = serializers.CharField()

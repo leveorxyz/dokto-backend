@@ -60,21 +60,24 @@ class DoctorInfoSerializer(ModelSerializer):
 
 
 class DoctorEducationSerializer(ModelSerializer):
-    certificate = CharField(required=True, write_only=True)
+    certificate = CharField(required=False, write_only=True)
 
     def create(self, validated_data):
-        certificate = validated_data.pop("certificate")
+        certificate = None
+        if "certificate" in validated_data:
+            certificate = validated_data.pop("certificate")
         doctor_info = validated_data.pop("doctor_info")
         doctor_education = DoctorEducation.objects.create(
             doctor_info=doctor_info, **validated_data
         )
-        certificate_file_name, certificate_file = generate_image_file_and_name(
-            certificate, doctor_info.id
-        )
-        doctor_education.certificate.save(
-            certificate_file_name, certificate_file, save=True
-        )
-        doctor_education.save()
+        if certificate:
+            certificate_file_name, certificate_file = generate_image_file_and_name(
+                certificate, doctor_info.id
+            )
+            doctor_education.certificate.save(
+                certificate_file_name, certificate_file, save=True
+            )
+            doctor_education.save()
         return doctor_education
 
     class Meta:
@@ -131,7 +134,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     street = CharField(write_only=True)
     state = CharField(write_only=True, required=False)
     city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True)
+    zip_code = CharField(write_only=True, required=False)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
     country = CharField(write_only=True)
