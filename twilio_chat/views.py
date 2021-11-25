@@ -17,8 +17,9 @@ from .serializers import (
     CreateConversessionSerializer,
     ConversationaAddParticipantSerializer,
     ConversationaRemoveParticipantSerializer,
+    VideoRemoveParticipantSerializer,
 )
-from user.models import User, DoctorInfo, PatientInfo
+from user.models import User, DoctorInfo
 from core.literals import TWILIO_CONVERSATION_ROOM_EXISTS
 
 
@@ -287,3 +288,39 @@ class DeleteConversationAPIView(APIView):
             data={"status_code": 200, "message": "Success", "result": None},
             status=status.HTTP_201_CREATED,
         )
+
+
+class VideoRemoveParticipantAPIView(generics.CreateAPIView):
+    """
+    View for handling twilio video chat access token generation.
+    """
+
+    permission_classes = [AllowAny]
+    serializer_class = VideoRemoveParticipantSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.data
+
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        try:
+            participant = (
+                client.video.rooms(validated_data.get("room_name"))
+                .participants.get(validated_data.get("participant_sid"))
+                .update(status="disconnected")
+            )
+        except TwilioRestException as e:
+            return Response(
+                data={"status_code": 400, "message": e.msg, "result": None},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        else:
+            return Response(
+                data={
+                    "status_code": 200,
+                    "message": "Success",
+                    "result": participant._properties,
+                },
+                status=status.HTTP_200_OK,
+            )
