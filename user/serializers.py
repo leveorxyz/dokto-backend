@@ -73,21 +73,30 @@ class DoctorInfoSerializer(ModelSerializer):
 class DoctorEducationSerializer(ModelSerializer):
     class Meta:
         model = DoctorEducation
-        fields = "__all__"
+        fields = fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields())
+        )
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorExpericenceSerializer(ModelSerializer):
     class Meta:
         model = DoctorExperience
-        fields = "__all__"
+        fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields())
+        )
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorSpecialtySerializer(ModelSerializer):
     class Meta:
         model = DoctorSpecialty
-        fields = "__all__"
+        fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields())
+        )
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
