@@ -13,5 +13,14 @@ class CoreModel(models.Model):
     def get_hidden_fields(cls):
         return ["created_at", "updated_at", "is_deleted", "deleted_at"]
 
+    def update_from_validated_data(self, validated_data: dict, *args, **kwargs):
+        fields = [field.name for field in self._meta.fields]
+
+        for field in fields:
+            if field in validated_data:
+                setattr(self, field, validated_data.pop(field))
+
+        self.save()
+
     class Meta:
         abstract = True

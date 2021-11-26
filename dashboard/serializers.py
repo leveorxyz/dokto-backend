@@ -37,27 +37,18 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
 
     full_name = CharField(source="user.full_name", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
-    profile_photo = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
-    def get_profile_photo(self, doctor_info: DoctorInfo) -> str:
-        return doctor_info.user.profile_photo.url
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
 
     def update(self, instance: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "user" in validated_data:
             user_data = validated_data.pop("user")
-            user = instance.user
-            full_name = user_data.get("full_name", user.full_name)
-            contact_no = user_data.get("contact_no", user.contact_no)
-            user.full_name = full_name
-            user.contact_no = contact_no
-            user.save()
-        if "profile_photo" in validated_data:
-            profile_photo_data = validated_data.pop("profile_photo")
-            user = instance.user
-            file_name, file = generate_file_and_name(profile_photo_data, user.id)
-            user.profile_photo.delete(save=True)
-            user.profile_photo.save(file_name, file, save=True)
-            user.save()
+            instance.user.update_from_validated_data(user_data)
+            if "profile_photo" in validated_data:
+                profile_photo_data = user_data.pop("profile_photo")
+                instance.user.profile_photo = profile_photo_data
+
         instance = super().update(instance, validated_data)
         return instance
 
