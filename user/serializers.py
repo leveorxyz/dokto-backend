@@ -44,9 +44,13 @@ class UserSerializer(ModelSerializer):
 
 
 class UserLoginSerializer(ModelSerializer):
+    username = CharField(source="get_username")
+
     class Meta:
         model = User
-        fields = [field.name for field in model._meta.fields] + ["token"]
+        fields = list(
+            set(field.name for field in model._meta.fields) - set(["_profile_photo"])
+        ) + ["token", "profile_photo", "username"]
         extra_kwargs = {field: {"read_only": True} for field in fields}
         extra_kwargs["password"] = {"write_only": True}
         del extra_kwargs["email"]
