@@ -14,7 +14,7 @@ from user.models import (
     User,
     PatientInfo,
 )
-from .models import AssessmentDiagnosis, MedicalNotes, PatientEncounters
+from .models import AssessmentDiagnosis, MedicalNotes, PatientEncounters, PatientSocialHistory
 from user.utils import create_user
 
 
@@ -98,6 +98,18 @@ class PatientSerializer(ModelSerializer):
 #
 #
 #
+
+class PatientEncounterViewSerializer(serializers.ModelSerializer):
+    
+    patient_name = serializers.CharField(source='patient.user.email') 
+    provider_name = serializers.CharField(source='provider.user.email') 
+    
+    class Meta:
+        model = PatientEncounters
+        fields = ['id', 'visit_date','location','visit_reason','signed','patient','provider', 'patient_name', 'provider_name']
+
+
+
 class PatientEncounterSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientEncounters
@@ -114,6 +126,13 @@ class MedicalNotesSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicalNotes
         fields = "__all__"
+
+
+class PatientSocialHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientSocialHistory
+        fields = "__all__"
+
 
 
 # class PatientEncounterOSerializer(serializers.Serializer):
