@@ -401,7 +401,6 @@ class PatientInfo(CoreModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     gender = models.CharField(max_length=20, choices=Gender.choices)
     date_of_birth = models.DateField()
-    social_security_number = models.CharField(max_length=12, null=True, blank=True)
     identification_type = models.CharField(
         max_length=20, choices=IdentificationType.choices
     )
@@ -424,6 +423,19 @@ class PatientInfo(CoreModel):
         max_length=20, null=True, blank=True
     )
     referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
+
+    @classmethod
+    def from_validated_data(cls, validated_data: dict, *args, **kwargs):
+        fields = [field.name for field in PatientInfo._meta.fields]
+
+        user = validated_data.pop("user")
+        constructor_kwargs = {
+            field: validated_data.pop(field)
+            for field in fields
+            if field in validated_data
+        }
+        constructor_kwargs["user"] = user
+        return cls(**constructor_kwargs)
 
     @property
     def identification_photo(self):

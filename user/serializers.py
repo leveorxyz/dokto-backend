@@ -342,88 +342,27 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
 
 class PatientRegistrationSerializer(ModelSerializer):
-    token = SerializerMethodField()
-    password = CharField(write_only=True)
-    full_name = CharField(write_only=True)
-    street = CharField(write_only=True)
-    state = CharField(write_only=True, required=False)
-    city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True)
-    contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
-    date_of_birth = DateField(write_only=True)
-    gender = CharField(write_only=True)
-    social_security_number = CharField(write_only=True, required=False)
-    identification_type = CharField(write_only=True)
-    identification_number = CharField(write_only=True)
-    identification_photo = CharField(write_only=True)
-
-    # Insurance details
-    insurance_type = CharField(write_only=True)
-    insurance_name = CharField(write_only=True, required=False)
-    insurance_number = CharField(write_only=True, required=False)
-    insurance_policy_holder_name = CharField(write_only=True, required=False)
-
-    # Insurance reference
-    referring_doctor_full_name = CharField(write_only=True, required=False)
-    referring_doctor_phone_number = CharField(write_only=True, required=False)
-    referring_doctor_address = CharField(write_only=True, required=False)
-
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
-
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
-
     def create(self, validated_data):
-        host_url = self.context["request"].build_absolute_uri()
         user: User = User.from_validated_data(
-            validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
+            validated_data=validated_data.update({"user_type": User.UserType.PATIENT})
         )
         user.save()
-        user.profile_photo = validated_data.pop("profile_photo")
-
-        # Extract identification data
-        identification_photo = validated_data.pop("identification_photo")
-
-        if "full_name" in validated_data:
-            validated_data.pop("full_name")
-
-        # Extract patient info
         try:
-            patient_info = PatientInfo.objects.create(user=user, **validated_data)
-            (
-                identification_photo_name,
-                identification_photo,
-            ) = generate_file_and_name(identification_photo, patient_info.id)
-            patient_info.identification_photo.save(
-                identification_photo_name, identification_photo, save=True
-            )
+            user.profile_photo = validated_data.pop("profile_photo")
         except Exception as e:
             user.delete()
             raise e
 
-        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
-            text=user.email
-        )
+        identification_photo = validated_data.pop("identification_photo")
+        validated_data.update({"user": user})
+        try:
+            patient_info = PatientInfo.from_validated_data(validated_data)
+            patient_info.identification_photo = identification_photo
+        except Exception as e:
+            user.delete()
+            raise e
 
-        link = (
-            "/".join(
-                [
-                    settings.FRONTEND_URL,
-                    "email-verification",
-                ]
-            )
-            + f"?token={confirmation_token.decode('utf-8')}"
-        )
-
-        send_mail(
-            to_email=user.email,
-            subject=f"Welcome to Dokto, please verify your email address",
-            template_name="email/patient_verification.html",
-            input_context={"name": user.full_name, "link": link, "host_url": host_url},
-        )
+        user.send_email_verification_mail()
 
         return user
 
