@@ -45,7 +45,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
         if "user" in validated_data:
             user_data = validated_data.pop("user")
             instance.user.update_from_validated_data(user_data)
-            if "profile_photo" in validated_data:
+            if "profile_photo" in user_data:
                 profile_photo_data = user_data.pop("profile_photo")
                 instance.user.profile_photo = profile_photo_data
 
@@ -70,8 +70,6 @@ class DoctorEducationSerializerWithID(DoctorEducationSerializer):
     PUT/PATCH requests will be handled by another serializer below.
     """
 
-    certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
     def get_certificate(self, doctor_education: DoctorEducation):
         return doctor_education.certificate.url
 
@@ -82,7 +80,6 @@ class DoctorEducationSerializerWithID(DoctorEducationSerializer):
             "course",
             "year",
             "college",
-            "certificate",
         ]
 
 
@@ -94,10 +91,6 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
     """
 
     operation = CharField(required=True, allow_null=False, write_only=True)
-    certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
-    def get_certificate(self, doctor_education: DoctorEducation):
-        return doctor_education.certificate.url
 
     class Meta:
         model = DoctorEducation
@@ -107,7 +100,6 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
             "course",
             "year",
             "college",
-            "certificate",
             "operation",
         ]
         extra_kwargs = {
@@ -116,7 +108,6 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
             "course": {"required": False},
             "year": {"required": False},
             "college": {"required": False},
-            "certificate": {"required": False},
         }
 
 
@@ -407,7 +398,9 @@ class DoctorProfileSerializer(ModelSerializer):
     city = CharField(source="user.city", required=False, allow_null=True)
     zip_code = CharField(source="user.zip_code", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
-    profile_photo = SerializerMethodField(required=False, allow_null=True)
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
     avg_rating = SerializerMethodField(required=False, allow_null=True)
     qualification_suffix = SerializerMethodField(required=False, allow_null=True)
     education = DoctorEducationSerializerWithID(
@@ -445,9 +438,6 @@ class DoctorProfileSerializer(ModelSerializer):
     def get_qualification_suffix(self, doctor_info: DoctorInfo) -> str:
         courses = doctor_info.doctoreducation_set.all().values_list("course", flat=True)
         return ", ".join(courses)
-
-    def get_profile_photo(self, doctor_info: DoctorInfo) -> str:
-        return settings.BACKEND_URL + doctor_info.user.profile_photo.url
 
     def get_specialty(self, doctor_info: DoctorInfo) -> list:
         return doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
