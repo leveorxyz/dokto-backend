@@ -66,53 +66,27 @@ class DoctorInfoSerializer(ModelSerializer):
 
 
 class DoctorEducationSerializer(ModelSerializer):
-    certificate = CharField(required=True, write_only=True)
-
-    def create(self, validated_data):
-        certificate = validated_data.pop("certificate")
-        doctor_info = validated_data.pop("doctor_info")
-        doctor_education = DoctorEducation.objects.create(
-            doctor_info=doctor_info, **validated_data
-        )
-        doctor_education.certificate = certificate
-        return doctor_education
-
     class Meta:
         model = DoctorEducation
-        fields = ["doctor_info", "course", "year", "college", "certificate"]
+        fields = "__all__"
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorExpericenceSerializer(ModelSerializer):
     class Meta:
         model = DoctorExperience
-        fields = [
-            "doctor_info",
-            "establishment_name",
-            "job_title",
-            "start_date",
-            "end_date",
-            "job_description",
-        ]
+        fields = "__all__"
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorSpecialtySerializer(ModelSerializer):
     class Meta:
         model = DoctorSpecialty
-        fields = ["doctor_info", "specialty"]
+        fields = "__all__"
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorAvailableHoursSerializer(ModelSerializer):
-    day_of_week = SerializerMethodField()
-
-    class Meta:
-        model = User
-
-    def get_day_of_week(self, instance):
-        return instance.get_day_of_week_display()
-
     class Meta:
         model = DoctorAvailableHours
         fields = [
@@ -181,7 +155,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
         validated_data.update({"user_type": User.UserType.DOCTOR})
         user: User = User.from_validated_data(validated_data=validated_data)
         user.save()
-        user.profile_photo = validated_data.pop("profile_photo")
+        try:
+            user.profile_photo = validated_data.pop("profile_photo")
+        except Exception as e:
+            user.delete()
+            raise e
 
         experience_data = []
         if "experience" in validated_data:
