@@ -15,7 +15,6 @@ from core.models import CoreModel
 from core.literals import (
     PROFILE_PHOTO_DIRECTORY,
     DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY,
-    DOCTOR_EDUCATION_PHOTO_DIRECTORY,
     DOCTOR_LICENSE_FILE_DIRECTORY,
     PATIENT_IDENTIFICATION_PHOTO_DIRECTORY,
 )
@@ -77,15 +76,13 @@ class User(AbstractUser, CoreModel):
 
     @classmethod
     def get_hidden_fields(self) -> list:
-        return [
+        return super().get_hidden_fields() + [
             "is_staff",
             "is_superuser",
             "is_verified",
             "_profile_photo",
             "is_active",
-            "is_deleted",
             "date_joined",
-            "deleted_at",
         ]
 
     @property
@@ -221,7 +218,7 @@ class DoctorInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(self, *args, **kwargs) -> list:
-        return [
+        return super().get_hidden_fields() + [
             "_identification_photo",
             "_license_file",
             "id",
@@ -229,21 +226,17 @@ class DoctorInfo(CoreModel):
             "reason_to_delete",
             "temporary_disable",
             "notification_email",
-            "is_deleted",
-            "deleted_at",
         ]
 
     @classmethod
     def from_validated_data(cls, validated_data: dict, *args, **kwargs):
         fields = [field.name for field in DoctorInfo._meta.fields]
 
-        user = validated_data.pop("user")
         constructor_kwargs = {
             field: validated_data.pop(field)
             for field in fields
             if field in validated_data
         }
-        constructor_kwargs["user"] = user
         return cls(**constructor_kwargs)
 
     @property
@@ -434,14 +427,10 @@ class PatientInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return [
+        return super().get_hidden_fields() + [
             "_identification_photo",
             "user",
             "id",
-            "created_at",
-            "updated_at",
-            "deleted_at",
-            "is_deleted",
         ]
 
     @property

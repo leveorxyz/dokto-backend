@@ -9,5 +9,9 @@ class CoreModel(models.Model):
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
+    @classmethod
+    def get_hidden_fields(cls):
+        return ["created_at", "updated_at", "is_deleted", "deleted_at"]
+
     class Meta:
         abstract = True

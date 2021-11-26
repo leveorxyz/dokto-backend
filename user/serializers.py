@@ -257,27 +257,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
 
 class PharmacyRegistrationSerializer(ModelSerializer):
-    username = ReadWriteSerializerMethodField(required=True, allow_null=False)
-    token = SerializerMethodField()
-    password = CharField(write_only=True)
-    full_name = CharField(write_only=True)
-    street = CharField(write_only=True)
-    state = CharField(write_only=True, required=False)
-    city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True)
-    contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
-    number_of_practitioners = IntegerField(write_only=True)
-
-    def get_username(self, user: User) -> str:
-        return PharmacyInfo.objects.get(user=user).username
-
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
-
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
+    username = CharField(read_only=True, source="get_username")
 
     def create(self, validated_data):
         # Generate username
@@ -287,7 +267,11 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
         )
         user.save()
-        user.profile_photo = validated_data.pop("profile_photo")
+        try:
+            user.profile_photo = validated_data.pop("profile_photo")
+        except Exception as e:
+            user.delete()
+            raise e
 
         # Extract pharmacy info
         try:
@@ -300,21 +284,32 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "username",
-            "email",
-            "password",
-            "token",
-            "full_name",
-            "street",
-            "state",
-            "city",
-            "zip_code",
-            "contact_no",
-            "profile_photo",
-            "number_of_practitioners",
-        ]
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(User.get_hidden_fields() + ["user_type"])
+        )
+        extra_fields = list(
+            set(field.name for field in PharmacyInfo._meta.fields)
+            - set(PharmacyInfo.get_hidden_fields())
+        )
+        fields = (
+            main_fields
+            + extra_fields
+            + [
+                "username",
+                "token",
+                "profile_photo",
+            ]
+        )
+
+        read_only_fields = ["token", "username", "last_login"]
+        write_only_fields = ["password"]
+        required_false_fields = ["state", "city", "zip_code", "number_of_practitioners"]
+        extra_kwargs = {
+            **{key: {"required": False} for key in required_false_fields},
+            **{key: {"write_only": True} for key in write_only_fields},
+            **{key: {"read_only": True} for key in read_only_fields},
+        }
 
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
@@ -331,7 +326,12 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
             validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
         )
         user.save()
-        user.profile_photo = validated_data.pop("profile_photo")
+
+        try:
+            user.profile_photo = validated_data.pop("profile_photo")
+        except Exception as e:
+            user.delete()
+            raise e
 
         # Extract clinic info
         try:
@@ -341,10 +341,6 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
             raise e
 
         return user
-
-    class Meta:
-        model = User
-        fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
 
 
 class PatientRegistrationSerializer(ModelSerializer):
