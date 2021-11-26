@@ -110,7 +110,8 @@ class User(AbstractUser, CoreModel):
 
     @profile_photo.deleter
     def profile_photo(self):
-        self._profile_photo.delete(save=True)
+        if self._profile_photo.name:
+            self._profile_photo.delete(save=True)
 
     def delete(self, *args, **kwargs):
         del self.profile_photo
