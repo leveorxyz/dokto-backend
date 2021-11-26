@@ -358,7 +358,7 @@ class PharmacyRegistrationSerializer(ModelSerializer):
     zip_code = CharField(write_only=True, required=False)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
-    number_of_practitioners = IntegerField(write_only=True)
+    number_of_practitioners = IntegerField(write_only=True, required=False)
 
     def get_username(self, user: User) -> str:
         return PharmacyInfo.objects.get(user=user).username
@@ -404,8 +404,6 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
-    clinic_type = CharField(write_only=True)
-
     def get_username(self, user: User) -> str:
         return ClinicInfo.objects.get(user=user).username
 
@@ -425,7 +423,7 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
     class Meta:
         model = User
-        fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
+        fields = PharmacyRegistrationSerializer.Meta.fields
 
 
 class PatientRegistrationSerializer(ModelSerializer):
