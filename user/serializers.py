@@ -9,6 +9,7 @@ from rest_framework.serializers import (
     ListField,
     IntegerField,
     URLField,
+    ChoiceField,
 )
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
@@ -115,8 +116,10 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
     # Doctor fields
     identification_photo = CharField(required=True, write_only=True)
-    identification_type = CharField(
-        required=True, source="doctor_info.identification_type"
+    identification_type = ChoiceField(
+        choices=DoctorInfo.IdentificationType.choices,
+        required=True,
+        source="doctor_info.identification_type",
     )
     identification_number = CharField(
         required=True, source="doctor_info.identification_number"
@@ -128,7 +131,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
     awards = CharField(source="doctor_info.awards")
     country = CharField(required=True, source="doctor_info.country")
     professional_bio = CharField(required=True, source="doctor_info.professional_bio")
-    gender = CharField(required=True, source="doctor_info.gender")
+    gender = ChoiceField(
+        choices=PatientInfo.Gender.choices, required=True, source="doctor_info.gender"
+    )
     date_of_birth = DateField(required=True, source="doctor_info.date_of_birth")
 
     def from_serializer(
@@ -241,6 +246,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         required_false_fields = [
             "state",
             "city",
+            "zip_code",
             "awards",
         ]
         extra_kwargs = {
@@ -342,6 +348,41 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
 
 class PatientRegistrationSerializer(ModelSerializer):
+    profile_photo = CharField(required=True)
+    identification_photo = CharField(required=True, write_only=True)
+    identification_type = ChoiceField(
+        choices=PatientInfo.IdentificationType.choices,
+        required=True,
+        source="patient_info.identification_type",
+    )
+    identification_number = CharField(
+        required=True, source="patient_info.identification_number"
+    )
+    referring_doctor_full_name = CharField(
+        required=False, source="patient_info.referring_doctor_full_name"
+    )
+    referring_doctor_phone_number = CharField(
+        required=False, source="patient_info.referring_doctor_phone_number"
+    )
+    referring_doctor_address = CharField(
+        required=False, source="patient_info.referring_doctor_address"
+    )
+    insurance_type = ChoiceField(
+        choices=PatientInfo.InsuranceType,
+        required=False,
+        source="patient_info.insurance_type",
+    )
+    insurance_name = CharField(required=False, source="patient_info.insurance_name")
+    insurance_number = CharField(required=False, source="patient_info.insurance_number")
+    insurance_policy_holder_name = CharField(
+        required=False, source="patient_info.insurance_policy_holder_name"
+    )
+    date_of_birth = DateField(required=False, source="patient_info.date_of_birth")
+    gender = ChoiceField(
+        choices=PatientInfo.Gender.choices, required=True, source="patient_info.gender"
+    )
+    name_of_parent = CharField(required=False, source="patient_info.name_of_parent")
+
     def create(self, validated_data):
         user: User = User.from_validated_data(
             validated_data=validated_data.update({"user_type": User.UserType.PATIENT})
@@ -368,32 +409,36 @@ class PatientRegistrationSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "token",
-            "password",
-            "full_name",
-            "street",
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(User.get_hidden_fields())
+        )
+        extra_fields = list(
+            set(field.name for field in PatientInfo._meta.fields)
+            - set(PatientInfo.get_hidden_fields())
+        )
+        fields = (
+            main_fields
+            + extra_fields
+            + [
+                "profile_photo",
+                "identification_photo",
+                "token",
+            ]
+        )
+
+        read_only_fields = ["token", "last_login", "user_type"]
+        write_only_fields = ["password"]
+        required_false_fields = [
             "state",
             "city",
             "zip_code",
-            "contact_no",
-            "profile_photo",
-            "date_of_birth",
-            "gender",
-            "social_security_number",
-            "identification_type",
-            "identification_number",
-            "identification_photo",
-            "insurance_type",
-            "insurance_name",
-            "insurance_number",
-            "insurance_policy_holder_name",
-            "referring_doctor_full_name",
-            "referring_doctor_phone_number",
-            "referring_doctor_address",
         ]
+        extra_kwargs = {
+            **{key: {"required": False} for key in required_false_fields},
+            **{key: {"write_only": True} for key in write_only_fields},
+            **{key: {"read_only": True} for key in read_only_fields},
+        }
 
 
 class VerifyEmailSerializer(Serializer):

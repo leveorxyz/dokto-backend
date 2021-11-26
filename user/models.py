@@ -395,10 +395,10 @@ class PatientInfo(CoreModel):
         STUDENT_ID = "STUDENT ID", _("student id")
 
     class InsuranceType(models.TextChoices):
-        SELF_PAID = "SELF PAID", _("self paid")
-        INSURANCE_VERIFIED = "INSURANCE VERIFIED", _("insurance verified")
+        SELF_PAY = "SELF-PAY", _("self-pay")
+        INSURANCE = "INSURANCE", _("insurance")
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     gender = models.CharField(max_length=20, choices=Gender.choices)
     date_of_birth = models.DateField()
     identification_type = models.CharField(
@@ -423,19 +423,30 @@ class PatientInfo(CoreModel):
         max_length=20, null=True, blank=True
     )
     referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
+    name_of_parent = models.CharField(max_length=100, blank=True, null=True)
 
     @classmethod
     def from_validated_data(cls, validated_data: dict, *args, **kwargs):
         fields = [field.name for field in PatientInfo._meta.fields]
 
-        user = validated_data.pop("user")
         constructor_kwargs = {
             field: validated_data.pop(field)
             for field in fields
             if field in validated_data
         }
-        constructor_kwargs["user"] = user
         return cls(**constructor_kwargs)
+
+    @classmethod
+    def get_hidden_fields(cls):
+        return [
+            "_identification_photo",
+            "user",
+            "id",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+            "is_deleted",
+        ]
 
     @property
     def identification_photo(self):
