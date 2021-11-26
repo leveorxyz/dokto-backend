@@ -101,6 +101,8 @@ class User(AbstractUser, CoreModel):
 
     @profile_photo.setter
     def profile_photo(self, profile_photo_data):
+        if self._profile_photo.name:
+            del self.profile_photo
         file_name, file = generate_file_and_name(profile_photo_data, self.id)
         self._profile_photo.save(file_name, file, save=True)
         self.save()
@@ -247,6 +249,8 @@ class DoctorInfo(CoreModel):
 
     @identification_photo.setter
     def identification_photo(self, identification_photo_data):
+        if self._identification_photo.name:
+            del self.identification_photo
         file_name, file = generate_file_and_name(identification_photo_data, self.id)
         self._identification_photo.save(file_name, file, save=True)
         self.save()
@@ -264,6 +268,8 @@ class DoctorInfo(CoreModel):
 
     @license_file.setter
     def license_file(self, license_file_data):
+        if self._license_file.name:
+            del self.license_file
         file_name, file = generate_file_and_name(license_file_data, self.id)
         self._license_file.save(file_name, file, save=True)
         self.save()
@@ -449,6 +455,8 @@ class PatientInfo(CoreModel):
 
     @identification_photo.setter
     def identification_photo(self, identification_photo_data):
+        if self._identification_photo.name:
+            del self.identification_photo
         file_name, file = generate_file_and_name(identification_photo_data, self.id)
         self._identification_photo.save(file_name, file, save=True)
         self.save()
