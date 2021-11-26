@@ -44,7 +44,7 @@ class UserSerializer(ModelSerializer):
 
 
 class UserLoginSerializer(ModelSerializer):
-    username = CharField(source="get_username")
+    username = CharField(source="get_username", read_only=True)
 
     class Meta:
         model = User
