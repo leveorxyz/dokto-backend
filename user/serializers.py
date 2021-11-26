@@ -466,9 +466,8 @@ class VerifyEmailSerializer(Serializer):
         except User.DoesNotExist:
             raise ValidationError("User does not exist")
 
-        if not user.is_active:
-            user.is_active = True
-            user.is_verified = True
-            user.save()
+        user.is_active = True
+        user.is_verified = True
+        user.save()
 
         return data

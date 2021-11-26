@@ -151,17 +151,10 @@ class VerifyEmailView(APIView):
         serializer = VerifyEmailSerializer(data={"token": kwargs["token"]})
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
-        user = validated_data["user"]
-        token, _ = Token.objects.get_or_create(user=user)
         return Response(
             {
                 "status_code": 200,
                 "message": "Email verified successfully.",
-                "result": {
-                    "id": user.id,
-                    "email": user.email,
-                    "profile_photo": user.profile_photo.url,
-                    "token": token.key,
-                },
+                "result": UserLoginSerializer(instance=validated_data["user"]).data,
             }
         )
