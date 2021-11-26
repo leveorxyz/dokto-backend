@@ -32,28 +32,6 @@ class LoginView(GenericAPIView):
     queryset = User.objects.all()
 
     def post(self, request):
-        """
-        User login endpoint
-
-        Request method: POST
-
-        Request fields
-        ---
-        - email: string
-        - password: string
-
-        Response codes
-        ---
-        - 200: User logged in successfully
-        - 401: Invalid credentials
-
-        Response fields
-        ---
-        - id: int
-        - token: string
-        - email: string
-        """
-
         # Extracting data from request and validating it
         user = None
         fields = ["email", "password"]
@@ -94,17 +72,6 @@ class LoginView(GenericAPIView):
 
 class LogoutView(APIView):
     def post(self, request):
-        """
-        User logout endpoint
-
-        Request method: POST
-
-        Response codes
-        ---
-        - 200: User logged out successfully
-        - 401: Invalid credentials
-        """
-
         # Flushing current request session
         set_user_ip(request)
         logout(request)
@@ -121,21 +88,6 @@ class UsernameExists(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, user_type=None, username=None):
-        """
-        Check if email exists
-
-        Request method: GET
-
-        Response codes
-        ---
-        - 200: Exists
-        - 404: Does not exist
-
-        Response fields
-        ---
-        - status_code: int
-        - message: string
-        """
         if not user_type or not username:
             raise ValidationError("Invalid request parameters.")
 
@@ -175,91 +127,24 @@ class DoctorSignupView(CustomCreateAPIView):
 
 
 class PatientSignupView(CustomCreateAPIView):
-    """
-    Patient signup endpoint
-
-    Request method: POST
-
-    Request fields
-    ---
-    - email: string
-    - password: string
-    - first_name: string
-    - last_name: string
-    - phone_number: string
-    - address:
-        - street: string
-        - city: string
-        - state: string
-        - zip_code: string
-        - country: string
-    """
-
     permission_classes = [AllowAny]
     queryset = User.objects.filter(user_type=User.UserType.PATIENT)
     serializer_class = PatientRegistrationSerializer
 
 
 class ClinicSignupView(CustomCreateAPIView):
-    """
-    Clinic signup endpoint
-
-    Request method: POST
-
-    Request fields
-    ---
-    - username: string
-    - email: string
-    - password: string
-    - first_name: string
-    - last_name: string
-    - phone_number: string
-    - address:
-        - street: string
-        - city: string
-        - state: string
-        - zip_code: string
-        - country: string
-    """
-
     permission_classes = [AllowAny]
     queryset = User.objects.filter(user_type=User.UserType.CLINIC)
     serializer_class = ClinicRegistrationSerializer
 
 
 class PharmacySignupView(CustomCreateAPIView):
-    """
-    Pharmacy signup endpoint
-
-    Request method: POST
-
-    Request fields
-    ---
-    - email: string
-    - password: string
-    - first_name: string
-    - last_name: string
-    - phone_number: string
-    - address:
-        - street: string
-        - city: string
-        - state: string
-        - zip_code: string
-        - country: string
-    """
-
     permission_classes = [AllowAny]
     queryset = User.objects.filter(user_type=User.UserType.PHARMACY)
     serializer_class = PharmacyRegistrationSerializer
 
 
 class VerifyEmailView(APIView):
-    """
-    Verify email endpoint
-
-    Request method: POST
-    """
-
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):

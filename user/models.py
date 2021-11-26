@@ -352,6 +352,10 @@ class ClinicInfo(CoreModel):
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
 
+    @classmethod
+    def get_hidden_fields(cls):
+        return super().get_hidden_fields() + ["user"]
+
 
 class PharmacyInfo(CoreModel):
     username = models.CharField(
@@ -368,6 +372,10 @@ class PharmacyInfo(CoreModel):
         User, on_delete=models.CASCADE, related_name="pharmacy_info"
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+
+    @classmethod
+    def get_hidden_fields(cls):
+        return super().get_hidden_fields() + ["user"]
 
 
 class PatientInfo(CoreModel):

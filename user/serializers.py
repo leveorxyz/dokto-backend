@@ -258,14 +258,17 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
 class PharmacyRegistrationSerializer(ModelSerializer):
     username = CharField(read_only=True, source="get_username")
+    number_of_practitioners = IntegerField(
+        required=False, source="pharmacy_info.number_of_practitioners"
+    )
+    profile_photo = CharField(required=True)
 
     def create(self, validated_data):
         # Generate username
-        username = generate_username(DoctorInfo, validated_data.get("full_name"))
+        username = generate_username(PharmacyInfo, validated_data.get("full_name"))
 
-        user: User = User.from_validated_data(
-            validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
-        )
+        validated_data.update({"user_type": User.UserType.PHARMACY})
+        user: User = User.from_validated_data(validated_data=validated_data)
         user.save()
         try:
             user.profile_photo = validated_data.pop("profile_photo")
@@ -313,18 +316,16 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
-    clinic_type = CharField(write_only=True)
+    number_of_practitioners = IntegerField(
+        required=False, source="clinic_info.number_of_practitioners"
+    )
 
-    def get_username(self, user: User) -> str:
-        return ClinicInfo.objects.get(user=user).username
-
-    def create(self, validated_data):
+    def create(self, validated_data: dict):
         # Generate username
-        username = generate_username(DoctorInfo, validated_data.get("full_name"))
+        username = generate_username(ClinicInfo, validated_data.get("full_name"))
 
-        user: User = User.from_validated_data(
-            validated_data=validated_data.update({"user_type": User.UserType.PHARMACY})
-        )
+        validated_data.update({"user_type": User.UserType.CLINIC})
+        user: User = User.from_validated_data(validated_data=validated_data)
         user.save()
 
         try:
