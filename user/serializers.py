@@ -197,7 +197,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
         # Generate username
         username = generate_username(DoctorInfo, validated_data.pop("full_name"))
-        print(username)
 
         # Creating doctor info
         try:
@@ -349,17 +348,17 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
 
 class PharmacyRegistrationSerializer(ModelSerializer):
-    username = ReadWriteSerializerMethodField(required=True, allow_null=False)
+    username = SerializerMethodField()
     token = SerializerMethodField()
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
     state = CharField(write_only=True, required=False)
     city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True)
+    zip_code = CharField(write_only=True, required=False)
     contact_no = CharField(write_only=True)
     profile_photo = ReadWriteSerializerMethodField()
-    number_of_practitioners = IntegerField(write_only=True)
+    number_of_practitioners = IntegerField(write_only=True, required=False)
 
     def get_username(self, user: User) -> str:
         return PharmacyInfo.objects.get(user=user).username
@@ -373,11 +372,12 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.PHARMACY)
-        if "full_name" in validated_data:
-            validated_data.pop("full_name")
+
+        # Generate username
+        username = generate_username(PharmacyInfo, validated_data.pop("full_name"))
         # Extract pharmacy info
         try:
-            PharmacyInfo.objects.create(user=user, **validated_data)
+            PharmacyInfo.objects.create(user=user, username=username, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -404,18 +404,17 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
-    clinic_type = CharField(write_only=True)
-
     def get_username(self, user: User) -> str:
         return ClinicInfo.objects.get(user=user).username
 
     def create(self, validated_data):
         user: User = create_user(validated_data, User.UserType.CLINIC)
-        if "full_name" in validated_data:
-            validated_data.pop("full_name")
+
+        # Generate username
+        username = generate_username(ClinicInfo, validated_data.pop("full_name"))
         # Extract clinic info
         try:
-            ClinicInfo.objects.create(user=user, **validated_data)
+            ClinicInfo.objects.create(user=user, username=username, **validated_data)
         except Exception as e:
             user.delete()
             raise e
@@ -424,7 +423,7 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
     class Meta:
         model = User
-        fields = PharmacyRegistrationSerializer.Meta.fields + ["clinic_type"]
+        fields = PharmacyRegistrationSerializer.Meta.fields
 
 
 class PatientRegistrationSerializer(ModelSerializer):

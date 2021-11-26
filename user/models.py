@@ -193,10 +193,6 @@ class DoctorReview(CoreModel):
 
 
 class ClinicInfo(CoreModel):
-    class ClinicType(models.TextChoices):
-        HOSPITAL = "HOSPITAL", _("hospital")
-        CLINIC = "CLINIC", _("clinic")
-
     username = models.CharField(
         _("username"),
         max_length=150,
@@ -208,7 +204,6 @@ class ClinicInfo(CoreModel):
         },
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    clinic_type = models.CharField(max_length=20, choices=ClinicType.choices)
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
 
 
