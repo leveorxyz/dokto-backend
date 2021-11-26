@@ -4,23 +4,17 @@ from rest_framework.serializers import (
     ModelSerializer,
     Serializer,
     CharField,
-    SerializerMethodField,
     DateField,
     ListField,
     IntegerField,
     URLField,
     ChoiceField,
 )
-from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
-from django.conf import settings
 from cryptography.fernet import InvalidToken
-from stripe.api_resources import source
 from core.models import CoreModel
 
-from core.serializers import ReadWriteSerializerMethodField
 from core.classes import ExpiringActivationTokenGenerator
-from core.modelutils import send_mail
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
@@ -34,7 +28,7 @@ from .models import (
     PharmacyInfo,
     PatientInfo,
 )
-from .utils import generate_username, generate_file_and_name
+from .utils import generate_username
 
 
 class UserSerializer(ModelSerializer):
@@ -130,24 +124,20 @@ class DoctorRegistrationSerializer(ModelSerializer):
     # Doctor fields
     identification_photo = CharField(required=True, write_only=True)
     identification_type = ChoiceField(
-        choices=DoctorInfo.IdentificationType.choices,
-        required=True,
-        source="doctor_info.identification_type",
+        choices=DoctorInfo.IdentificationType.choices, required=True, write_only=True
     )
-    identification_number = CharField(
-        required=True, source="doctor_info.identification_number"
-    )
-    facebook_url = URLField(required=False, source="doctor_info.facebook_url")
-    linkedin_url = URLField(required=False, source="doctor_info.linkedin_url")
-    twitter_url = URLField(required=False, source="doctor_info.twitter_url")
+    identification_number = CharField(required=True, write_only=True)
+    facebook_url = URLField(required=False, write_only=True)
+    linkedin_url = URLField(required=False, write_only=True)
+    twitter_url = URLField(required=False, write_only=True)
     license_file = CharField(required=True, write_only=True)
-    awards = CharField(source="doctor_info.awards")
-    country = CharField(required=True, source="doctor_info.country")
-    professional_bio = CharField(required=True, source="doctor_info.professional_bio")
+    awards = CharField(write_only=True)
+    country = CharField(required=True, write_only=True)
+    professional_bio = CharField(required=True, write_only=True)
     gender = ChoiceField(
-        choices=PatientInfo.Gender.choices, required=True, source="doctor_info.gender"
+        choices=PatientInfo.Gender.choices, required=True, write_only=True
     )
-    date_of_birth = DateField(required=True, source="doctor_info.date_of_birth")
+    date_of_birth = DateField(required=True, write_only=True)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
@@ -361,41 +351,26 @@ class PatientRegistrationSerializer(ModelSerializer):
     profile_photo = CharField(required=True)
     identification_photo = CharField(required=True, write_only=True)
     identification_type = ChoiceField(
-        choices=PatientInfo.IdentificationType.choices,
-        required=True,
-        source="patient_info.identification_type",
+        choices=PatientInfo.IdentificationType.choices, required=True, write_only=True
     )
-    identification_number = CharField(
-        required=True, source="patient_info.identification_number"
-    )
-    referring_doctor_full_name = CharField(
-        required=False, source="patient_info.referring_doctor_full_name"
-    )
-    referring_doctor_phone_number = CharField(
-        required=False, source="patient_info.referring_doctor_phone_number"
-    )
-    referring_doctor_address = CharField(
-        required=False, source="patient_info.referring_doctor_address"
-    )
+    identification_number = CharField(required=True, write_only=True)
+    referring_doctor_full_name = CharField(required=False, write_only=True)
+    referring_doctor_phone_number = CharField(required=False, write_only=True)
+    referring_doctor_address = CharField(required=False, write_only=True)
     insurance_type = ChoiceField(
-        choices=PatientInfo.InsuranceType,
-        required=False,
-        source="patient_info.insurance_type",
+        choices=PatientInfo.InsuranceType, required=False, write_only=True
     )
-    insurance_name = CharField(required=False, source="patient_info.insurance_name")
-    insurance_number = CharField(required=False, source="patient_info.insurance_number")
-    insurance_policy_holder_name = CharField(
-        required=False, source="patient_info.insurance_policy_holder_name"
-    )
-    date_of_birth = DateField(required=False, source="patient_info.date_of_birth")
-    gender = ChoiceField(
-        choices=PatientInfo.Gender.choices, required=True, source="patient_info.gender"
-    )
-    name_of_parent = CharField(required=False, source="patient_info.name_of_parent")
+    insurance_name = CharField(required=False, write_only=True)
+    insurance_number = CharField(required=False, write_only=True)
+    insurance_policy_holder_name = CharField(required=False, write_only=True)
+    date_of_birth = DateField(required=True, write_only=True)
+    gender = ChoiceField(choices=PatientInfo.Gender.choices, write_only=True)
+    name_of_parent = CharField(required=False, write_only=True)
 
     def create(self, validated_data):
+        validated_data.update({"user_type": User.UserType.PATIENT})
         user: User = User.from_validated_data(
-            validated_data=validated_data.update({"user_type": User.UserType.PATIENT})
+            validated_data=validated_data,
         )
         user.save()
         try:
