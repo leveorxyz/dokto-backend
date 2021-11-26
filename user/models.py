@@ -99,7 +99,7 @@ class User(AbstractUser, CoreModel):
     @property
     def profile_photo(self):
         domain = Site.objects.get_current().domain
-        if self._profile_photo:
+        if self._profile_photo.name:
             return domain + self._profile_photo.url
 
     @profile_photo.setter
@@ -248,7 +248,7 @@ class DoctorInfo(CoreModel):
     @property
     def identification_photo(self):
         domain = Site.objects.get_current().domain
-        if self._identification_photo:
+        if self._identification_photo.name:
             return domain + self._identification_photo.url
 
     @identification_photo.setter
@@ -259,12 +259,13 @@ class DoctorInfo(CoreModel):
 
     @identification_photo.deleter
     def identification_photo(self):
-        self._identification_photo.delete(save=True)
+        if self._identification_photo.name:
+            self._identification_photo.delete(save=True)
 
     @property
     def license_file(self):
         domain = Site.objects.get_current().domain
-        if self._license_file:
+        if self._license_file.name:
             return domain + self._license_file.url
 
     @license_file.setter
@@ -275,7 +276,8 @@ class DoctorInfo(CoreModel):
 
     @license_file.deleter
     def license_file(self):
-        self._license_file.delete(save=True)
+        if self._license_file.name:
+            self._license_file.delete(save=True)
 
     def delete(self, *args, **kwargs):
         del self.identification_photo
@@ -299,27 +301,6 @@ class DoctorEducation(CoreModel):
     course = models.CharField(max_length=50)
     year = models.CharField(max_length=15)
     college = models.CharField(max_length=60)
-    _certificate = models.ImageField(upload_to=DOCTOR_EDUCATION_PHOTO_DIRECTORY)
-
-    @property
-    def certificate(self):
-        domain = Site.objects.get_current().domain
-        if self._certificate:
-            return domain + self._certificate.url
-
-    @certificate.setter
-    def certificate(self, certificate_data):
-        filename, file = generate_file_and_name(certificate_data, self.id)
-        self._certificate.save(filename, file, save=True)
-        self.save()
-
-    def delete(self, *args, **kwargs):
-        """
-        Deletes the image file in the storage manually before deletion of an instance
-        """
-        storage, path = self.certificate.storage, self.certificate.path
-        super(DoctorEducation, self).delete(*args, **kwargs)
-        storage.delete(path)
 
 
 class DoctorExperience(CoreModel):
@@ -425,7 +406,7 @@ class PatientInfo(CoreModel):
         max_length=20, choices=IdentificationType.choices
     )
     identification_number = models.CharField(max_length=50)
-    identification_photo = models.ImageField(
+    _identification_photo = models.ImageField(
         upload_to=PATIENT_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
 
@@ -443,3 +424,20 @@ class PatientInfo(CoreModel):
         max_length=20, null=True, blank=True
     )
     referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
+
+    @property
+    def identification_photo(self):
+        domain = Site.objects.get_current().domain
+        if self._identification_photo.name:
+            return domain + self._identification_photo.url
+
+    @identification_photo.setter
+    def identification_photo(self, identification_photo_data):
+        file_name, file = generate_file_and_name(identification_photo_data, self.id)
+        self._identification_photo.save(file_name, file, save=True)
+        self.save()
+
+    @identification_photo.deleter
+    def identification_photo(self):
+        if self._identification_photo.name:
+            self._identification_photo.delete(save=True)
