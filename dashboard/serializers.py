@@ -12,10 +12,12 @@ from rest_framework.serializers import (
 )
 from rest_framework.exceptions import ValidationError
 
-from core.serializers import ReadWriteSerializerMethodField
+from core.serializers import (
+    ReadWriteSerializerMethodField,
+    CustomCreateUpdateDeleteObjectOperationSerializer,
+)
 from user.models import (
     DoctorAvailableHours,
-    User,
     DoctorInfo,
     DoctorSpecialty,
     DoctorEducation,
@@ -92,6 +94,10 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
 
     operation = CharField(required=True, allow_null=False, write_only=True)
 
+    def create(self, validated_data):
+        validated_data.pop("operation")
+        return super().create(validated_data)
+
     class Meta:
         model = DoctorEducation
         fields = [
@@ -139,6 +145,10 @@ class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
 
     operation = CharField(required=True, allow_null=False, write_only=True)
 
+    def create(self, validated_data):
+        validated_data.pop("operation")
+        return super().create(validated_data)
+
     class Meta:
         model = DoctorExperience
         fields = fields = [
@@ -185,7 +195,9 @@ class DoctorExperienceEducationSerializer(ModelSerializer):
         fields = ("experience", "education")
 
 
-class DoctorExperienceEducationUpdateSerializer(ModelSerializer):
+class DoctorExperienceEducationUpdateSerializer(
+    CustomCreateUpdateDeleteObjectOperationSerializer
+):
     """
     Main serializer for `dashboard > profile settings > experience and education` page.
     Experience and education can be added updated and deleted from the single endpoint.
@@ -208,88 +220,26 @@ class DoctorExperienceEducationUpdateSerializer(ModelSerializer):
     def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "doctoreducation_set" in validated_data:
             educations = validated_data.pop("doctoreducation_set")
-            added = [
-                {k: v for k, v in education.items() if k != "operation"}
-                for education in educations
-                if education.get("operation") == "add"
-            ]
-            updated = [
-                {k: v for k, v in education.items() if k != "operation"}
-                for education in educations
-                if education.get("operation") == "update"
-            ]
-            deleted = [
-                education.get("id")
-                for education in educations
-                if education.get("operation") == "delete" and education.get("id")
-            ]
-            delete_queryset = DoctorEducation.objects.filter(
-                doctor_info=doctor_info, id__in=deleted
+            self.perform_crud_operations(
+                educations,
+                DoctorEducationUpdateSerializerWithID,
+                DoctorEducation,
+                add_kwagrs={"doctor_info": doctor_info.id},
+                update_kwargs={"doctor_info": doctor_info},
+                delete_kwargs={"doctor_info": doctor_info},
             )
-            for instance in delete_queryset:
-                instance.delete()
-            for education_data in added:
-                doctor_education_serializer = DoctorEducationSerializer(
-                    data={"doctor_info": doctor_info.id, **education_data}
-                )
-                doctor_education_serializer.is_valid(raise_exception=True)
-                doctor_education_serializer.save()
-            for education_data in updated:
-                if "id" in education_data:
-                    education_instance = get_object_or_404(
-                        DoctorEducation, id=education_data.pop("id")
-                    )
-                    for key, value in education_data.items():
-                        if key == "certificate":
-                            certificate_data = education_data.get("certificate")
-                            file_name, file = generate_file_and_name(
-                                certificate_data, doctor_info.id
-                            )
-                            education_instance.certificate.delete(save=True)
-                            education_instance.certificate.save(
-                                file_name, file, save=True
-                            )
-                            education_instance.save()
-                        elif hasattr(education_instance, key):
-                            setattr(education_instance, key, value)
-                    education_instance.save()
 
         if "doctorexperience_set" in validated_data:
-            experiences = validated_data.pop("doctorexperience_set")
-            added = [
-                {k: v for k, v in experience.items() if k != "operation"}
-                for experience in experiences
-                if experience.get("operation") == "add"
-            ]
-            updated = [
-                {k: v for k, v in experience.items() if k != "operation"}
-                for experience in experiences
-                if experience.get("operation") == "update"
-            ]
-            deleted = [
-                experience.get("id")
-                for experience in experiences
-                if experience.get("operation") == "delete" and experience.get("id")
-            ]
-            DoctorExperience.objects.filter(
-                doctor_info=doctor_info, id__in=deleted
-            ).delete()
-            for experience_data in added:
-                doctor_experience_serializer = DoctorExpericenceSerializer(
-                    data={"doctor_info": doctor_info.id, **experience_data}
-                )
-                doctor_experience_serializer.is_valid(raise_exception=True)
-                doctor_experience_serializer.save()
+            experience = validated_data.pop("doctorexperience_set")
+            self.perform_crud_operations(
+                experience,
+                DoctorExpericenceUpdateSerializerWithID,
+                DoctorExperience,
+                add_kwagrs={"doctor_info": doctor_info.id},
+                update_kwargs={"doctor_info": doctor_info},
+                delete_kwargs={"doctor_info": doctor_info},
+            )
 
-            for experience_data in updated:
-                if "id" in experience_data:
-                    experience_instance = get_object_or_404(
-                        DoctorExperience, id=experience_data.pop("id")
-                    )
-                    for key, value in experience_data.items():
-                        if hasattr(experience_instance, key):
-                            setattr(experience_instance, key, value)
-                    experience_instance.save()
         return doctor_info
 
     class Meta:
