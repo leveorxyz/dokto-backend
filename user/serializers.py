@@ -1,19 +1,20 @@
+from typing import Union, List, Dict
+
 from rest_framework.serializers import (
     ModelSerializer,
     Serializer,
     CharField,
-    SerializerMethodField,
     DateField,
+    ListField,
+    IntegerField,
+    URLField,
+    ChoiceField,
 )
-from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, URLField, IntegerField
 from rest_framework.exceptions import ValidationError
-from django.conf import settings
 from cryptography.fernet import InvalidToken
+from core.models import CoreModel
 
-from core.serializers import ReadWriteSerializerMethodField
 from core.classes import ExpiringActivationTokenGenerator
-from core.utils import send_mail
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
@@ -27,7 +28,7 @@ from .models import (
     PharmacyInfo,
     PatientInfo,
 )
-from .utils import create_user, generate_image_file_and_name, generate_username
+from .utils import generate_username
 
 
 class UserSerializer(ModelSerializer):
@@ -37,9 +38,13 @@ class UserSerializer(ModelSerializer):
 
 
 class UserLoginSerializer(ModelSerializer):
+    username = CharField(source="get_username", read_only=True)
+
     class Meta:
         model = User
-        fields = [field.name for field in model._meta.fields] + ["token"]
+        fields = list(
+            set(field.name for field in model._meta.fields) - set(["_profile_photo"])
+        ) + ["token", "profile_photo", "username"]
         extra_kwargs = {field: {"read_only": True} for field in fields}
         extra_kwargs["password"] = {"write_only": True}
         del extra_kwargs["email"]
@@ -60,57 +65,36 @@ class DoctorInfoSerializer(ModelSerializer):
 
 
 class DoctorEducationSerializer(ModelSerializer):
-    certificate = CharField(required=False, write_only=True)
-
-    def create(self, validated_data):
-        certificate = None
-        if "certificate" in validated_data:
-            certificate = validated_data.pop("certificate")
-        doctor_info = validated_data.pop("doctor_info")
-        doctor_education = DoctorEducation.objects.create(
-            doctor_info=doctor_info, **validated_data
-        )
-        if certificate:
-            certificate_file_name, certificate_file = generate_image_file_and_name(
-                certificate, doctor_info.id
-            )
-            doctor_education.certificate.save(
-                certificate_file_name, certificate_file, save=True
-            )
-            doctor_education.save()
-        return doctor_education
-
     class Meta:
         model = DoctorEducation
-        fields = ["doctor_info", "course", "year", "college", "certificate"]
+        fields = fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields())
+        )
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorExpericenceSerializer(ModelSerializer):
     class Meta:
         model = DoctorExperience
-        fields = [
-            "doctor_info",
-            "establishment_name",
-            "job_title",
-            "start_date",
-            "end_date",
-            "job_description",
-        ]
+        fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields())
+        )
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorSpecialtySerializer(ModelSerializer):
     class Meta:
         model = DoctorSpecialty
-        fields = ["doctor_info", "specialty"]
+        fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields())
+        )
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
 class DoctorAvailableHoursSerializer(ModelSerializer):
-    class Meta:
-        model = User
-
     class Meta:
         model = DoctorAvailableHours
         fields = [
@@ -127,254 +111,174 @@ class DoctorReviewSerializer(ModelSerializer):
 
 
 class DoctorRegistrationSerializer(ModelSerializer):
-    token = SerializerMethodField()
-    username = SerializerMethodField()
-    password = CharField(write_only=True)
-    full_name = CharField(write_only=True)
-    street = CharField(write_only=True)
-    state = CharField(write_only=True, required=False)
-    city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True, required=False)
-    contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
-    country = CharField(write_only=True)
-    gender = CharField(write_only=True)
+    username = CharField(read_only=True, source="get_username")
+    profile_photo = CharField(required=True)
     language = ListField(child=CharField(), write_only=True)
     education = ListField(child=DoctorEducationSerializer(), write_only=True)
-    professional_bio = CharField(write_only=True)
-    linkedin_url = URLField(write_only=True, required=False)
-    facebook_url = URLField(write_only=True, required=False)
-    twitter_url = URLField(write_only=True, required=False)
     experience = ListField(
-        child=DoctorExpericenceSerializer(), write_only=True, required=False
+        child=DoctorExpericenceSerializer(), required=False, write_only=True
     )
     specialty = ListField(child=CharField(), write_only=True)
-    identification_type = CharField(write_only=True)
-    identification_number = CharField(write_only=True)
-    identification_photo = CharField(write_only=True)
-    date_of_birth = DateField(write_only=True)
-    awards = CharField(write_only=True, required=False)
-    license_file = CharField(write_only=True)
-    accepted_insurance = ListField(child=CharField(), write_only=True)
+    accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
 
-    def get_username(self, user: User) -> str:
-        return DoctorInfo.objects.get(user=user).username
+    # Doctor fields
+    identification_photo = CharField(required=True, write_only=True)
+    identification_type = ChoiceField(
+        choices=DoctorInfo.IdentificationType.choices, required=True, write_only=True
+    )
+    identification_number = CharField(required=True, write_only=True)
+    facebook_url = URLField(required=False, write_only=True)
+    linkedin_url = URLField(required=False, write_only=True)
+    twitter_url = URLField(required=False, write_only=True)
+    license_file = CharField(required=True, write_only=True)
+    awards = CharField(write_only=True)
+    country = CharField(required=True, write_only=True)
+    professional_bio = CharField(required=True, write_only=True)
+    gender = ChoiceField(
+        choices=PatientInfo.Gender.choices, required=True, write_only=True
+    )
+    date_of_birth = DateField(required=True, write_only=True)
 
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
+    def from_serializer(
+        self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
+    ) -> None:
+        if not isinstance(data, list):
+            data = [data]
+        for item in data:
+            serializer_instance = serializer_class(data={**item, **extra_info})
+            serializer_instance.is_valid(raise_exception=True)
+            serializer_instance.save()
 
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
+    def from_list(
+        self, data: List, model: CoreModel, keyword: str, **extra_info
+    ) -> None:
+        model.objects.bulk_create(
+            [model(**{keyword: item, **extra_info}) for item in data]
+        )
 
-    def create(self, validated_data):
-        host_url = self.context["request"].build_absolute_uri()
+    def create(self, validated_data: dict):
+        # Generate username
+        username = generate_username(DoctorInfo, validated_data.get("full_name"))
 
-        user: User = create_user(validated_data, User.UserType.DOCTOR)
+        validated_data.update({"user_type": User.UserType.DOCTOR})
+        user: User = User.from_validated_data(validated_data=validated_data)
+        user.save()
+        try:
+            user.profile_photo = validated_data.pop("profile_photo")
+        except Exception as e:
+            user.delete()
+            raise e
 
-        if "accepted_insurance" in validated_data:
-            validated_data.pop("accepted_insurance")
-
-        # Extract education data
-        education_data = validated_data.pop("education")
-
-        # Extract experience data
         experience_data = []
         if "experience" in validated_data:
             experience_data = validated_data.pop("experience")
-
-        # Extract specialty data
+        if "accepted_insurance" in validated_data:
+            validated_data.pop("accepted_insurance")
+        education_data = validated_data.pop("education")
         specialty_data = validated_data.pop("specialty")
-
-        # Extract language data
         language = validated_data.pop("language")
-
-        # Extract identification data
         identification_photo = validated_data.pop("identification_photo")
-
-        # Extract license data
         license_file = validated_data.pop("license_file")
 
-        # Generate username
-        username = generate_username(DoctorInfo, validated_data.pop("full_name"))
-
         # Creating doctor info
+        validated_data.update({"user": user, "username": username})
         try:
-            doctor_info: DoctorInfo = DoctorInfo.objects.create(
-                user=user, username=username, **validated_data
-            )
-            (
-                identification_photo_name,
-                identification_photo,
-            ) = generate_image_file_and_name(identification_photo, doctor_info.id)
-            doctor_info.identification_photo.save(
-                identification_photo_name, identification_photo, save=True
-            )
-            license_file_name, license_file_object = generate_image_file_and_name(
-                license_file, doctor_info.id
-            )
-            doctor_info.license_file.save(
-                license_file_name, license_file_object, save=True
+            doctor_info: DoctorInfo = DoctorInfo.from_validated_data(
+                validated_data=validated_data
             )
             doctor_info.save()
+            doctor_info.identification_photo = identification_photo
+            doctor_info.license_file = license_file
         except Exception as e:
             user.delete()
             raise e
 
-        # Add doctor education
         try:
-            for education in education_data:
-                doctor_education_serializer = DoctorEducationSerializer(
-                    data={"doctor_info": doctor_info.id, **education}
-                )
-                doctor_education_serializer.is_valid(raise_exception=True)
-                doctor_education_serializer.save()
-        except Exception as e:
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
-            user.delete()
-            raise e
-
-        # Add doctor experience
-        try:
-            for experience in experience_data:
-                doctor_experience_serializer = DoctorExpericenceSerializer(
-                    data={"doctor_info": doctor_info.id, **experience}
-                )
-                doctor_experience_serializer.is_valid(raise_exception=True)
-                doctor_experience_serializer.save()
-        except Exception as e:
-            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
-            user.delete()
-            raise e
-
-        # Add doctor specialty
-        try:
-            for specialty in specialty_data:
-                doctor_specialty_serializer = DoctorSpecialtySerializer(
-                    data={"doctor_info": doctor_info.id, "specialty": specialty}
-                )
-                doctor_specialty_serializer.is_valid(raise_exception=True)
-                doctor_specialty_serializer.save()
-        except Exception as e:
-            DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
-            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
-            user.delete()
-            raise e
-
-        # Add doctor language
-        try:
-            if isinstance(language, str):
-                language = [language]
-            DoctorLanguage.objects.bulk_create(
-                [
-                    DoctorLanguage(doctor_info=doctor_info, language=lang)
-                    for lang in language
-                ]
+            self.from_serializer(
+                education_data, DoctorEducationSerializer, doctor_info=doctor_info.id
             )
         except Exception as e:
-            DoctorSpecialty.objects.filter(doctor_info=doctor_info).delete()
-            DoctorExperience.objects.filter(doctor_info=doctor_info).delete()
-            DoctorEducation.objects.filter(doctor_info=doctor_info).delete()
-            DoctorLanguage.objects.filter(doctor_info=doctor_info).delete()
-            doctor_info.delete()
+            user.delete()
+            raise e
+        try:
+            self.from_serializer(
+                experience_data, DoctorExpericenceSerializer, doctor_info=doctor_info.id
+            )
+        except Exception as e:
             user.delete()
             raise e
 
-        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
-            text=user.email
+        self.from_list(
+            specialty_data, DoctorSpecialty, "specialty", doctor_info=doctor_info
         )
+        self.from_list(language, DoctorLanguage, "language", doctor_info=doctor_info)
 
-        link = (
-            "/".join(
-                [
-                    settings.FRONTEND_URL,
-                    "email-verification",
-                ]
-            )
-            + f"?token={confirmation_token.decode('utf-8')}"
-        )
-
-        send_mail(
-            to_email=user.email,
-            subject=f"Welcome to Dokto, please verify your email address",
-            template_name="email/provider_verification.html",
-            input_context={
-                "provider_name": user.full_name,
-                "link": link,
-                "host_url": host_url,
-            },
-        )
+        user.send_email_verification_mail()
 
         return user
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "username",
-            "email",
-            "password",
-            "token",
-            "full_name",
-            "street",
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(User.get_hidden_fields() + ["user_type"])
+        )
+        extra_fields = list(
+            set(field.name for field in DoctorInfo._meta.fields)
+            - set(DoctorInfo.get_hidden_fields())
+        )
+        fields = (
+            main_fields
+            + extra_fields
+            + [
+                "username",
+                "token",
+                "accepted_insurance",
+                "license_file",
+                "language",
+                "profile_photo",
+                "identification_photo",
+                "specialty",
+                "education",
+                "experience",
+            ]
+        )
+
+        read_only_fields = ["token", "username", "last_login"]
+        write_only_fields = ["password"]
+        required_false_fields = [
             "state",
             "city",
             "zip_code",
-            "contact_no",
-            "profile_photo",
-            "country",
-            "gender",
-            "language",
-            "education",
-            "professional_bio",
-            "linkedin_url",
-            "facebook_url",
-            "twitter_url",
-            "experience",
-            "specialty",
-            "identification_type",
-            "identification_number",
-            "identification_photo",
-            "date_of_birth",
             "awards",
-            "license_file",
-            "accepted_insurance",
         ]
+        extra_kwargs = {
+            **{key: {"required": False} for key in required_false_fields},
+            **{key: {"write_only": True} for key in write_only_fields},
+            **{key: {"read_only": True} for key in read_only_fields},
+        }
 
 
 class PharmacyRegistrationSerializer(ModelSerializer):
-    username = SerializerMethodField()
-    token = SerializerMethodField()
-    password = CharField(write_only=True)
-    full_name = CharField(write_only=True)
-    street = CharField(write_only=True)
-    state = CharField(write_only=True, required=False)
-    city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True, required=False)
-    contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
-    number_of_practitioners = IntegerField(write_only=True, required=False)
-
-    def get_username(self, user: User) -> str:
-        return PharmacyInfo.objects.get(user=user).username
-
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
-
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
+    username = CharField(read_only=True, source="get_username")
+    number_of_practitioners = IntegerField(
+        required=False, source="pharmacy_info.number_of_practitioners"
+    )
+    profile_photo = CharField(required=True)
 
     def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.PHARMACY)
-
         # Generate username
-        username = generate_username(PharmacyInfo, validated_data.pop("full_name"))
+        username = generate_username(PharmacyInfo, validated_data.get("full_name"))
+
+        validated_data.update({"user_type": User.UserType.PHARMACY})
+        user: User = User.from_validated_data(validated_data=validated_data)
+        user.save()
+        try:
+            user.profile_photo = validated_data.pop("profile_photo")
+        except Exception as e:
+            user.delete()
+            raise e
+
         # Extract pharmacy info
         try:
             PharmacyInfo.objects.create(user=user, username=username, **validated_data)
@@ -386,32 +290,53 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "username",
-            "email",
-            "password",
-            "token",
-            "full_name",
-            "street",
-            "state",
-            "city",
-            "zip_code",
-            "contact_no",
-            "profile_photo",
-            "number_of_practitioners",
-        ]
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(User.get_hidden_fields() + ["user_type"])
+        )
+        extra_fields = list(
+            set(field.name for field in PharmacyInfo._meta.fields)
+            - set(PharmacyInfo.get_hidden_fields())
+        )
+        fields = (
+            main_fields
+            + extra_fields
+            + [
+                "username",
+                "token",
+                "profile_photo",
+            ]
+        )
+
+        read_only_fields = ["token", "username", "last_login"]
+        write_only_fields = ["password"]
+        required_false_fields = ["state", "city", "zip_code", "number_of_practitioners"]
+        extra_kwargs = {
+            **{key: {"required": False} for key in required_false_fields},
+            **{key: {"write_only": True} for key in write_only_fields},
+            **{key: {"read_only": True} for key in read_only_fields},
+        }
 
 
 class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
-    def get_username(self, user: User) -> str:
-        return ClinicInfo.objects.get(user=user).username
+    number_of_practitioners = IntegerField(
+        required=False, source="clinic_info.number_of_practitioners"
+    )
 
-    def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.CLINIC)
-
+    def create(self, validated_data: dict):
         # Generate username
-        username = generate_username(ClinicInfo, validated_data.pop("full_name"))
+        username = generate_username(ClinicInfo, validated_data.get("full_name"))
+
+        validated_data.update({"user_type": User.UserType.CLINIC})
+        user: User = User.from_validated_data(validated_data=validated_data)
+        user.save()
+
+        try:
+            user.profile_photo = validated_data.pop("profile_photo")
+        except Exception as e:
+            user.delete()
+            raise e
+
         # Extract clinic info
         try:
             ClinicInfo.objects.create(user=user, username=username, **validated_data)
@@ -421,122 +346,84 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
         return user
 
-    class Meta:
-        model = User
-        fields = PharmacyRegistrationSerializer.Meta.fields
-
 
 class PatientRegistrationSerializer(ModelSerializer):
-    token = SerializerMethodField()
-    password = CharField(write_only=True)
-    full_name = CharField(write_only=True)
-    street = CharField(write_only=True)
-    state = CharField(write_only=True, required=False)
-    city = CharField(write_only=True, required=False)
-    zip_code = CharField(write_only=True)
-    contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
-    date_of_birth = DateField(write_only=True)
-    gender = CharField(write_only=True)
-    social_security_number = CharField(write_only=True, required=False)
-    identification_type = CharField(write_only=True)
-    identification_number = CharField(write_only=True)
-    identification_photo = CharField(write_only=True)
-
-    # Insurance details
-    insurance_type = CharField(write_only=True)
-    insurance_name = CharField(write_only=True, required=False)
-    insurance_number = CharField(write_only=True, required=False)
-    insurance_policy_holder_name = CharField(write_only=True, required=False)
-
-    # Insurance reference
-    referring_doctor_full_name = CharField(write_only=True, required=False)
-    referring_doctor_phone_number = CharField(write_only=True, required=False)
-    referring_doctor_address = CharField(write_only=True, required=False)
-
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
-
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
+    profile_photo = CharField(required=True)
+    identification_photo = CharField(required=True, write_only=True)
+    identification_type = ChoiceField(
+        choices=PatientInfo.IdentificationType.choices, required=True, write_only=True
+    )
+    identification_number = CharField(required=True, write_only=True)
+    referring_doctor_full_name = CharField(required=False, write_only=True)
+    referring_doctor_phone_number = CharField(required=False, write_only=True)
+    referring_doctor_address = CharField(required=False, write_only=True)
+    insurance_type = ChoiceField(
+        choices=PatientInfo.InsuranceType, required=False, write_only=True
+    )
+    insurance_name = CharField(required=False, write_only=True)
+    insurance_number = CharField(required=False, write_only=True)
+    insurance_policy_holder_name = CharField(required=False, write_only=True)
+    date_of_birth = DateField(required=True, write_only=True)
+    gender = ChoiceField(choices=PatientInfo.Gender.choices, write_only=True)
+    name_of_parent = CharField(required=False, write_only=True)
 
     def create(self, validated_data):
-        host_url = self.context["request"].build_absolute_uri()
-
-        user: User = create_user(validated_data, User.UserType.PATIENT)
-
-        # Extract identification data
-        identification_photo = validated_data.pop("identification_photo")
-
-        if "full_name" in validated_data:
-            validated_data.pop("full_name")
-
-        # Extract patient info
+        validated_data.update({"user_type": User.UserType.PATIENT})
+        user: User = User.from_validated_data(
+            validated_data=validated_data,
+        )
+        user.save()
         try:
-            patient_info = PatientInfo.objects.create(user=user, **validated_data)
-            (
-                identification_photo_name,
-                identification_photo,
-            ) = generate_image_file_and_name(identification_photo, patient_info.id)
-            patient_info.identification_photo.save(
-                identification_photo_name, identification_photo, save=True
-            )
+            user.profile_photo = validated_data.pop("profile_photo")
         except Exception as e:
             user.delete()
             raise e
 
-        confirmation_token = ExpiringActivationTokenGenerator().generate_token(
-            text=user.email
-        )
+        identification_photo = validated_data.pop("identification_photo")
+        validated_data.update({"user": user})
+        try:
+            patient_info = PatientInfo.from_validated_data(validated_data)
+            patient_info.identification_photo = identification_photo
+        except Exception as e:
+            user.delete()
+            raise e
 
-        link = (
-            "/".join(
-                [
-                    settings.FRONTEND_URL,
-                    "email-verification",
-                ]
-            )
-            + f"?token={confirmation_token.decode('utf-8')}"
-        )
-
-        send_mail(
-            to_email=user.email,
-            subject=f"Welcome to Dokto, please verify your email address",
-            template_name="email/patient_verification.html",
-            input_context={"name": user.full_name, "link": link, "host_url": host_url},
-        )
+        user.send_email_verification_mail()
 
         return user
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "token",
-            "password",
-            "full_name",
-            "street",
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(User.get_hidden_fields())
+        )
+        extra_fields = list(
+            set(field.name for field in PatientInfo._meta.fields)
+            - set(PatientInfo.get_hidden_fields())
+        )
+        fields = (
+            main_fields
+            + extra_fields
+            + [
+                "profile_photo",
+                "identification_photo",
+                "token",
+            ]
+        )
+
+        read_only_fields = ["token", "last_login", "user_type"]
+        write_only_fields = ["password"]
+        required_false_fields = [
             "state",
             "city",
             "zip_code",
-            "contact_no",
-            "profile_photo",
-            "date_of_birth",
-            "gender",
-            "social_security_number",
-            "identification_type",
-            "identification_number",
-            "identification_photo",
-            "insurance_type",
-            "insurance_name",
-            "insurance_number",
-            "insurance_policy_holder_name",
-            "referring_doctor_full_name",
-            "referring_doctor_phone_number",
-            "referring_doctor_address",
         ]
+        extra_kwargs = {
+            **{key: {"required": False} for key in required_false_fields},
+            **{key: {"write_only": True} for key in write_only_fields},
+            **{key: {"read_only": True} for key in read_only_fields},
+        }
 
 
 class VerifyEmailSerializer(Serializer):
@@ -554,9 +441,8 @@ class VerifyEmailSerializer(Serializer):
         except User.DoesNotExist:
             raise ValidationError("User does not exist")
 
-        if not user.is_active:
-            user.is_active = True
-            user.is_verified = True
-            user.save()
+        user.is_active = True
+        user.is_verified = True
+        user.save()
 
         return data

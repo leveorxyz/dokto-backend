@@ -1,8 +1,10 @@
+from os import name
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.hashers import make_password
+from drf_spectacular.utils import extend_schema
 
 from core.views import (
     CustomRetrieveAPIView,
@@ -12,17 +14,14 @@ from core.views import (
 from core.permissions import (
     OwnProfilePermission,
     DoctorPermission,
-    OwnProfileViewPermission,
 )
-from user.models import DoctorInfo, User
+from user.models import DoctorInfo
 from .serializers import (
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
     DoctorSpecialtySettingsSerializer,
     DoctorExperienceEducationSerializer,
-    DoctorExperienceEducationUpdateSerializer,
     DoctorAvailableHoursSerializerWithID,
-    DoctorAvailableHoursUpdateSerializerWithID,
     DoctorAccountSettingsSerializer,
 )
 
@@ -47,7 +46,9 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
         return DoctorInfo.objects.filter(user=self.request.user)
 
     def get_object(self):
-        return get_object_or_404(self.get_queryset())
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
@@ -67,12 +68,6 @@ class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorExperienceEducationSerializer
 
-    def get_serializer_class(self):
-        if self.request.method in ["PUT", "PATCH"]:
-            return DoctorExperienceEducationUpdateSerializer
-        else:
-            return DoctorExperienceEducationSerializer
-
     def get_queryset(self):
         return DoctorInfo.objects.all()
 
@@ -84,12 +79,27 @@ class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
 
 class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+    serializer_class = DoctorAvailableHoursSerializerWithID
 
-    def get_serializer_class(self):
-        if self.request.method in ["PUT", "PATCH"]:
-            return DoctorAvailableHoursUpdateSerializerWithID
-        else:
-            return DoctorAvailableHoursSerializerWithID
+    @extend_schema(
+        responses=DoctorAvailableHoursSerializerWithID(many=True),
+        request=DoctorAvailableHoursSerializerWithID(many=True),
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        responses=DoctorAvailableHoursSerializerWithID(many=True),
+        request=DoctorAvailableHoursSerializerWithID(many=True),
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(
+        responses=DoctorAvailableHoursSerializerWithID(many=True),
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         doctor_info = get_object_or_404(DoctorInfo, user=self.request.user)
@@ -97,9 +107,7 @@ class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
         return doctor_info.doctoravailablehours_set.all()
 
     def perform_update(self, serializer):
-        serializer.validated_data[
-            "doctor_info"
-        ] = self.request.user.doctorinfo_set.first()
+        serializer.validated_data["doctor_info"] = self.request.user.doctor_info
         serializer.update(serializer.instance, serializer.validated_data)
 
 
@@ -119,48 +127,9 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorAccountSettingsSerializer
+    queryset = DoctorInfo.objects.all()
 
-    def retrieve(self, request, *args, **kwargs):
-        user = request.user
-        doctor_info = get_object_or_404(DoctorInfo, user=user)
-        temporary_disable = doctor_info.temporary_disable
-        notification_email = doctor_info.notification_email
-        data = {
-            "notification_email": notification_email,
-            "temporary_disable": temporary_disable,
-        }
-        serializer = self.serializer_class(data=data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data)
-
-    def update(self, request, *args, **kwargs):
-        user = request.user
-        doctor_info = get_object_or_404(DoctorInfo, user=user)
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated_data = serializer.validated_data
-        if validated_data.get("old_password") and validated_data.get("new_password"):
-            old_password = validated_data.pop("old_password")
-            new_password = validated_data.pop("new_password")
-            if not user.check_password(old_password):
-                raise AuthenticationFailed("Incorrect password")
-            else:
-                password = make_password(new_password)
-                user.password = password
-        if validated_data.get("account_delete_password"):
-            if not user.check_password(validated_data.pop("account_delete_password")):
-                raise AuthenticationFailed("Incorrect password")
-            else:
-                user.is_active = False
-                if validated_data.get("reason_to_delete"):
-                    doctor_info.reason_to_delete = validated_data.pop(
-                        "reason_to_delete"
-                    )
-        if validated_data.get("notification_email"):
-            doctor_info.notification_email = validated_data.pop("notification_email")
-        if "temporary_disable" in validated_data:
-            doctor_info.temporary_disable = validated_data.pop("temporary_disable")
-        user.save()
-        doctor_info.save()
-        return Response({"message": "Updated successfully!"}, status=200)
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj

@@ -1,7 +1,5 @@
-from django.db import models
 from django.db.models import Sum
-from django.conf import settings
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.hashers import make_password
 from rest_framework.serializers import (
     Serializer,
     ModelSerializer,
@@ -10,12 +8,14 @@ from rest_framework.serializers import (
     EmailField,
     BooleanField,
 )
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
-from core.serializers import ReadWriteSerializerMethodField
+from core.serializers import (
+    ReadWriteSerializerMethodField,
+    CustomCreateUpdateDeleteObjectOperationSerializer,
+)
 from user.models import (
     DoctorAvailableHours,
-    User,
     DoctorInfo,
     DoctorSpecialty,
     DoctorEducation,
@@ -27,7 +27,7 @@ from user.serializers import (
     DoctorAvailableHoursSerializer,
     DoctorReviewSerializer,
 )
-from user.utils import generate_image_file_and_name
+from user.utils import generate_file_and_name
 
 
 class DoctorProfileDetailsSerializer(ModelSerializer):
@@ -37,27 +37,18 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
 
     full_name = CharField(source="user.full_name", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
-    profile_photo = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
-    def get_profile_photo(self, doctor_info: DoctorInfo) -> str:
-        return doctor_info.user.profile_photo.url
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
 
     def update(self, instance: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "user" in validated_data:
             user_data = validated_data.pop("user")
-            user = instance.user
-            full_name = user_data.get("full_name", user.full_name)
-            contact_no = user_data.get("contact_no", user.contact_no)
-            user.full_name = full_name
-            user.contact_no = contact_no
-            user.save()
-        if "profile_photo" in validated_data:
-            profile_photo_data = validated_data.pop("profile_photo")
-            user = instance.user
-            file_name, file = generate_image_file_and_name(profile_photo_data, user.id)
-            user.profile_photo.delete(save=True)
-            user.profile_photo.save(file_name, file, save=True)
-            user.save()
+            instance.user.update_from_validated_data(user_data)
+            if "profile_photo" in user_data:
+                profile_photo_data = user_data.pop("profile_photo")
+                instance.user.profile_photo = profile_photo_data
+
         instance = super().update(instance, validated_data)
         return instance
 
@@ -72,33 +63,8 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
         ]
 
 
-class DoctorEducationSerializerWithID(DoctorEducationSerializer):
-    """
-    Serializer for DoctorEducation model which includes `id` field in addition.
-    This serializer will only be used for GET request of `dashboard > profile settings > experience and education`.
-    PUT/PATCH requests will be handled by another serializer below.
-    """
+class DoctorEducationSerializerWithID(ModelSerializer):
 
-    certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
-    def get_certificate(self, doctor_education: DoctorEducation):
-        try:
-            return doctor_education.certificate.url
-        except Exception:
-            return None
-
-    class Meta(DoctorEducationSerializer.Meta):
-        fields = [
-            "id",
-            "doctor_info",
-            "course",
-            "year",
-            "college",
-            "certificate",
-        ]
-
-
-class DoctorEducationUpdateSerializerWithID(ModelSerializer):
     """
     Serializer for DoctorEducation model which includes `id` and `operation` fields in addition.
     This serializer will only be used for PUT/PATCH request of
@@ -106,13 +72,10 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
     """
 
     operation = CharField(required=True, allow_null=False, write_only=True)
-    certificate = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
-    def get_certificate(self, doctor_education: DoctorEducation):
-        try:
-            return doctor_education.certificate.url
-        except Exception:
-            return None
+    def create(self, validated_data):
+        validated_data.pop("operation")
+        return super().create(validated_data)
 
     class Meta:
         model = DoctorEducation
@@ -122,7 +85,6 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
             "course",
             "year",
             "college",
-            "certificate",
             "operation",
         ]
         extra_kwargs = {
@@ -131,30 +93,10 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
             "course": {"required": False},
             "year": {"required": False},
             "college": {"required": False},
-            "certificate": {"required": False},
         }
 
 
-class DoctorExpericenceSerializerWithID(DoctorExpericenceSerializer):
-    """
-    Serializer for DoctorExpericence model which includes `id` field in addition.
-    This serializer will only be used for GET request of `dashboard > profile settings > experience and education`.
-    PUT/PATCH requests will be handled by another serializer below.
-    """
-
-    class Meta(DoctorExpericenceSerializer.Meta):
-        fields = fields = [
-            "id",
-            "doctor_info",
-            "establishment_name",
-            "job_title",
-            "start_date",
-            "end_date",
-            "job_description",
-        ]
-
-
-class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
+class DoctorExpericenceSerializerWithID(ModelSerializer):
     """
     Serializer for DoctorExpericence model which includes `id` and `operation` fields in addition.
     This serializer will only be used for PUT/PATCH request of
@@ -162,6 +104,10 @@ class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
     """
 
     operation = CharField(required=True, allow_null=False, write_only=True)
+
+    def create(self, validated_data):
+        validated_data.pop("operation")
+        return super().create(validated_data)
 
     class Meta:
         model = DoctorExperience
@@ -184,11 +130,13 @@ class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
         }
 
 
-class DoctorExperienceEducationSerializer(ModelSerializer):
+class DoctorExperienceEducationSerializer(
+    CustomCreateUpdateDeleteObjectOperationSerializer
+):
     """
     Main serializer for `dashboard > profile settings > experience and education` page.
     Experience and education can be added updated and deleted from the single endpoint.
-    This serializer will only be used for GET requests.
+    This serializer will only be used for PUT/PATCH requests.
     """
 
     experience = DoctorExpericenceSerializerWithID(
@@ -204,116 +152,29 @@ class DoctorExperienceEducationSerializer(ModelSerializer):
         allow_null=True,
     )
 
-    class Meta:
-        model = DoctorInfo
-        fields = ("experience", "education")
-
-
-class DoctorExperienceEducationUpdateSerializer(ModelSerializer):
-    """
-    Main serializer for `dashboard > profile settings > experience and education` page.
-    Experience and education can be added updated and deleted from the single endpoint.
-    This serializer will only be used for PUT/PATCH requests.
-    """
-
-    experience = DoctorExpericenceUpdateSerializerWithID(
-        source="doctorexperience_set",
-        many=True,
-        required=False,
-        allow_null=True,
-    )
-    education = DoctorEducationUpdateSerializerWithID(
-        source="doctoreducation_set",
-        many=True,
-        required=False,
-        allow_null=True,
-    )
-
     def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "doctoreducation_set" in validated_data:
             educations = validated_data.pop("doctoreducation_set")
-            added = [
-                {k: v for k, v in education.items() if k != "operation"}
-                for education in educations
-                if education.get("operation") == "add"
-            ]
-            updated = [
-                {k: v for k, v in education.items() if k != "operation"}
-                for education in educations
-                if education.get("operation") == "update"
-            ]
-            deleted = [
-                education.get("id")
-                for education in educations
-                if education.get("operation") == "delete" and education.get("id")
-            ]
-            delete_queryset = DoctorEducation.objects.filter(
-                doctor_info=doctor_info, id__in=deleted
+            self.perform_crud_operations(
+                educations,
+                DoctorEducationSerializerWithID,
+                DoctorEducation,
+                add_kwagrs={"doctor_info": doctor_info.id},
+                update_kwargs={"doctor_info": doctor_info},
+                delete_kwargs={"doctor_info": doctor_info},
             )
-            for instance in delete_queryset:
-                instance.delete()
-            for education_data in added:
-                doctor_education_serializer = DoctorEducationSerializer(
-                    data={"doctor_info": doctor_info.id, **education_data}
-                )
-                doctor_education_serializer.is_valid(raise_exception=True)
-                doctor_education_serializer.save()
-            for education_data in updated:
-                if "id" in education_data:
-                    education_instance = get_object_or_404(
-                        DoctorEducation, id=education_data.pop("id")
-                    )
-                    for key, value in education_data.items():
-                        if key == "certificate":
-                            certificate_data = education_data.get("certificate")
-                            file_name, file = generate_image_file_and_name(
-                                certificate_data, doctor_info.id
-                            )
-                            education_instance.certificate.delete(save=True)
-                            education_instance.certificate.save(
-                                file_name, file, save=True
-                            )
-                            education_instance.save()
-                        elif hasattr(education_instance, key):
-                            setattr(education_instance, key, value)
-                    education_instance.save()
 
         if "doctorexperience_set" in validated_data:
-            experiences = validated_data.pop("doctorexperience_set")
-            added = [
-                {k: v for k, v in experience.items() if k != "operation"}
-                for experience in experiences
-                if experience.get("operation") == "add"
-            ]
-            updated = [
-                {k: v for k, v in experience.items() if k != "operation"}
-                for experience in experiences
-                if experience.get("operation") == "update"
-            ]
-            deleted = [
-                experience.get("id")
-                for experience in experiences
-                if experience.get("operation") == "delete" and experience.get("id")
-            ]
-            DoctorExperience.objects.filter(
-                doctor_info=doctor_info, id__in=deleted
-            ).delete()
-            for experience_data in added:
-                doctor_experience_serializer = DoctorExpericenceSerializer(
-                    data={"doctor_info": doctor_info.id, **experience_data}
-                )
-                doctor_experience_serializer.is_valid(raise_exception=True)
-                doctor_experience_serializer.save()
+            experience = validated_data.pop("doctorexperience_set")
+            self.perform_crud_operations(
+                experience,
+                DoctorExpericenceSerializerWithID,
+                DoctorExperience,
+                add_kwagrs={"doctor_info": doctor_info.id},
+                update_kwargs={"doctor_info": doctor_info},
+                delete_kwargs={"doctor_info": doctor_info},
+            )
 
-            for experience_data in updated:
-                if "id" in experience_data:
-                    experience_instance = get_object_or_404(
-                        DoctorExperience, id=experience_data.pop("id")
-                    )
-                    for key, value in experience_data.items():
-                        if hasattr(experience_instance, key):
-                            setattr(experience_instance, key, value)
-                    experience_instance.save()
         return doctor_info
 
     class Meta:
@@ -321,18 +182,7 @@ class DoctorExperienceEducationUpdateSerializer(ModelSerializer):
         fields = ("experience", "education")
 
 
-class DoctorAvailableHoursSerializerWithID(DoctorAvailableHoursSerializer):
-    class Meta(DoctorAvailableHoursSerializer.Meta):
-        fields = [
-            "id",
-            "doctor_info",
-            "day_of_week",
-            "start_time",
-            "end_time",
-        ]
-
-
-class DoctorAvailableHoursUpdateSerializerWithID(ModelSerializer):
+class DoctorAvailableHoursSerializerWithID(ModelSerializer):
     operation = CharField(required=True, allow_null=False, write_only=True)
 
     def update(self, instance: DoctorAvailableHours, validated_data):
@@ -403,7 +253,7 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
     class Meta:
         model = DoctorInfo
-        fields = ["id", "specialty"]
+        fields = ["specialty"]
 
 
 class DoctorProfileSerializer(ModelSerializer):
@@ -411,7 +261,6 @@ class DoctorProfileSerializer(ModelSerializer):
     Serializer for `dashboard > see my profile` page
     """
 
-    ## TODO: implement using DoctorInfo Model
     full_name = CharField(source="user.full_name", allow_null=True)
     email = EmailField(source="user.email", allow_null=True)
     is_verified = BooleanField(
@@ -422,7 +271,9 @@ class DoctorProfileSerializer(ModelSerializer):
     city = CharField(source="user.city", required=False, allow_null=True)
     zip_code = CharField(source="user.zip_code", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
-    profile_photo = SerializerMethodField(required=False, allow_null=True)
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
     avg_rating = SerializerMethodField(required=False, allow_null=True)
     qualification_suffix = SerializerMethodField(required=False, allow_null=True)
     education = DoctorEducationSerializerWithID(
@@ -460,9 +311,6 @@ class DoctorProfileSerializer(ModelSerializer):
     def get_qualification_suffix(self, doctor_info: DoctorInfo) -> str:
         courses = doctor_info.doctoreducation_set.all().values_list("course", flat=True)
         return ", ".join(courses)
-
-    def get_profile_photo(self, doctor_info: DoctorInfo) -> str:
-        return settings.BACKEND_URL + doctor_info.user.profile_photo.url
 
     def get_specialty(self, doctor_info: DoctorInfo) -> list:
         return doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
@@ -516,10 +364,53 @@ class DoctorAccountSettingsSerializer(Serializer):
     reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
 
     def validate(self, data):
+        user = self.context["request"].user
         if data.get("old_password") and not data.get("new_password"):
             raise ValidationError("you need to provide new password!")
         if data.get("new_password") and not data.get("old_password"):
             raise ValidationError("you need to provide old password!")
         if data.get("account_delete_password") and not data.get("reason_to_delete"):
             raise ValidationError("you need to provide the reason of account deletion!")
+        if (
+            "old_password" in data
+            and "new_password" in data
+            and not user.check_password(data.get("old_password"))
+        ):
+            raise AuthenticationFailed("Incorrect password!")
+        if "account_delete_password" in data and not user.check_password(
+            data.get("account_delete_password")
+        ):
+            raise AuthenticationFailed("Incorrect password!")
         return data
+
+    def update(self, instance, validated_data):
+        user = self.context["request"].user
+        if validated_data.get("old_password"):
+            new_password = make_password(validated_data.pop("new_password"))
+            user.password = new_password
+        if validated_data.get("account_delete_password"):
+            user.is_active = False
+            user.is_deleted = True
+            instance.is_deleted = True
+            if validated_data.get("reason_to_delete"):
+                instance.reason_to_delete = validated_data.pop("reason_to_delete")
+        if validated_data.get("notification_email"):
+            instance.notification_email = validated_data.pop("notification_email")
+        if "temporary_disable" in validated_data:
+            user.is_active = False
+            instance.temporary_disable = validated_data.pop("temporary_disable")
+        user.save()
+        instance.save()
+
+        return instance
+
+    class Meta:
+        model = DoctorInfo
+        field = [
+            "old_password",
+            "new_password",
+            "notification_mail",
+            "temporary_disable",
+            "account_delete_password",
+            "reason_to_delete",
+        ]

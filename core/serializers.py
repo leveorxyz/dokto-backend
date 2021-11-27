@@ -1,4 +1,7 @@
-from rest_framework.serializers import SerializerMethodField
+from requests.api import delete
+from rest_framework.serializers import SerializerMethodField, ModelSerializer
+
+from .models import CoreModel
 
 
 class ReadWriteSerializerMethodField(SerializerMethodField):
@@ -9,3 +12,73 @@ class ReadWriteSerializerMethodField(SerializerMethodField):
 
     def to_internal_value(self, data):
         return {self.field_name: data}
+
+
+class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
+    def _operation_filter(self, data, operation):
+        filtered_data = []
+        if operation == "add":
+            filtered_data = [
+                instance for instance in data if operation == instance.get("operation")
+            ]
+
+        elif operation == "delete":
+            filtered_data = [
+                instance.get("id")
+                for instance in data
+                if operation == instance.get("operation")
+            ]
+        return filtered_data
+
+    def _perform_create(
+        self, data, operation_serializer: ModelSerializer, **extra_create_kwargs
+    ) -> int:
+        create_count = 0
+        filtered_data = self._operation_filter(data, "add")
+        for instance in filtered_data:
+            serializer_instance = operation_serializer(
+                data={**instance, **extra_create_kwargs}
+            )
+            serializer_instance.is_valid(raise_exception=True)
+            serializer_instance.save()
+            create_count += 1
+        return create_count
+
+    def _perform_delete(self, data, operation_model: CoreModel, **kwargs) -> int:
+        delete_count = 0
+        filtered_data = self._operation_filter(data, "delete")
+        filtered_queryset = operation_model.objects.filter(
+            id__in=filtered_data, **kwargs
+        )
+        for instance in filtered_queryset:
+            instance.delete()
+            delete_count += 1
+        return delete_count
+
+    def _perform_update(self, data, operation_model: CoreModel, **kwargs) -> int:
+        update_count = 0
+        filtered_data = self._operation_filter(data, "update")
+        for instance in filtered_data:
+            update_count += operation_model.objects.filter(
+                id=instance.pop("id"), **kwargs
+            ).update(**instance)
+        return update_count
+
+    def perform_crud_operations(
+        self,
+        data,
+        operation_serializer: ModelSerializer,
+        operation_model: CoreModel,
+        add_kwagrs={},
+        delete_kwargs={},
+        update_kwargs={},
+    ) -> dict:
+        return {
+            "add": self._perform_create(data, operation_serializer, **add_kwagrs),
+            "update": self._perform_update(data, operation_model, **update_kwargs),
+            "delete": self._perform_delete(data, operation_model, **delete_kwargs),
+        }
+
+    class Meta:
+        model = CoreModel
+        fields = "__all__"

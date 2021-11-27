@@ -1,25 +1,24 @@
 from rest_framework import serializers
 from rest_framework.serializers import (
     ModelSerializer,
-    Serializer,
     CharField,
     SerializerMethodField,
     DateField,
 )
 from rest_framework.authtoken.models import Token
-from rest_framework.serializers import ListField, URLField, IntegerField
 
 from core.serializers import ReadWriteSerializerMethodField
-from user.models import (
-    User,
-    PatientInfo,
+from user.models import User
+from .models import (
+    AssessmentDiagnosis,
+    MedicalNotes,
+    PatientEncounters,
+    PatientSocialHistory,
 )
-from .models import AssessmentDiagnosis, MedicalNotes, PatientEncounters
-from user.utils import create_user
 
 
 class PatientSerializer(ModelSerializer):
-    token = SerializerMethodField()
+    token = CharField(source="user.token", read_only=True)
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
@@ -27,7 +26,7 @@ class PatientSerializer(ModelSerializer):
     city = CharField(write_only=True)
     zip_code = CharField(write_only=True)
     contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
+    profile_photo = CharField(source="user.profile_photo", read_only=True)
     date_of_birth = DateField(write_only=True)
     gender = CharField(write_only=True)
     social_security_number = CharField(write_only=True, required=False)
@@ -44,27 +43,6 @@ class PatientSerializer(ModelSerializer):
     referring_doctor_full_name = CharField(write_only=True, required=False)
     referring_doctor_phone_number = CharField(write_only=True, required=False)
     referring_doctor_address = CharField(write_only=True, required=False)
-
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
-
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
-
-    """
-    def create(self, validated_data):
-        user: User = create_user(validated_data, User.UserType.PATIENT)
-
-        # Extract patient info
-        try:
-            PatientInfo.objects.create(user=user, **validated_data)
-        except Exception as e:
-            user.delete()
-            raise e
-
-        return user
-    """
 
     class Meta:
         model = User
@@ -95,9 +73,26 @@ class PatientSerializer(ModelSerializer):
         ]
 
 
-#
-#
-#
+class PatientEncounterViewSerializer(serializers.ModelSerializer):
+
+    patient_name = serializers.CharField(source="patient.user.email")
+    provider_name = serializers.CharField(source="provider.user.email")
+
+    class Meta:
+        model = PatientEncounters
+        fields = [
+            "id",
+            "visit_date",
+            "location",
+            "visit_reason",
+            "signed",
+            "patient",
+            "provider",
+            "patient_name",
+            "provider_name",
+        ]
+
+
 class PatientEncounterSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientEncounters
@@ -113,6 +108,12 @@ class AssessmentDiagnosisSerializer(serializers.ModelSerializer):
 class MedicalNotesSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicalNotes
+        fields = "__all__"
+
+
+class PatientSocialHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientSocialHistory
         fields = "__all__"
 
 
