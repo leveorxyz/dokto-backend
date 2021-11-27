@@ -18,7 +18,7 @@ from .models import (
 
 
 class PatientSerializer(ModelSerializer):
-    token = SerializerMethodField()
+    token = CharField(source="user.token", read_only=True)
     password = CharField(write_only=True)
     full_name = CharField(write_only=True)
     street = CharField(write_only=True)
@@ -26,7 +26,7 @@ class PatientSerializer(ModelSerializer):
     city = CharField(write_only=True)
     zip_code = CharField(write_only=True)
     contact_no = CharField(write_only=True)
-    profile_photo = ReadWriteSerializerMethodField()
+    profile_photo = CharField(source="user.profile_photo", read_only=True)
     date_of_birth = DateField(write_only=True)
     gender = CharField(write_only=True)
     social_security_number = CharField(write_only=True, required=False)
@@ -43,13 +43,6 @@ class PatientSerializer(ModelSerializer):
     referring_doctor_full_name = CharField(write_only=True, required=False)
     referring_doctor_phone_number = CharField(write_only=True, required=False)
     referring_doctor_address = CharField(write_only=True, required=False)
-
-    def get_token(self, user: User) -> str:
-        token, _ = Token.objects.get_or_create(user=user)
-        return token.key
-
-    def get_profile_photo(self, user: User) -> str:
-        return user.profile_photo.url
 
     class Meta:
         model = User
