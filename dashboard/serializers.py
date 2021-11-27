@@ -65,27 +65,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
         ]
 
 
-class DoctorEducationSerializerWithID(DoctorEducationSerializer):
-    """
-    Serializer for DoctorEducation model which includes `id` field in addition.
-    This serializer will only be used for GET request of `dashboard > profile settings > experience and education`.
-    PUT/PATCH requests will be handled by another serializer below.
-    """
-
-    def get_certificate(self, doctor_education: DoctorEducation):
-        return doctor_education.certificate.url
-
-    class Meta(DoctorEducationSerializer.Meta):
-        fields = [
-            "id",
-            "doctor_info",
-            "course",
-            "year",
-            "college",
-        ]
-
-
-class DoctorEducationUpdateSerializerWithID(ModelSerializer):
+class DoctorEducationSerializerWithID(ModelSerializer):
     """
     Serializer for DoctorEducation model which includes `id` and `operation` fields in addition.
     This serializer will only be used for PUT/PATCH request of
@@ -117,26 +97,7 @@ class DoctorEducationUpdateSerializerWithID(ModelSerializer):
         }
 
 
-class DoctorExpericenceSerializerWithID(DoctorExpericenceSerializer):
-    """
-    Serializer for DoctorExpericence model which includes `id` field in addition.
-    This serializer will only be used for GET request of `dashboard > profile settings > experience and education`.
-    PUT/PATCH requests will be handled by another serializer below.
-    """
-
-    class Meta(DoctorExpericenceSerializer.Meta):
-        fields = fields = [
-            "id",
-            "doctor_info",
-            "establishment_name",
-            "job_title",
-            "start_date",
-            "end_date",
-            "job_description",
-        ]
-
-
-class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
+class DoctorExpericenceSerializerWithID(ModelSerializer):
     """
     Serializer for DoctorExpericence model which includes `id` and `operation` fields in addition.
     This serializer will only be used for PUT/PATCH request of
@@ -170,11 +131,13 @@ class DoctorExpericenceUpdateSerializerWithID(ModelSerializer):
         }
 
 
-class DoctorExperienceEducationSerializer(ModelSerializer):
+class DoctorExperienceEducationSerializer(
+    CustomCreateUpdateDeleteObjectOperationSerializer
+):
     """
     Main serializer for `dashboard > profile settings > experience and education` page.
     Experience and education can be added updated and deleted from the single endpoint.
-    This serializer will only be used for GET requests.
+    This serializer will only be used for PUT/PATCH requests.
     """
 
     experience = DoctorExpericenceSerializerWithID(
@@ -190,39 +153,12 @@ class DoctorExperienceEducationSerializer(ModelSerializer):
         allow_null=True,
     )
 
-    class Meta:
-        model = DoctorInfo
-        fields = ("experience", "education")
-
-
-class DoctorExperienceEducationUpdateSerializer(
-    CustomCreateUpdateDeleteObjectOperationSerializer
-):
-    """
-    Main serializer for `dashboard > profile settings > experience and education` page.
-    Experience and education can be added updated and deleted from the single endpoint.
-    This serializer will only be used for PUT/PATCH requests.
-    """
-
-    experience = DoctorExpericenceUpdateSerializerWithID(
-        source="doctorexperience_set",
-        many=True,
-        required=False,
-        allow_null=True,
-    )
-    education = DoctorEducationUpdateSerializerWithID(
-        source="doctoreducation_set",
-        many=True,
-        required=False,
-        allow_null=True,
-    )
-
     def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "doctoreducation_set" in validated_data:
             educations = validated_data.pop("doctoreducation_set")
             self.perform_crud_operations(
                 educations,
-                DoctorEducationUpdateSerializerWithID,
+                DoctorEducationSerializerWithID,
                 DoctorEducation,
                 add_kwagrs={"doctor_info": doctor_info.id},
                 update_kwargs={"doctor_info": doctor_info},
@@ -233,7 +169,7 @@ class DoctorExperienceEducationUpdateSerializer(
             experience = validated_data.pop("doctorexperience_set")
             self.perform_crud_operations(
                 experience,
-                DoctorExpericenceUpdateSerializerWithID,
+                DoctorExpericenceSerializerWithID,
                 DoctorExperience,
                 add_kwagrs={"doctor_info": doctor_info.id},
                 update_kwargs={"doctor_info": doctor_info},
@@ -247,18 +183,7 @@ class DoctorExperienceEducationUpdateSerializer(
         fields = ("experience", "education")
 
 
-class DoctorAvailableHoursSerializerWithID(DoctorAvailableHoursSerializer):
-    class Meta(DoctorAvailableHoursSerializer.Meta):
-        fields = [
-            "id",
-            "doctor_info",
-            "day_of_week",
-            "start_time",
-            "end_time",
-        ]
-
-
-class DoctorAvailableHoursUpdateSerializerWithID(ModelSerializer):
+class DoctorAvailableHoursSerializerWithID(ModelSerializer):
     operation = CharField(required=True, allow_null=False, write_only=True)
 
     def update(self, instance: DoctorAvailableHours, validated_data):
