@@ -52,7 +52,9 @@ class AssessmentDiagnosis(CoreModel):
     disease_name = models.CharField(max_length=256, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
-    diagnosis_type = models.CharField(max_length=25, choices=Type.choices, blank=True, null=True)
+    diagnosis_type = models.CharField(
+        max_length=25, choices=Type.choices, blank=True, null=True
+    )
     primary_diagnosis = models.BooleanField(blank=True, null=True)
     assessment = models.CharField(max_length=512, blank=True, null=True)
 
@@ -75,31 +77,31 @@ class PatientSocialHistory(CoreModel):
     # class HigherEducation(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
-    
+
     # class SexualOrientation(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
-    
+
     # class GenderIdentity(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
-    
+
     # class Status(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
-    
+
     # class TobaccoType(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
-        
+
     # class PacksDay(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
-    
+
     # class TobaccoCessation(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
-    
+
     # class Exercise(models.TextChoices):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
@@ -128,36 +130,34 @@ class PatientSocialHistory(CoreModel):
     #     ACUTE = "OPTION1", _("option1")
     #     CHRONIC = "OPTION2", _("option2")
 
-    #Foreign Key
+    # Foreign Key
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
-    
-    #Martial Status
-    home_environment = models.CharField( max_length=100, blank=True, null=True )
+
+    # Martial Status
+    home_environment = models.CharField(max_length=100, blank=True, null=True)
     children = models.CharField(max_length=100, blank=True, null=True)
-    higher_education = models.CharField( max_length=100, blank=True, null=True )
+    higher_education = models.CharField(max_length=100, blank=True, null=True)
     occupation = models.CharField(max_length=100, blank=True, null=True)
-    sexual_orientation = models.CharField( max_length=100, blank=True, null=True )
-    gender_identity = models.CharField( max_length=100, blank=True, null=True )
-    
-    #Tobacco Info
-    tobacco_status = models.CharField( max_length=100, blank=True, null=True )
-    tobacco_type = models.CharField( max_length=100, blank=True, null=True )
+    sexual_orientation = models.CharField(max_length=100, blank=True, null=True)
+    gender_identity = models.CharField(max_length=100, blank=True, null=True)
+
+    # Tobacco Info
+    tobacco_status = models.CharField(max_length=100, blank=True, null=True)
+    tobacco_type = models.CharField(max_length=100, blank=True, null=True)
     tobacco_started_year = models.DateField(blank=True, null=True)
-    tobacco_packs_per_day=models.CharField( max_length=100, blank=True, null=True )
+    tobacco_packs_per_day = models.CharField(max_length=100, blank=True, null=True)
     tobacco_start_date = models.DateField(blank=True, null=True)
     tobacco_end_date = models.DateField(blank=True, null=True)
-    tobacco_cessation = models.CharField( max_length=100, blank=True, null=True )
-    
-    #Risk Factors
-    exercise = models.CharField( max_length=100, blank=True, null=True )
-    drug_use = models.CharField( max_length=100, blank=True, null=True )
+    tobacco_cessation = models.CharField(max_length=100, blank=True, null=True)
+
+    # Risk Factors
+    exercise = models.CharField(max_length=100, blank=True, null=True)
+    drug_use = models.CharField(max_length=100, blank=True, null=True)
     quit_date = models.DateField(blank=True, null=True)
-    seatbelts = models.CharField( max_length=100, blank=True, null=True )
-    exposure = models.CharField( max_length=100, blank=True, null=True )
-    
-    #Alcohal Cafine Use
-    alcohol_use = models.CharField( max_length=100, blank=True, null=True )
-    caffeine_use = models.CharField( max_length=100, blank=True, null=True )
-    etoh = models.CharField( max_length=100, blank=True, null=True )
+    seatbelts = models.CharField(max_length=100, blank=True, null=True)
+    exposure = models.CharField(max_length=100, blank=True, null=True)
 
-
+    # Alcohal Cafine Use
+    alcohol_use = models.CharField(max_length=100, blank=True, null=True)
+    caffeine_use = models.CharField(max_length=100, blank=True, null=True)
+    etoh = models.CharField(max_length=100, blank=True, null=True)
