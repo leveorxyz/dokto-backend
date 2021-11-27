@@ -4,13 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.hashers import make_password
-from drf_spectacular.utils import (
-    OpenApiExample,
-    extend_schema,
-    OpenApiResponse,
-)
-from drf_spectacular.types import OpenApiTypes
-from rest_framework.decorators import action
+from drf_spectacular.utils import extend_schema
 
 from core.views import (
     CustomRetrieveAPIView,
@@ -131,48 +125,7 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorAccountSettingsSerializer
+    queryset = DoctorInfo.objects.all()
 
-    def retrieve(self, request, *args, **kwargs):
-        user = request.user
-        doctor_info = get_object_or_404(DoctorInfo, user=user)
-        temporary_disable = doctor_info.temporary_disable
-        notification_email = doctor_info.notification_email
-        data = {
-            "notification_email": notification_email,
-            "temporary_disable": temporary_disable,
-        }
-        serializer = self.serializer_class(data=data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data)
-
-    def update(self, request, *args, **kwargs):
-        user = request.user
-        doctor_info = get_object_or_404(DoctorInfo, user=user)
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated_data = serializer.validated_data
-        if validated_data.get("old_password") and validated_data.get("new_password"):
-            old_password = validated_data.pop("old_password")
-            new_password = validated_data.pop("new_password")
-            if not user.check_password(old_password):
-                raise AuthenticationFailed("Incorrect password")
-            else:
-                password = make_password(new_password)
-                user.password = password
-        if validated_data.get("account_delete_password"):
-            if not user.check_password(validated_data.pop("account_delete_password")):
-                raise AuthenticationFailed("Incorrect password")
-            else:
-                user.is_active = False
-                if validated_data.get("reason_to_delete"):
-                    doctor_info.reason_to_delete = validated_data.pop(
-                        "reason_to_delete"
-                    )
-        if validated_data.get("notification_email"):
-            doctor_info.notification_email = validated_data.pop("notification_email")
-        if "temporary_disable" in validated_data:
-            doctor_info.temporary_disable = validated_data.pop("temporary_disable")
-        user.save()
-        doctor_info.save()
-        return Response({"message": "Updated successfully!"}, status=200)
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user=self.request.user)
