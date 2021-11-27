@@ -46,7 +46,9 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
         return DoctorInfo.objects.filter(user=self.request.user)
 
     def get_object(self):
-        return get_object_or_404(self.get_queryset())
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
@@ -128,4 +130,6 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
     queryset = DoctorInfo.objects.all()
 
     def get_object(self):
-        return get_object_or_404(self.get_queryset(), user=self.request.user)
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj

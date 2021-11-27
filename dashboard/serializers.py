@@ -260,7 +260,6 @@ class DoctorProfileSerializer(ModelSerializer):
     Serializer for `dashboard > see my profile` page
     """
 
-    ## TODO: implement using DoctorInfo Model
     full_name = CharField(source="user.full_name", allow_null=True)
     email = EmailField(source="user.email", allow_null=True)
     is_verified = BooleanField(
