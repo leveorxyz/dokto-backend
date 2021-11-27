@@ -64,6 +64,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
 
 
 class DoctorEducationSerializerWithID(ModelSerializer):
+
     """
     Serializer for DoctorEducation model which includes `id` and `operation` fields in addition.
     This serializer will only be used for PUT/PATCH request of
