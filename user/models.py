@@ -230,17 +230,6 @@ class DoctorInfo(CoreModel):
             "notification_email",
         ]
 
-    @classmethod
-    def from_validated_data(cls, validated_data: dict, *args, **kwargs):
-        fields = [field.name for field in DoctorInfo._meta.fields]
-
-        constructor_kwargs = {
-            field: validated_data.pop(field)
-            for field in fields
-            if field in validated_data
-        }
-        return cls(**constructor_kwargs)
-
     @property
     def identification_photo(self):
         domain = Site.objects.get_current().domain
@@ -427,17 +416,6 @@ class PatientInfo(CoreModel):
     )
     referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
     name_of_parent = models.CharField(max_length=100, blank=True, null=True)
-
-    @classmethod
-    def from_validated_data(cls, validated_data: dict, *args, **kwargs):
-        fields = [field.name for field in PatientInfo._meta.fields]
-
-        constructor_kwargs = {
-            field: validated_data.pop(field)
-            for field in fields
-            if field in validated_data
-        }
-        return cls(**constructor_kwargs)
 
     @classmethod
     def get_hidden_fields(cls):
