@@ -11,7 +11,7 @@ class Appointment(CoreModel):
     Appointment model
     """
 
-    patient = models.OneToOneField(
+    patient = models.ForeignKey(
         PatientInfo, on_delete=models.CASCADE, related_name="patient_appointment"
     )
     doctor = models.ForeignKey(
