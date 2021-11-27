@@ -9,5 +9,29 @@ class CoreModel(models.Model):
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
+    @classmethod
+    def get_hidden_fields(cls):
+        return ["created_at", "updated_at", "is_deleted", "deleted_at"]
+
+    @classmethod
+    def from_validated_data(cls, validated_data: dict, *args, **kwargs):
+        fields = [field.name for field in cls._meta.fields]
+
+        constructor_kwargs = {
+            field: validated_data.pop(field)
+            for field in fields
+            if field in validated_data
+        }
+        return cls(**constructor_kwargs)
+
+    def update_from_validated_data(self, validated_data: dict, *args, **kwargs):
+        fields = [field.name for field in self._meta.fields]
+
+        for field in fields:
+            if field in validated_data:
+                setattr(self, field, validated_data.pop(field))
+
+        self.save()
+
     class Meta:
         abstract = True
