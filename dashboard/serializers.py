@@ -254,7 +254,7 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
     class Meta:
         model = DoctorInfo
-        fields = ["id", "specialty"]
+        fields = ["specialty"]
 
 
 class DoctorProfileSerializer(ModelSerializer):
