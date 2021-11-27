@@ -131,7 +131,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     linkedin_url = URLField(required=False, write_only=True)
     twitter_url = URLField(required=False, write_only=True)
     license_file = CharField(required=True, write_only=True)
-    awards = CharField(write_only=True)
+    awards = CharField(write_only=True, required=False)
     country = CharField(required=True, write_only=True)
     professional_bio = CharField(required=True, write_only=True)
     gender = ChoiceField(
