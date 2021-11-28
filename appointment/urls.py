@@ -11,4 +11,5 @@ urlpatterns = [
         views.EncounteredPatientListAPIView.as_view(),
         name="encountered-patients-list",
     ),
+    path("doctors/", views.DoctorListAPIView.as_view(), name="doctor-list"),
 ]
