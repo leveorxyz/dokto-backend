@@ -18,11 +18,6 @@ urlpatterns = [
         name="create_conversation",
     ),
     path(
-        "add-participant-conversation/",
-        views.ConversationAddParticipantAPIView.as_view(),
-        name="add_participant_conversation",
-    ),
-    path(
         "remove-participant-conversation/",
         views.ConversationRemoveParticipantAPIView.as_view(),
         name="remove_participant_conversation",
