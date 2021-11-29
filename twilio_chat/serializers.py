@@ -29,11 +29,6 @@ class CreateConversessionSerializer(serializers.Serializer):
         return data
 
 
-class ConversationaAddParticipantSerializer(serializers.Serializer):
-    participant_identity = serializers.CharField()
-    channel_unique_name = serializers.CharField()
-
-
 class ConversationaRemoveParticipantSerializer(serializers.Serializer):
     channel_unique_name = serializers.CharField()
 

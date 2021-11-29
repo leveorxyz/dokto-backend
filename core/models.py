@@ -33,5 +33,11 @@ class CoreModel(models.Model):
 
         self.save()
 
+    def __str__(self) -> str:
+        return str(self.id)
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
     class Meta:
         abstract = True

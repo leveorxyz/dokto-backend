@@ -15,7 +15,6 @@ from .serializers import (
     VideoChatTokenSerializer,
     AppointmentVideoChatTokenSerializer,
     CreateConversessionSerializer,
-    ConversationaAddParticipantSerializer,
     ConversationaRemoveParticipantSerializer,
     VideoRemoveParticipantSerializer,
 )
@@ -176,49 +175,6 @@ class CreateConversationAPIView(generics.CreateAPIView):
             },
             status=status.HTTP_201_CREATED,
         )
-
-
-class ConversationAddParticipantAPIView(generics.CreateAPIView):
-    """
-    View for handling twilio video chat access token generation.
-    """
-
-    serializer_class = ConversationaAddParticipantSerializer
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        validated_data = serializer.data
-
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        service = client.conversations.services(
-            settings.TWILIO_CONVERSATION_SERVICE_SID
-        )
-        try:
-            conversation = client.conversations.conversations(
-                validated_data.get("channel_unique_name")
-            ).fetch()
-            participant = service.conversations(conversation.sid).participants.create(
-                identity=validated_data.get("participant_identity")
-            )
-        except TwilioRestException as e:
-            return Response(
-                data={"status_code": 400, "message": e.msg, "result": None},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        else:
-            return Response(
-                data={
-                    "status_code": 201,
-                    "message": "Success",
-                    "result": {
-                        "channel": conversation._properties,
-                        "participants": [participant._properties],
-                    },
-                },
-                status=status.HTTP_201_CREATED,
-            )
 
 
 class ConversationRemoveParticipantAPIView(generics.CreateAPIView):

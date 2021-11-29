@@ -159,6 +159,12 @@ class User(AbstractUser, CoreModel):
         }
         return getattr(self, user_type_map[self.user_type]).username
 
+    def __str__(self) -> str:
+        return self.email
+
+    def __repr__(self) -> str:
+        return self.email
+
 
 class UserIp(CoreModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
