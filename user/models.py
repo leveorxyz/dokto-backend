@@ -117,10 +117,7 @@ class User(AbstractUser, CoreModel):
         return super(User, self).delete(*args, **kwargs)
 
     def send_email_verification_mail(self):
-        template = {
-            User.UserType.DOCTOR: "email/provider_verification.html",
-            User.UserType.PATIENT: "email/patient_verification.html",
-        }
+        template = "email/account_verification.html"
 
         confirmation_token = ExpiringActivationTokenGenerator().generate_token(
             text=self.email
@@ -138,7 +135,7 @@ class User(AbstractUser, CoreModel):
         send_mail(
             to_email=self.email,
             subject=f"Welcome to Dokto, please verify your email address",
-            template_name=template[self.user_type],
+            template_name=template,
             input_context={
                 "name": self.full_name,
                 "link": link,
