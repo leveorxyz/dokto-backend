@@ -1,5 +1,5 @@
 import uuid
-from django.db import models
+from django.db import models, transaction
 
 # Create your models here.
 class CoreModel(models.Model):
