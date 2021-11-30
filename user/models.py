@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password
@@ -407,6 +407,8 @@ class PatientInfo(CoreModel):
         upload_to=PATIENT_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
 
+    display_id = models.PositiveIntegerField(default=1)
+
     # Insurance Info
     insurance_type = models.CharField(max_length=20, choices=InsuranceType.choices)
     insurance_name = models.CharField(max_length=50, null=True, blank=True)
@@ -429,6 +431,7 @@ class PatientInfo(CoreModel):
             "_identification_photo",
             "user",
             "id",
+            "display_id",
         ]
 
     @property
@@ -449,3 +452,14 @@ class PatientInfo(CoreModel):
     def identification_photo(self):
         if self._identification_photo.name:
             self._identification_photo.delete(save=True)
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            last_id = PatientInfo.objects.all().aggregate(
+                largest=models.Max("display_id")
+            )["largest"]
+            if last_id is not None:
+                self.display_id = last_id + 1
+
+        super(PatientInfo, self).save(*args, **kwargs)
