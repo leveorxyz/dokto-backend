@@ -292,6 +292,8 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
+        user.send_email_verification_mail()
+
         return user
 
     class Meta:
@@ -355,6 +357,8 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
         except Exception as e:
             user.delete()
             raise e
+
+        user.send_email_verification_mail()
 
         return user
 
