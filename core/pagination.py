@@ -3,12 +3,26 @@ from rest_framework.pagination import LimitOffsetPagination
 
 
 class CustomPagination(LimitOffsetPagination):
+    def contruct_dict_from_list(self, data_list: list) -> dict:
+        """
+        Constructs a dictionary from a list of data.
+        :param data_list: list of data
+        :return: dict
+        """
+        return {
+            split_value[0]: split_value[1]
+            for split_value in [value.split("=") for value in data_list]
+        }
+
     def get_offset_from_url(self, url: str):
         if not url:
             return None
-        params = url.split("?")[-1]
-        offset = params.split("&")[-1].split("=")[-1]
-        return offset
+        raw_params = url.split("?")[-1]
+        split_params = raw_params.split("&")
+        params = self.contruct_dict_from_list(split_params)
+        if "offset" in params:
+            return params["offset"]
+        return None
 
     def get_paginated_response(self, data):
         response = super().get_paginated_response(data)
