@@ -7,25 +7,26 @@ from core.views import (
     CustomRetrieveUpdateDestroyAPIView,
 )
 from ehr.models import (
-    MedicalNotes,
+    ICDs,
+    PlanOfCare,
     PatientEncounters,
     AssessmentDiagnosis,
     PatientSocialHistory,
 )
 from .serializers import (
     AssessmentDiagnosisSerializer,
-    MedicalNotesSerializer,
+    PlanOfCareSerializer,
     PatientEncounterSerializer,
     PatientEncounterViewSerializer,
     PatientSocialHistorySerializer,
+    ICDSerializer,
 )
 
 # Create your views here.
 
-
 class AllEncounters(CustomListAPIView):
     permission_classes = [AllowAny]
-    # permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+    #permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     """
         Patient encounter endpoint
 
@@ -40,8 +41,13 @@ class AllEncounters(CustomListAPIView):
         - visit_reason: string
         - signed: boolean
     """
-    queryset = PatientEncounters.objects.all()
+    #queryset = PatientEncounters.objects.all()
     serializer_class = PatientEncounterViewSerializer
+
+    def get_queryset(self):
+        patient_uuid = self.kwargs['patient_uuid']
+        return PatientEncounters.objects.filter(patient_id=patient_uuid)
+
 
 
 class AddEncounters(CustomCreateAPIView):
@@ -65,13 +71,26 @@ class AddEncounters(CustomCreateAPIView):
     serializer_class = PatientEncounterSerializer
 
 
-class PatientEncounters(CustomRetrieveUpdateDestroyAPIView):
+class PatientEncountersView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
     queryset = PatientEncounters.objects.all()
     serializer_class = PatientEncounterSerializer
 
 
-class AssessmentDiagnosisView(CustomListCreateAPIView):
+class AssessmentDiagnosisByEncounterIDView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    #permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+
+    #queryset = AssessmentDiagnosis.objects.all()
+    serializer_class = AssessmentDiagnosisSerializer
+
+    def get_queryset(self):
+        patient_encounter_uuid = self.kwargs['patient_encounter_uuid']
+        return AssessmentDiagnosis.objects.filter(patient_encounter_id=patient_encounter_uuid)
+
+
+
+class AssessmentDiagnosisView(CustomCreateAPIView):
     permission_classes = [AllowAny]
     """
         Patient assesment and diagnosis endpoint
@@ -85,6 +104,7 @@ class AssessmentDiagnosisView(CustomListCreateAPIView):
     queryset = AssessmentDiagnosis.objects.all()
     serializer_class = AssessmentDiagnosisSerializer
 
+    
 
 class AssessmentDiagnosisUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
@@ -92,7 +112,7 @@ class AssessmentDiagnosisUpdateView(CustomRetrieveUpdateDestroyAPIView):
     serializer_class = AssessmentDiagnosisSerializer
 
 
-class MedicalNotesView(CustomListCreateAPIView):
+class PlanOfCareByEncounterIDView(CustomListAPIView):
     permission_classes = [AllowAny]
     """
         Patient encounter medical notes endpoint
@@ -103,17 +123,55 @@ class MedicalNotesView(CustomListCreateAPIView):
         ---
         - patient_encounter: uuid
     """
-    queryset = MedicalNotes.objects.all()
-    serializer_class = MedicalNotesSerializer
+    #queryset = PlanOfCare.objects.all()
+    serializer_class = PlanOfCareSerializer
+
+    def get_queryset(self):
+        patient_encounter_uuid = self.kwargs['patient_encounter_uuid']
+        return PlanOfCare.objects.filter(patient_encounter_id=patient_encounter_uuid)
 
 
-class MedicalNotesUpdateView(CustomRetrieveUpdateDestroyAPIView):
+class PlanOfCareView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = MedicalNotes.objects.all()
-    serializer_class = MedicalNotesSerializer
+    """
+        Patient encounter medical notes endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+    """
+    queryset = PlanOfCare.objects.all()
+    serializer_class = PlanOfCareSerializer
 
 
-class PatientSocialHistoryView(CustomListCreateAPIView):
+class PlanOfCareUpdateView(CustomRetrieveUpdateDestroyAPIView):
+    permission_classes = [AllowAny]
+    queryset = PlanOfCare.objects.all()
+    serializer_class = PlanOfCareSerializer
+
+
+class PatientSocialHistoryByEncounterIDView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient social history endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+    """
+    #queryset = PatientSocialHistory.objects.all()
+    serializer_class = PatientSocialHistorySerializer
+
+    def get_queryset(self):
+        patient_encounter_uuid = self.kwargs['patient_encounter_uuid']
+        return PatientSocialHistory.objects.filter(patient_encounter_id=patient_encounter_uuid)
+
+
+class PatientSocialHistoryView(CustomCreateAPIView):
     permission_classes = [AllowAny]
     """
         Patient social history endpoint
@@ -132,3 +190,14 @@ class PatientSocialHistoryUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
     queryset = PatientSocialHistory.objects.all()
     serializer_class = PatientSocialHistorySerializer
+
+
+class ICDsView(CustomListAPIView):
+    permission_classes = [AllowAny]
+   
+    serializer_class = ICDSerializer
+
+    def get_queryset(self):
+        icd_description = self.kwargs['icd_description']
+        return ICDs.objects.filter(full_description__contains=icd_description)
+

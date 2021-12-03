@@ -11,7 +11,8 @@ from core.serializers import ReadWriteSerializerMethodField
 from user.models import User
 from .models import (
     AssessmentDiagnosis,
-    MedicalNotes,
+    ICDs,
+    PlanOfCare,
     PatientEncounters,
     PatientSocialHistory,
 )
@@ -105,9 +106,9 @@ class AssessmentDiagnosisSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class MedicalNotesSerializer(serializers.ModelSerializer):
+class PlanOfCareSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MedicalNotes
+        model = PlanOfCare
         fields = "__all__"
 
 
@@ -115,6 +116,12 @@ class PatientSocialHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientSocialHistory
         fields = "__all__"
+
+class ICDSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ICDs
+        fields = "__all__"
+
 
 
 # class PatientEncounterOSerializer(serializers.Serializer):
