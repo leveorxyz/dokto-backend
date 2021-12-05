@@ -7,7 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_404_NOT_FOUND
 from django.contrib.auth import authenticate, logout
 
-from core.views import CustomRetrieveAPIView, CustomCreateAPIView
+from core.views import CustomRetrieveAPIView, CustomCreateAPIView, CustomAPIView
 from core.utils import set_user_ip
 from .models import User, DoctorInfo, PharmacyInfo, ClinicInfo
 from .serializers import (
@@ -70,18 +70,12 @@ class LoginView(GenericAPIView):
         )
 
 
-class LogoutView(APIView):
+class LogoutView(CustomAPIView):
+    http_method_names = ["post", "options"]
     def post(self, request):
         # Flushing current request session
-        set_user_ip(request)
         logout(request)
-        return Response(
-            {
-                "status_code": 200,
-                "message": "Logout successful.",
-                "result": None,
-            }
-        )
+        return super().post(request=request)
 
 
 class UsernameExists(APIView):
