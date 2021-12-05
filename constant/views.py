@@ -197,7 +197,7 @@ class ProfessionView(CustomAPIView):
         return super().get(request, response_data=data, *args, **kwargs)
 
 
-class ServicesView(APIView):
+class ServicesView(CustomAPIView):
     permission_classes = (AllowAny,)
     http_method_names = ["get", "options"]
 
