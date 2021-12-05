@@ -122,20 +122,20 @@ class CustomRetrieveUpdateAPIView(RetrieveUpdateAPIView):
 class CustomAPIView(APIView):
     http_method_names = ["get", "post", "patch", "put", "delete", "head", "options"]
 
-    def get(self, data=None, *args, **kwargs):
-        if not data:
-            data = {}
-        response = Response(data)
+    def get(self, request, response_data=None, *args, **kwargs):
+        if not response_data:
+            response_data = {}
+        response = Response(response_data)
         return custom_response(response)
 
-    def post(self, data=None, *args, **kwargs):
-        return self.get(data, *args, **kwargs)
+    def post(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
 
-    def patch(self, data=None, *args, **kwargs):
-        return self.get(data, *args, **kwargs)
+    def patch(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
 
-    def put(self, data=None, *args, **kwargs):
-        return self.get(data, *args, **kwargs)
+    def put(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
 
-    def delete(self, data=None, *args, **kwargs):
-        return self.get(data, *args, **kwargs)
+    def delete(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
