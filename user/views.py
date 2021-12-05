@@ -72,46 +72,11 @@ class LoginView(GenericAPIView):
 
 class LogoutView(CustomAPIView):
     http_method_names = ["post", "options"]
+
     def post(self, request):
         # Flushing current request session
         logout(request)
         return super().post(request=request)
-
-
-class UsernameExists(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, user_type=None, username=None):
-        if not user_type or not username:
-            raise ValidationError("Invalid request parameters.")
-
-        # Checking if username exists
-        user_model = {
-            "doctor": DoctorInfo,
-            "pharmacy": PharmacyInfo,
-            "clinic": ClinicInfo,
-        }
-
-        try:
-            if user_model[user_type].objects.filter(username=username).exists():
-                return Response(
-                    {
-                        "status_code": 200,
-                        "message": "Exists.",
-                        "result": None,
-                    }
-                )
-        except KeyError:
-            raise ValidationError("Invalid user type.")
-
-        return Response(
-            {
-                "status_code": 404,
-                "message": "Does not exist.",
-                "result": None,
-            },
-            status=HTTP_404_NOT_FOUND,
-        )
 
 
 class DoctorSignupView(CustomCreateAPIView):
