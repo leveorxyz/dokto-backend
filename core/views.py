@@ -7,6 +7,8 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from core.mixins import CustomListUpdateModelMixin, CustomListModelMixin
 from .utils import set_user_ip
@@ -115,3 +117,25 @@ class CustomRetrieveUpdateAPIView(RetrieveUpdateAPIView):
         response = super().put(request, *args, **kwargs)
         set_user_ip(request)
         return custom_response(response)
+
+
+class CustomAPIView(APIView):
+    http_method_names = ["get", "post", "patch", "put", "delete", "head", "options"]
+
+    def get(self, request, response_data=None, *args, **kwargs):
+        if not response_data:
+            response_data = {}
+        response = Response(response_data)
+        return custom_response(response)
+
+    def post(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
+
+    def patch(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
+
+    def put(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
+
+    def delete(self, request, response_data=None, *args, **kwargs):
+        return self.get(request, response_data, *args, **kwargs)
