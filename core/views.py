@@ -129,13 +129,13 @@ class CustomAPIView(APIView):
         return custom_response(response)
 
     def post(self, data=None, *args, **kwargs):
-        return self.get(data)
+        return self.get(data, *args, **kwargs)
 
     def patch(self, data=None, *args, **kwargs):
-        return self.get(data)
+        return self.get(data, *args, **kwargs)
 
     def put(self, data=None, *args, **kwargs):
-        return self.get(data)
+        return self.get(data, *args, **kwargs)
 
     def delete(self, data=None, *args, **kwargs):
-        return self.get(data)
+        return self.get(data, *args, **kwargs)
