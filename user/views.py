@@ -3,14 +3,18 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
-from rest_framework.authtoken.models import Token
-from rest_framework.status import HTTP_404_NOT_FOUND
 from django.contrib.auth import authenticate, logout
 
-from core.views import CustomRetrieveAPIView, CustomCreateAPIView, CustomAPIView
+from core.views import (
+    CustomListAPIView,
+    CustomRetrieveAPIView,
+    CustomCreateAPIView,
+    CustomAPIView,
+)
 from core.utils import set_user_ip
-from .models import User, DoctorInfo, PharmacyInfo, ClinicInfo
+from .models import User, DoctorInfo
 from .serializers import (
+    DoctorDirectorySerializer,
     UserSerializer,
     UserLoginSerializer,
     VerifyEmailSerializer,
@@ -117,3 +121,9 @@ class VerifyEmailView(APIView):
                 "result": UserLoginSerializer(instance=validated_data["user"]).data,
             }
         )
+
+
+class DoctorsListView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    queryset = DoctorInfo.objects.all()
+    serializer_class = DoctorDirectorySerializer
