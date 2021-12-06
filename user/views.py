@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
+from rest_framework.filters import SearchFilter
 from django.contrib.auth import authenticate, logout
 
 from core.views import (
@@ -12,7 +13,7 @@ from core.views import (
     CustomAPIView,
 )
 from core.utils import set_user_ip
-from .models import User, DoctorInfo
+from .models import User, DoctorInfo, DoctorSpecialty
 from .serializers import (
     DoctorDirectorySerializer,
     UserSerializer,
@@ -125,5 +126,15 @@ class VerifyEmailView(APIView):
 
 class DoctorsListView(CustomListAPIView):
     permission_classes = [AllowAny]
-    queryset = DoctorInfo.objects.all()
+    filter_backends = [SearchFilter]
     serializer_class = DoctorDirectorySerializer
+    queryset = DoctorInfo.objects.all()
+    search_fields = ["user__full_name", "username"]
+
+    def filter_queryset(self, queryset):
+        filtered_queryset = super().filter_queryset(queryset)
+        specialty_query = DoctorSpecialty.objects.filter(
+            specialty__icontains=self.request.query_params["search"]
+        ).values_list("doctor_info_id", flat=True)
+        specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
+        return (filtered_queryset | specialty_queryset).distinct()
