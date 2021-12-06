@@ -15,6 +15,9 @@ from .models import (
     PlanOfCare,
     PatientEncounters,
     PatientSocialHistory,
+    FunctionalAndCognitiveStatus,
+    ChiefComplaintsAndHPI,
+    PatientProcedure
 )
 
 
@@ -122,6 +125,22 @@ class ICDSerializer(serializers.ModelSerializer):
         model = ICDs
         fields = "__all__"
 
+class FunctionalAndCognitiveStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FunctionalAndCognitiveStatus
+        fields = '__all__'
+
+
+class ChiefComplaintsAndHPISerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChiefComplaintsAndHPI
+        fields = '__all__'
+
+
+class PatientProcedureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientProcedure
+        fields = '__all__'
 
 
 # class PatientEncounterOSerializer(serializers.Serializer):
