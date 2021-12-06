@@ -3,14 +3,19 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
-from rest_framework.authtoken.models import Token
-from rest_framework.status import HTTP_404_NOT_FOUND
+from rest_framework.filters import SearchFilter
 from django.contrib.auth import authenticate, logout
 
-from core.views import CustomRetrieveAPIView, CustomCreateAPIView, CustomAPIView
+from core.views import (
+    CustomListAPIView,
+    CustomRetrieveAPIView,
+    CustomCreateAPIView,
+    CustomAPIView,
+)
 from core.utils import set_user_ip
-from .models import User, DoctorInfo, PharmacyInfo, ClinicInfo
+from .models import User, DoctorInfo, DoctorSpecialty
 from .serializers import (
+    DoctorDirectorySerializer,
     UserSerializer,
     UserLoginSerializer,
     VerifyEmailSerializer,
@@ -117,3 +122,19 @@ class VerifyEmailView(APIView):
                 "result": UserLoginSerializer(instance=validated_data["user"]).data,
             }
         )
+
+
+class DoctorsListView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    filter_backends = [SearchFilter]
+    serializer_class = DoctorDirectorySerializer
+    queryset = DoctorInfo.objects.all()
+    search_fields = ["user__full_name", "username"]
+
+    def filter_queryset(self, queryset):
+        filtered_queryset = super().filter_queryset(queryset)
+        specialty_query = DoctorSpecialty.objects.filter(
+            specialty__icontains=self.request.query_params["search"]
+        ).values_list("doctor_info_id", flat=True)
+        specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
+        return (filtered_queryset | specialty_queryset).distinct()

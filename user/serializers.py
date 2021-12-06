@@ -9,6 +9,7 @@ from rest_framework.serializers import (
     IntegerField,
     URLField,
     ChoiceField,
+    BooleanField,
 )
 from rest_framework.exceptions import ValidationError
 from cryptography.fernet import InvalidToken
@@ -462,3 +463,26 @@ class VerifyEmailSerializer(Serializer):
         user.save()
 
         return data
+
+
+class DoctorDirectorySerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name")
+    email = CharField(source="user.email")
+    street = CharField(source="user.street")
+    state = CharField(source="user.state")
+    city = CharField(source="user.city")
+    zip_code = CharField(source="user.zip_code")
+    contact_no = CharField(source="user.contact_no")
+
+    class Meta:
+        model = DoctorInfo
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields() + ["user"])
+        )
+        extra_fields = list(
+            set(field.name for field in User._meta.fields)
+            - set(User.get_hidden_fields() + ["user_type", "password", "last_login"])
+        )
+        fields = main_fields + extra_fields
+        extra_kwargs = {field: {"read_only": True} for field in extra_fields}
