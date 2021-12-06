@@ -13,4 +13,10 @@ urlpatterns = [
         view=views.AcceptedInsurance.as_view(),
         name="accepted_insurance",
     ),
+    path("profession/", view=views.ProfessionView.as_view(), name="profession"),
+    path(
+        "profession-service/",
+        view=views.ServicesView.as_view(),
+        name="profession_service",
+    ),
 ]

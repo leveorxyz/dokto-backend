@@ -1,9 +1,13 @@
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 from core.views import CustomListAPIView, CustomListCreateAPIView
-from core.permissions import DoctorPermission
 from .models import Appointment
-from .serializers import AppointmentSerializer, EncounteredListSerializer
+from user.models import DoctorInfo
+from .serializers import (
+    AppointmentSerializer,
+    EncounteredListSerializer,
+    DummyDoctorListSerializer,
+)
 
 # Create your views here.
 class AppointmentListCreateAPIView(CustomListCreateAPIView):
@@ -26,3 +30,9 @@ class EncounteredPatientListAPIView(CustomListAPIView):
     ]
     queryset = Appointment.objects.all()
     serializer_class = EncounteredListSerializer
+
+
+class DoctorListAPIView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    queryset = DoctorInfo.objects.all()
+    serializer_class = DummyDoctorListSerializer

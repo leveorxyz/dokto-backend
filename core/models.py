@@ -1,5 +1,5 @@
 import uuid
-from django.db import models
+from django.db import models, transaction
 
 # Create your models here.
 class CoreModel(models.Model):
@@ -32,6 +32,12 @@ class CoreModel(models.Model):
                 setattr(self, field, validated_data.pop(field))
 
         self.save()
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
     class Meta:
         abstract = True

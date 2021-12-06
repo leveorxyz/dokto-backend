@@ -280,11 +280,19 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             raise e
 
         # Extract pharmacy info
+        pharmacy_data = {}
+        if "pharmacy_data" in validated_data:
+            pharmacy_data = validated_data.pop("pharmacy_data")
         try:
-            PharmacyInfo.objects.create(user=user, username=username, **validated_data)
+            pharmacy = PharmacyInfo.from_validated_data(
+                validated_data={"user": user, "username": username, **pharmacy_data}
+            )
+            pharmacy.save()
         except Exception as e:
             user.delete()
             raise e
+
+        user.send_email_verification_mail()
 
         return user
 
@@ -338,11 +346,19 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
             raise e
 
         # Extract clinic info
+        clinic_data = {}
+        if "clinic_info" in validated_data:
+            clinic_data = validated_data.pop("clinic_info")
         try:
-            ClinicInfo.objects.create(user=user, username=username, **validated_data)
+            clinic = ClinicInfo.from_validated_data(
+                validated_data={"user": user, "username": username, **clinic_data}
+            )
+            clinic.save()
         except Exception as e:
             user.delete()
             raise e
+
+        user.send_email_verification_mail()
 
         return user
 

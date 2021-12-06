@@ -89,7 +89,7 @@ class DoctorEducationSerializerWithID(ModelSerializer):
         ]
         extra_kwargs = {
             "id": {"read_only": False, "required": False},
-            "doctor_info": {"required": False},
+            "doctor_info": {"required": False, "write_only": True},
             "course": {"required": False},
             "year": {"required": False},
             "college": {"required": False},
@@ -123,7 +123,7 @@ class DoctorExpericenceSerializerWithID(ModelSerializer):
         ]
         extra_kwargs = {
             "id": {"read_only": False, "required": False},
-            "doctor_info": {"required": False},
+            "doctor_info": {"required": False, "write_only": True},
             "establishment_name": {"required": False},
             "job_title": {"required": False},
             "start_date": {"required": False},
@@ -210,7 +210,7 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
         ]
         extra_kwargs = {
             "id": {"read_only": False, "required": False},
-            "doctor_info": {"required": False},
+            "doctor_info": {"required": False, "write_only": True},
             "day_of_week": {"required": False},
             "start_time": {"required": False},
             "end_time": {"required": False},

@@ -7,7 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.status import HTTP_404_NOT_FOUND
 from django.contrib.auth import authenticate, logout
 
-from core.views import CustomRetrieveAPIView, CustomCreateAPIView
+from core.views import CustomRetrieveAPIView, CustomCreateAPIView, CustomAPIView
 from core.utils import set_user_ip
 from .models import User, DoctorInfo, PharmacyInfo, ClinicInfo
 from .serializers import (
@@ -70,54 +70,13 @@ class LoginView(GenericAPIView):
         )
 
 
-class LogoutView(APIView):
+class LogoutView(CustomAPIView):
+    http_method_names = ["post", "options"]
+
     def post(self, request):
         # Flushing current request session
-        set_user_ip(request)
         logout(request)
-        return Response(
-            {
-                "status_code": 200,
-                "message": "Logout successful.",
-                "result": None,
-            }
-        )
-
-
-class UsernameExists(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, user_type=None, username=None):
-        if not user_type or not username:
-            raise ValidationError("Invalid request parameters.")
-
-        # Checking if username exists
-        user_model = {
-            "doctor": DoctorInfo,
-            "pharmacy": PharmacyInfo,
-            "clinic": ClinicInfo,
-        }
-
-        try:
-            if user_model[user_type].objects.filter(username=username).exists():
-                return Response(
-                    {
-                        "status_code": 200,
-                        "message": "Exists.",
-                        "result": None,
-                    }
-                )
-        except KeyError:
-            raise ValidationError("Invalid user type.")
-
-        return Response(
-            {
-                "status_code": 404,
-                "message": "Does not exist.",
-                "result": None,
-            },
-            status=HTTP_404_NOT_FOUND,
-        )
+        return super().post(request=request)
 
 
 class DoctorSignupView(CustomCreateAPIView):
