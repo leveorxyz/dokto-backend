@@ -12,11 +12,15 @@ from .views import (
     PatientEncountersView,
     PatientSocialHistoryUpdateView,
     PatientSocialHistoryView,
-    PatientSocialHistoryByEncounterIDView
+    PatientSocialHistoryByEncounterIDView,
 )
 
 urlpatterns = [
-    path("encounters/<uuid:patient_uuid>/", AllEncounters.as_view(), name="patient-encounter-list"),
+    path(
+        "encounters/<uuid:patient_uuid>/",
+        AllEncounters.as_view(),
+        name="patient-encounter-list",
+    ),
     path("encounters/add", AddEncounters.as_view(), name="encounter-add"),
     path(
         "patient-encounters/<uuid:pk>/",
@@ -69,7 +73,7 @@ urlpatterns = [
         name="patient-social-history-update",
     ),
     path(
-        "encounters/icd/<icd_description>/",
+        "encounters/icd/<str:icd_description>/",
         ICDsView.as_view(),
         name="icd-code-list",
     ),
