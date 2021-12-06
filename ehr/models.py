@@ -47,8 +47,8 @@ class AssessmentDiagnosis(CoreModel):
 
     icd = models.CharField(max_length=100, blank=True, null=True)
     description = models.CharField(max_length=512, blank=True, null=True)
-    snomed_code = models.CharField(max_length=100, blank=True, null=True)
-    snomed_description = models.CharField(max_length=512, blank=True, null=True)
+    disease_code = models.CharField(max_length=100, blank=True, null=True)
+    disease_description = models.CharField(max_length=512, blank=True, null=True)
     disease_name = models.CharField(max_length=256, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
@@ -59,7 +59,7 @@ class AssessmentDiagnosis(CoreModel):
     assessment = models.CharField(max_length=512, blank=True, null=True)
 
 
-class MedicalNotes(CoreModel):
+class PlanOfCare(CoreModel):
 
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
@@ -161,3 +161,11 @@ class PatientSocialHistory(CoreModel):
     alcohol_use = models.CharField(max_length=100, blank=True, null=True)
     caffeine_use = models.CharField(max_length=100, blank=True, null=True)
     etoh = models.CharField(max_length=100, blank=True, null=True)
+
+
+class ICDs(models.Model):
+
+    code_description = models.CharField(max_length=200, blank=True, null=True)
+    icd_code = models.CharField(max_length=20, blank=True, null=True)
+    full_description = models.CharField(max_length=1024, blank=True, null=True)
+
