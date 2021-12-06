@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    DoctorsListView,
     UserRetrieveAPIView,
     LoginView,
     LogoutView,
@@ -20,4 +21,5 @@ urlpatterns = [
     path("patient-signup/", PatientSignupView.as_view(), name="patient-signup"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("activate/<str:token>/", VerifyEmailView.as_view(), name="verify-email"),
+    path("doctors/", DoctorsListView.as_view(), name="doctors-list"),
 ]

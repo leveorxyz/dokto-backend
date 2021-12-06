@@ -4,20 +4,33 @@ from .views import (
     AllEncounters,
     AssessmentDiagnosisUpdateView,
     AssessmentDiagnosisView,
-    MedicalNotesUpdateView,
-    MedicalNotesView,
-    PatientEncounters,
+    AssessmentDiagnosisByEncounterIDView,
+    ICDsView,
+    PlanOfCareUpdateView,
+    PlanOfCareView,
+    PlanOfCareByEncounterIDView,
+    PatientEncountersView,
     PatientSocialHistoryUpdateView,
     PatientSocialHistoryView,
+    PatientSocialHistoryByEncounterIDView,
 )
 
 urlpatterns = [
-    path("encounters/", AllEncounters.as_view(), name="encounter-list"),
+    path(
+        "encounters/<uuid:patient_uuid>/",
+        AllEncounters.as_view(),
+        name="patient-encounter-list",
+    ),
     path("encounters/add", AddEncounters.as_view(), name="encounter-add"),
     path(
         "patient-encounters/<uuid:pk>/",
-        PatientEncounters.as_view(),
+        PatientEncountersView.as_view(),
         name="patient-encounter-list",
+    ),
+    path(
+        "encounters/assessments/<uuid:patient_encounter_uuid>/",
+        AssessmentDiagnosisByEncounterIDView.as_view(),
+        name="patient-encounter-assessments",
     ),
     path(
         "encounters/assessments/",
@@ -25,9 +38,14 @@ urlpatterns = [
         name="patient-encounter-assessments",
     ),
     path(
-        "encounters/medical-notes/",
-        MedicalNotesView.as_view(),
-        name="patient-encounter-medical-notes",
+        "encounters/plan-of-care/",
+        PlanOfCareView.as_view(),
+        name="patient-encounter-plan-of-care",
+    ),
+    path(
+        "encounters/plan-of-care/<uuid:patient_encounter_uuid>/",
+        PlanOfCareByEncounterIDView.as_view(),
+        name="patient-encounter-plan-of-care",
     ),
     path(
         "encounters/assessments/<uuid:pk>/",
@@ -35,9 +53,9 @@ urlpatterns = [
         name="patient-encounter-assessments-update",
     ),
     path(
-        "encounters/medical-notes/<uuid:pk>/",
-        MedicalNotesUpdateView.as_view(),
-        name="patient-encounter-medical-notes-update",
+        "encounters/plan-of-care/<uuid:pk>/",
+        PlanOfCareUpdateView.as_view(),
+        name="patient-encounter-plan-of-care-update",
     ),
     path(
         "encounters/social-history/",
@@ -45,8 +63,18 @@ urlpatterns = [
         name="patient-social-history",
     ),
     path(
+        "encounters/social-history/<uuid:patient_encounter_uuid>/",
+        PatientSocialHistoryByEncounterIDView.as_view(),
+        name="patient-social-history",
+    ),
+    path(
         "encounters/social-history/<uuid:pk>/",
         PatientSocialHistoryUpdateView.as_view(),
         name="patient-social-history-update",
+    ),
+    path(
+        "encounters/icd/<str:icd_description>/",
+        ICDsView.as_view(),
+        name="icd-code-list",
     ),
 ]
