@@ -133,8 +133,10 @@ class DoctorsListView(CustomListAPIView):
 
     def filter_queryset(self, queryset):
         filtered_queryset = super().filter_queryset(queryset)
-        specialty_query = DoctorSpecialty.objects.filter(
-            specialty__icontains=self.request.query_params["search"]
-        ).values_list("doctor_info_id", flat=True)
-        specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
-        return (filtered_queryset | specialty_queryset).distinct()
+        if "search" in self.request.query_params:
+            specialty_query = DoctorSpecialty.objects.filter(
+                specialty__icontains=self.request.query_params["search"]
+            ).values_list("doctor_info_id", flat=True)
+            specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
+            return (filtered_queryset | specialty_queryset).distinct()
+        return filtered_queryset
