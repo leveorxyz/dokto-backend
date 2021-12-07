@@ -169,3 +169,69 @@ class ICDs(models.Model):
     icd_code = models.CharField(max_length=20, blank=True, null=True)
     full_description = models.CharField(max_length=1024, blank=True, null=True)
 
+
+#############MODEL##########################
+class FunctionalAndCognitiveStatus(CoreModel):
+    # class CodeType(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class ModuleType(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Status(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    moduleType = models.CharField(max_length=125, blank=True, null=True)
+    codeType = models.CharField(max_length=125, blank=True, null=True)
+    status = models.CharField(max_length=125, blank=True, null=True)
+    code = models.CharField(max_length=100, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    description = models.CharField(max_length=512, blank=True, null=True)
+
+
+class ChiefComplaintsAndHPI(CoreModel):
+    # class ChiefComplaint(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Severity(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Duration(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class ModifyingFactors(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    chiefComplaint = models.CharField(max_length=125, blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    severity = models.CharField(max_length=125, blank=True, null=True)
+    duration = models.CharField(max_length=125, blank=True, null=True)
+    modifying_factors = models.CharField(max_length=125, blank=True, null=True)
+    associated_symptons = models.CharField(max_length=100, blank=True, null=True)
+    description = models.CharField(max_length=512, blank=True, null=True)
+    context = models.CharField(max_length=100, blank=True, null=True)
+    hpi = models.CharField(max_length=512, blank=True, null=True)
+
+
+class PatientProcedure(CoreModel):
+    # class Type(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Status(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    procedure_type = models.CharField(max_length=125, blank=True, null=True)
+    code = models.CharField(max_length=100, blank=True, null=True)
+    description = models.CharField(max_length=512, blank=True, null=True)
+
+    status = models.CharField(max_length=125, blank=True, null=True)
+    date = models.DateField(blank=True, null=True)

@@ -6,22 +6,22 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('ehr', '0002_patientsocialhistory'),
+        ("ehr", "0002_patientsocialhistory"),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='MedicalNotes',
-            new_name='PlanOfCare',
+            old_name="MedicalNotes",
+            new_name="PlanOfCare",
         ),
         migrations.RenameField(
-            model_name='assessmentdiagnosis',
-            old_name='snomed_code',
-            new_name='disease_code',
+            model_name="assessmentdiagnosis",
+            old_name="snomed_code",
+            new_name="disease_code",
         ),
         migrations.RenameField(
-            model_name='assessmentdiagnosis',
-            old_name='snomed_description',
-            new_name='disease_description',
+            model_name="assessmentdiagnosis",
+            old_name="snomed_description",
+            new_name="disease_description",
         ),
     ]
