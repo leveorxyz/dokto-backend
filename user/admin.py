@@ -7,9 +7,18 @@ from .models import (
     PharmacyInfo,
     ClinicInfo,
     DoctorEducation,
+    DoctorExperience,
 )
 
 # Register your models here.
-models = [User, DoctorInfo, PatientInfo, PharmacyInfo, ClinicInfo, DoctorEducation]
+models = [
+    User,
+    DoctorInfo,
+    PatientInfo,
+    PharmacyInfo,
+    ClinicInfo,
+    DoctorEducation,
+    DoctorExperience,
+]
 for model in models:
     admin.site.register(model)
