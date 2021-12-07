@@ -229,7 +229,7 @@ class PatientProcedure(CoreModel):
 
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
-    type = models.CharField(max_length=125, blank=True, null=True)
+    procedure_type = models.CharField(max_length=125, blank=True, null=True)
     code = models.CharField(max_length=100, blank=True, null=True)
     description = models.CharField(max_length=512, blank=True, null=True)
 
