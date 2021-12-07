@@ -40,6 +40,7 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
         create_count = 0
         filtered_data = self._operation_filter(data, "add")
         for instance in filtered_data:
+            instance.pop("operation")
             serializer_instance = operation_serializer(
                 data={**instance, **extra_create_kwargs}
             )
@@ -63,6 +64,7 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
         update_count = 0
         filtered_data = self._operation_filter(data, "update")
         for instance in filtered_data:
+            instance.pop("operation")
             update_count += operation_model.objects.filter(
                 id=instance.pop("id"), **kwargs
             ).update(**instance)
