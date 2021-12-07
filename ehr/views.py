@@ -214,14 +214,20 @@ class ICDsView(CustomAPIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        parameters=[OpenApiParameter("icd_description", str, required=True)],
         responses={
             200: OpenApiResponse(
                 description="Success.",
                 examples=[
                     OpenApiExample(
                         name="example 1",
-                        value=[{"name": "string", "phone_code": "string"}],
+                        value=[
+                            {
+                                "id": 0,
+                                "code_description": "string",
+                                "icd_code": "string",
+                                "full_description": "string",
+                            }
+                        ],
                     )
                 ],
                 response=[OpenApiTypes.STR],
