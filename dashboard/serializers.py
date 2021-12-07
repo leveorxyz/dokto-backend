@@ -20,6 +20,7 @@ from user.models import (
     DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
+    PatientInfo,
 )
 from user.serializers import (
     DoctorEducationSerializer,
@@ -411,6 +412,88 @@ class DoctorAccountSettingsSerializer(Serializer):
             "new_password",
             "notification_mail",
             "temporary_disable",
+            "account_delete_password",
+            "reason_to_delete",
+        ]
+
+
+class PatientProfileDetailsSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
+
+    def update(self, instance: PatientInfo, validated_data: dict) -> PatientInfo:
+        if "user" in validated_data:
+            user_data = validated_data.pop("user")
+            instance.user.update_from_validated_data(user_data)
+            if "profile_photo" in user_data:
+                profile_photo_data = user_data.pop("profile_photo")
+                instance.user.profile_photo = profile_photo_data
+
+        instance = super().update(instance, validated_data)
+        return instance
+
+    class Meta:
+        model = PatientInfo
+        fields = ["full_name", "gender", "date_of_birth", "contact_no", "profile_photo"]
+
+
+class PatientAccountSettingsSerializer(Serializer):
+    old_password = CharField(required=False, allow_null=True, write_only=True)
+    new_password = CharField(required=False, allow_null=True, write_only=True)
+    ## TODO: uncomment this after notification email is implemented in model
+    # notification_email = EmailField(required=False, allow_null=True)  
+    account_delete_password = CharField(
+        required=False, allow_null=True, write_only=True
+    )
+    reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
+
+    def validate(self, data):
+        user = self.context["request"].user
+        if data.get("old_password") and not data.get("new_password"):
+            raise ValidationError("you need to provide new password!")
+        if data.get("new_password") and not data.get("old_password"):
+            raise ValidationError("you need to provide old password!")
+        if data.get("account_delete_password") and not data.get("reason_to_delete"):
+            raise ValidationError("you need to provide the reason of account deletion!")
+        if (
+            "old_password" in data
+            and "new_password" in data
+            and not user.check_password(data.get("old_password"))
+        ):
+            raise AuthenticationFailed("Incorrect password!")
+        if "account_delete_password" in data and not user.check_password(
+            data.get("account_delete_password")
+        ):
+            raise AuthenticationFailed("Incorrect password!")
+        return data
+
+    def update(self, instance, validated_data):
+        user = self.context["request"].user
+        if validated_data.get("old_password"):
+            new_password = make_password(validated_data.pop("new_password"))
+            user.password = new_password
+        if validated_data.get("account_delete_password"):
+            user.is_active = False
+            user.is_deleted = True
+            instance.is_deleted = True
+            if validated_data.get("reason_to_delete"):
+                instance.reason_to_delete = validated_data.pop("reason_to_delete")
+        if validated_data.get("notification_email"):
+            instance.notification_email = validated_data.pop("notification_email")
+        user.save()
+        instance.save()
+
+        return instance
+
+    class Meta:
+        model = PatientInfo
+        field = [
+            "old_password",
+            "new_password",
+            "notification_mail",
             "account_delete_password",
             "reason_to_delete",
         ]
