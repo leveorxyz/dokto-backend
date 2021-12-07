@@ -184,19 +184,13 @@ class FunctionalAndCognitiveStatus(CoreModel):
 
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
-    moduleType = models.CharField(
-        max_length=125,  blank=True, null=True
-    )
-    codeType = models.CharField(
-        max_length=125,  blank=True, null=True
-    )
-    status = models.CharField(
-        max_length=125,  blank=True, null=True
-    )
+    moduleType = models.CharField(max_length=125, blank=True, null=True)
+    codeType = models.CharField(max_length=125, blank=True, null=True)
+    status = models.CharField(max_length=125, blank=True, null=True)
     code = models.CharField(max_length=100, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
     description = models.CharField(max_length=512, blank=True, null=True)
-     
+
 
 class ChiefComplaintsAndHPI(CoreModel):
     # class ChiefComplaint(models.TextChoices):
@@ -214,24 +208,15 @@ class ChiefComplaintsAndHPI(CoreModel):
 
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
-    chiefComplaint = models.CharField(
-        max_length=125, blank=True, null=True
-    )
+    chiefComplaint = models.CharField(max_length=125, blank=True, null=True)
     location = models.CharField(max_length=100, blank=True, null=True)
-    severity=models.CharField(
-        max_length=125, blank=True, null=True
-    )
-    duration=models.CharField(
-        max_length=125, blank=True, null=True
-    )
-    modifying_factors=models.CharField(
-        max_length=125, blank=True, null=True
-    )
-    associated_symptons=models.CharField(max_length=100, blank=True, null=True)
+    severity = models.CharField(max_length=125, blank=True, null=True)
+    duration = models.CharField(max_length=125, blank=True, null=True)
+    modifying_factors = models.CharField(max_length=125, blank=True, null=True)
+    associated_symptons = models.CharField(max_length=100, blank=True, null=True)
     description = models.CharField(max_length=512, blank=True, null=True)
-    context=models.CharField(max_length=100, blank=True, null=True)
+    context = models.CharField(max_length=100, blank=True, null=True)
     hpi = models.CharField(max_length=512, blank=True, null=True)
-
 
 
 class PatientProcedure(CoreModel):
@@ -241,24 +226,12 @@ class PatientProcedure(CoreModel):
     # class Status(models.TextChoices):
     #     ACUTE = "ACUTE", _("acute")
     #     CHRONIC = "CHRONIC", _("chronic")
-   
 
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
-    type = models.CharField(
-        max_length=125, blank=True, null=True
-    )
+    type = models.CharField(max_length=125, blank=True, null=True)
     code = models.CharField(max_length=100, blank=True, null=True)
     description = models.CharField(max_length=512, blank=True, null=True)
 
-    status=models.CharField(
-        max_length=125, blank=True, null=True
-    )
+    status = models.CharField(max_length=125, blank=True, null=True)
     date = models.DateField(blank=True, null=True)
-
-
-
-    
-    
-    
-    

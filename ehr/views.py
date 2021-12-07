@@ -24,7 +24,7 @@ from ehr.models import (
     PatientEncounters,
     AssessmentDiagnosis,
     PatientSocialHistory,
-    FunctionalAndCognitiveStatus
+    FunctionalAndCognitiveStatus,
 )
 from .serializers import (
     AssessmentDiagnosisSerializer,
@@ -214,9 +214,7 @@ class ICDsView(CustomAPIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter("icd_description", str, required=True)
-        ],
+        parameters=[OpenApiParameter("icd_description", str, required=True)],
         responses={
             200: OpenApiResponse(
                 description="Success.",
@@ -254,12 +252,14 @@ class FunctionalAndCognitiveStatusByEncounterIdView(CustomListAPIView):
         
 
     """
-    #queryset = FunctionalAndCognitiveStatus.objects.all()
+    # queryset = FunctionalAndCognitiveStatus.objects.all()
     serializer_class = FunctionalAndCognitiveStatusSerializer
 
     def get_queryset(self):
-        patient_encounter_uuid = self.kwargs['patient_encounter_uuid']
-        return FunctionalAndCognitiveStatus.objects.filter(patient_encounter_id=patient_encounter_uuid)
+        patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
+        return FunctionalAndCognitiveStatus.objects.filter(
+            patient_encounter_id=patient_encounter_uuid
+        )
 
 
 class FunctionalAndCognitiveStatusView(CustomCreateAPIView):
@@ -301,8 +301,10 @@ class ChiefComplaintsAndHPIByEncounterIDView(CustomListAPIView):
     serializer_class = ChiefComplaintsAndHPISerializer
 
     def get_queryset(self):
-        patient_encounter_uuid = self.kwargs['patient_encounter_uuid']
-        return ChiefComplaintsAndHPI.objects.filter(patient_encounter_id=patient_encounter_uuid)
+        patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
+        return ChiefComplaintsAndHPI.objects.filter(
+            patient_encounter_id=patient_encounter_uuid
+        )
 
 
 class ChiefComplaintsAndHPIView(CustomCreateAPIView):
@@ -344,8 +346,10 @@ class PatientProcedureByEncounterIDView(CustomListAPIView):
     serializer_class = PatientProcedureSerializer
 
     def get_queryset(self):
-        patient_encounter_uuid = self.kwargs['patient_encounter_uuid']
-        return PatientProcedure.objects.filter(patient_encounter_id=patient_encounter_uuid)
+        patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
+        return PatientProcedure.objects.filter(
+            patient_encounter_id=patient_encounter_uuid
+        )
 
 
 class PatientProcedureView(CustomCreateAPIView):
