@@ -28,6 +28,10 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
                 for instance in data
                 if operation == instance.get("operation")
             ]
+        elif operation == "update":
+            filtered_data = [
+                instance for instance in data if operation == instance.get("operation")
+            ]
         return filtered_data
 
     def _perform_create(
@@ -59,6 +63,7 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
         update_count = 0
         filtered_data = self._operation_filter(data, "update")
         for instance in filtered_data:
+            instance.pop("operation")
             update_count += operation_model.objects.filter(
                 id=instance.pop("id"), **kwargs
             ).update(**instance)
