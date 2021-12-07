@@ -28,6 +28,10 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
                 for instance in data
                 if operation == instance.get("operation")
             ]
+        elif operation == "update":
+            filtered_data = [
+                instance for instance in data if operation == instance.get("operation")
+            ]
         return filtered_data
 
     def _perform_create(
