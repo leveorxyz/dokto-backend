@@ -1,5 +1,6 @@
 from django.db.models import Sum
 from django.contrib.auth.hashers import make_password
+from rest_framework.fields import DateField
 from rest_framework.serializers import (
     Serializer,
     ModelSerializer,
@@ -7,6 +8,7 @@ from rest_framework.serializers import (
     CharField,
     EmailField,
     BooleanField,
+    ChoiceField,
 )
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
@@ -22,12 +24,8 @@ from user.models import (
     DoctorExperience,
 )
 from user.serializers import (
-    DoctorEducationSerializer,
-    DoctorExpericenceSerializer,
-    DoctorAvailableHoursSerializer,
     DoctorReviewSerializer,
 )
-from user.utils import generate_file_and_name
 
 
 class DoctorProfileDetailsSerializer(ModelSerializer):
@@ -40,6 +38,16 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
+    date_of_birth = DateField(required=False, allow_null=True)
+    gender = ChoiceField(
+        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
+    )
+    email = EmailField(source="user.email", read_only=True)
+    street = CharField(source="user.street", required=False)
+    city = CharField(source="user.city", required=False)
+    state = CharField(source="user.state", required=False)
+    country = CharField(required=False)
+    zip_code = CharField(source="user.zip_code", required=False)
 
     def update(self, instance: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "user" in validated_data:
@@ -49,7 +57,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
                 profile_photo_data = user_data.pop("profile_photo")
                 instance.user.profile_photo = profile_photo_data
 
-        instance = super().update(instance, validated_data)
+        instance.update_from_validated_data(validated_data)
         return instance
 
     class Meta:
@@ -60,6 +68,13 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
             "contact_no",
             "profile_photo",
             "professional_bio",
+            "email",
+            "street",
+            "city",
+            "country",
+            "zip_code",
+            "date_of_birth",
+            "state",
         ]
 
 
