@@ -2,7 +2,7 @@ import base64
 from datetime import datetime, timezone
 
 from django.core.files.base import ContentFile
-from django.utils.text import get_valid_filename
+from django.utils.text import get_valid_filename, slugify
 from django.db import models
 
 
@@ -22,8 +22,8 @@ def generate_username(model: models.Model, full_name: str):
     """
     This method is used to generate a username for the user.
     """
-    converted_name = full_name.replace(" ", ".").lower()
+    converted_name = slugify(full_name)
     username_count = model.objects.filter(username__startswith=converted_name).count()
     if username_count == 0:
         return converted_name
-    return f"{converted_name}.{username_count}"
+    return f"{converted_name}-{username_count}"
