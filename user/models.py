@@ -220,6 +220,7 @@ class DoctorInfo(CoreModel):
     reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
+    profession = models.CharField(max_length=100, blank=True, null=True, default=None)
 
     @classmethod
     def get_hidden_fields(self, *args, **kwargs) -> list:
