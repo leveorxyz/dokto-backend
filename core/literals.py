@@ -8,3 +8,7 @@ PATIENT_IDENTIFICATION_PHOTO_DIRECTORY = "patient_identification_photo"
 TWILIO_CONVERSATION_ROOM_EXISTS = (
     "Unable to create record: Conversation with provided unique name already exists"
 )
+
+TWILIO_CONVERSATION_PARTICIPANT_EXISTS = (
+    "Unable to create record: Participant already exists"
+)
