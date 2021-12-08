@@ -9,7 +9,7 @@ from rest_framework.serializers import (
     IntegerField,
     URLField,
     ChoiceField,
-    BooleanField,
+    EmailField,
 )
 from rest_framework.exceptions import ValidationError
 from cryptography.fernet import InvalidToken
@@ -487,3 +487,21 @@ class DoctorDirectorySerializer(ModelSerializer):
         )
         fields = main_fields + extra_fields
         extra_kwargs = {field: {"read_only": True} for field in extra_fields}
+
+
+class PasswordResetEmailSerializer(Serializer):
+    email = EmailField(required=True)
+
+    def validate(self, data):
+        try:
+            user = User.objects.get(email=data["email"])
+        except User.DoesNotExist:
+            raise ValidationError("User does not exist")
+
+        data["user"] = user
+        return data
+
+
+class PasswordResetSerializer(Serializer):
+    password = CharField(required=True)
+    token = CharField(required=True)
