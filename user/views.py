@@ -5,6 +5,12 @@ from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.filters import SearchFilter
 from django.contrib.auth import authenticate, logout
+from drf_spectacular.utils import (
+    OpenApiExample,
+    extend_schema,
+    OpenApiResponse,
+)
+from drf_spectacular.types import OpenApiTypes
 
 from core.views import (
     CustomListAPIView,
@@ -23,6 +29,8 @@ from .serializers import (
     ClinicRegistrationSerializer,
     PharmacyRegistrationSerializer,
     PatientRegistrationSerializer,
+    PasswordResetEmailSerializer,
+    PasswordResetSerializer,
 )
 
 
@@ -140,3 +148,51 @@ class DoctorsListView(CustomListAPIView):
             specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
             return (filtered_queryset | specialty_queryset).distinct()
         return filtered_queryset
+
+
+class PasswordResetEmailView(CustomAPIView):
+    permission_classes = [AllowAny]
+    http_method_names = ["post", "options"]
+
+    @extend_schema(
+        request=PasswordResetEmailSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[OpenApiExample(name="example 1", value={})],
+                response=[],
+            )
+        },
+    )
+    def post(self, request):
+        # Extracting data from request and validating it
+        data = request.data
+        serializer = PasswordResetEmailSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        user: User = serializer.validated_data["user"]
+        user.send_password_reset_mail()
+        return super().post(request=request)
+
+
+class PasswordResetView(CustomAPIView):
+    permission_classes = [AllowAny]
+    http_method_names = ["post", "options"]
+
+    @extend_schema(
+        request=PasswordResetSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[OpenApiExample(name="example 1", value={})],
+                response=[],
+            )
+        },
+    )
+    def post(self, request):
+        # Extracting data from request and validating it
+        data = request.data
+        serializer = PasswordResetSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        User.verify_password_reset(**validated_data)
+        return super().post(request=request)

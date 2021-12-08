@@ -10,6 +10,8 @@ from .views import (
     PharmacySignupView,
     PatientSignupView,
     VerifyEmailView,
+    PasswordResetEmailView,
+    PasswordResetView,
 )
 
 urlpatterns = [
@@ -22,4 +24,10 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("activate/<str:token>/", VerifyEmailView.as_view(), name="verify-email"),
     path("doctors/", DoctorsListView.as_view(), name="doctors-list"),
+    path(
+        "send-password-reset-email/",
+        PasswordResetEmailView.as_view(),
+        name="send-password-reset-email",
+    ),
+    path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
 ]

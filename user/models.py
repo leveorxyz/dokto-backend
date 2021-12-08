@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from django.db import models, transaction
+from django.db import models, transaction, IntegrityError
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password
@@ -8,7 +8,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.sites.models import Site
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
 from core.classes import ExpiringActivationTokenGenerator
 from core.models import CoreModel
@@ -24,6 +24,11 @@ from .utils import generate_file_and_name
 # Create your models here.
 
 username_validator = UnicodeUsernameValidator()
+
+
+class PasswordResetWhitelist(CoreModel):
+    email = models.EmailField(unique=True)
+    token = models.CharField(max_length=255, unique=True)
 
 
 class User(AbstractUser, CoreModel):
@@ -142,6 +147,58 @@ class User(AbstractUser, CoreModel):
                 "host_url": Site.objects.get_current().domain,
             },
         )
+
+    def send_password_reset_mail(self):
+
+        template = "email/password_reset.html"
+
+        reset_token = ExpiringActivationTokenGenerator().generate_token(text=self.email)
+
+        try:
+            _ = PasswordResetWhitelist.objects.create(
+                email=self.email, token=reset_token.decode("utf-8")
+            )
+        except IntegrityError:
+            raise ValidationError("Password reset mail is already sent.")
+
+        link = (
+            "/".join(
+                [
+                    settings.FRONTEND_URL,
+                    "password-reset",
+                ]
+            )
+            + f"?token={reset_token.decode('utf-8')}"
+        )
+        send_mail(
+            to_email=self.email,
+            subject=f"Dokto Password Reset",
+            template_name=template,
+            input_context={
+                "name": self.full_name,
+                "link": link,
+                "host_url": Site.objects.get_current().domain,
+            },
+        )
+
+    @classmethod
+    def verify_password_reset(cls, token: str, password: str) -> None:
+        user = None
+        whitelist_token = None
+        try:
+            whitelist_token = PasswordResetWhitelist.objects.get(token=token)
+        except PasswordResetWhitelist.DoesNotExist:
+            raise ValidationError("Invalid token.")
+        email = ExpiringActivationTokenGenerator().get_token_value(token)
+
+        try:
+            user = cls.objects.get(email=email)
+        except cls.DoesNotExist:
+            raise ValidationError("Invalid token.")
+
+        user.set_password(password)
+        user.save()
+        whitelist_token.delete()
 
     def get_username(self) -> str:
         if (
