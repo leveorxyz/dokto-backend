@@ -19,7 +19,10 @@ from .serializers import (
     VideoRemoveParticipantSerializer,
 )
 from user.models import User, DoctorInfo
-from core.literals import TWILIO_CONVERSATION_ROOM_EXISTS
+from core.literals import (
+    TWILIO_CONVERSATION_ROOM_EXISTS,
+    TWILIO_CONVERSATION_PARTICIPANT_EXISTS,
+)
 
 
 class VideoChatTokenCreateAPIView(generics.CreateAPIView):
@@ -155,15 +158,22 @@ class CreateConversationAPIView(generics.CreateAPIView):
         participant_data = []
         for participant_name in participant_unique_names:
             try:
-                participant = service.conversations(
-                    conversation.sid
-                ).participants.create(identity=participant_name)
-            except TwilioRestException as e:
-                return Response(
-                    data={"status_code": 400, "message": e.msg, "result": None},
-                    status=status.HTTP_400_BAD_REQUEST,
+                _ = service.conversations(conversation.sid).participants.create(
+                    identity=participant_name
                 )
+            except TwilioRestException as e:
+                if e.msg == TWILIO_CONVERSATION_PARTICIPANT_EXISTS:
+                    pass
+                else:
+                    return Response(
+                        data={"status_code": 400, "message": e.msg, "result": None},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+        participants = service.conversations(conversation.sid).participants.list()
+        for participant in participants:
             participant_data.append(participant._properties)
+
         return Response(
             data={
                 "status_code": 201,
