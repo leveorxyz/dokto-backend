@@ -32,4 +32,5 @@ urlpatterns = [
         views.VideoRemoveParticipantAPIView.as_view(),
         name="remove_participant_video",
     ),
+    path("waiting-room/", views.WaitingRoomAPIView.as_view(), name="waiting_room"),
 ]

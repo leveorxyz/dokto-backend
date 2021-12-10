@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from twilio.jwt.access_token import AccessToken
@@ -10,14 +10,17 @@ from twilio.jwt.access_token.grants import VideoGrant, ChatGrant
 
 from django.conf import settings
 
-
+from core.views import CustomRetrieveUpdateAPIView
+from core.permissions import DoctorPermission, OwnProfilePermission
 from .serializers import (
     VideoChatTokenSerializer,
     AppointmentVideoChatTokenSerializer,
     CreateConversessionSerializer,
     ConversationaRemoveParticipantSerializer,
     VideoRemoveParticipantSerializer,
+    WaitingRoomSerializer,
 )
+from .models import WaitingRoom
 from user.models import User, DoctorInfo
 from core.literals import (
     TWILIO_CONVERSATION_ROOM_EXISTS,
@@ -290,3 +293,19 @@ class VideoRemoveParticipantAPIView(generics.CreateAPIView):
                 },
                 status=status.HTTP_200_OK,
             )
+
+
+class WaitingRoomAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = WaitingRoomSerializer
+    permissions_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        waiting_room, _ = WaitingRoom.objects.get_or_create(
+            doctor=self.request.user.doctor_info, defaults={}
+        )
+        return WaitingRoom.objects.filter(id=waiting_room.id)
+
+    def get_object(self):
+        obj = generics.get_object_or_404(self.get_queryset())
+        self.check_object_permissions(self.request, obj)
+        return obj
