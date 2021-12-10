@@ -79,8 +79,10 @@ class PatientSerializer(ModelSerializer):
 
 class PatientEncounterViewSerializer(serializers.ModelSerializer):
 
-    patient_name = serializers.CharField(source="patient.user.email")
-    provider_name = serializers.CharField(source="provider.user.email")
+  
+    patient_name = serializers.CharField(source="patient.user.full_name")
+    provider_name = serializers.CharField(source="provider.user.full_name")
+    
 
     class Meta:
         model = PatientEncounters
