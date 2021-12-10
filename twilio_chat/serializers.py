@@ -57,4 +57,4 @@ class WaitingRoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WaitingRoom
-        fields = "__all__"
+        exclude = ("created_at", "updated_at", "is_deleted", "deleted_at", "doctor")
