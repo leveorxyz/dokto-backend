@@ -29,7 +29,7 @@ class PatientEncounters(CoreModel):
 
     visit_date = models.DateField(blank=True, null=True)
     location = models.CharField(max_length=250, blank=True, null=True)
-    #visit_reason = models.CharField(max_length=512, blank=True, null=True)
+    # visit_reason = models.CharField(max_length=512, blank=True, null=True)
     reason = models.CharField(max_length=512, blank=True, null=True)
 
     signed = models.BooleanField(blank=True, null=True)
@@ -47,7 +47,7 @@ class AssessmentDiagnosis(CoreModel):
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
     icd = models.CharField(max_length=100, blank=True, null=True)
-    #description = models.CharField(max_length=512, blank=True, null=True)
+    # description = models.CharField(max_length=512, blank=True, null=True)
     icd_description = models.CharField(max_length=512, blank=True, null=True)
     disease_code = models.CharField(max_length=100, blank=True, null=True)
     disease_description = models.CharField(max_length=512, blank=True, null=True)
@@ -137,16 +137,15 @@ class PatientSocialHistory(CoreModel):
 
     # Martial Status
     home_environment = models.CharField(max_length=100, blank=True, null=True)
-    #children = models.CharField(max_length=100, blank=True, null=True)
-    children = models.IntegerField(max_length=100, blank=True, null=True)
-    #higher_education = models.CharField(max_length=100, blank=True, null=True)
+    # children = models.CharField(max_length=100, blank=True, null=True)
+    children = models.IntegerField(blank=True, null=True)
+    # higher_education = models.CharField(max_length=100, blank=True, null=True)
     highest_education = models.CharField(max_length=100, blank=True, null=True)
     occupation = models.CharField(max_length=100, blank=True, null=True)
     sexual_orientation = models.CharField(max_length=100, blank=True, null=True)
     gender_identity = models.CharField(max_length=100, blank=True, null=True)
-    #new field below added
+    # new field below added
     marital_status = models.CharField(max_length=100, blank=True, null=True)
-
 
     # Tobacco Info
     tobacco_status = models.CharField(max_length=100, blank=True, null=True)
