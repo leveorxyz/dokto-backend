@@ -1,6 +1,10 @@
+import os
+from datetime import datetime
+from django.utils.text import get_valid_filename
 from rest_framework import serializers
 
-from user.models import User, DoctorInfo, PatientInfo
+from user.models import User
+from .models import WaitingRoom
 
 
 class VideoChatTokenSerializer(serializers.Serializer):
@@ -36,3 +40,21 @@ class ConversationaRemoveParticipantSerializer(serializers.Serializer):
 class VideoRemoveParticipantSerializer(serializers.Serializer):
     room_name = serializers.CharField()
     participant_sid = serializers.CharField()
+
+
+class WaitingRoomSerializer(serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        now = datetime.now()
+        room_media = validated_data.get("room_media", None)
+        if room_media:
+            if instance.room_media.name:
+                os.remove(instance.room_media.path)
+            mime_type = room_media.content_type
+            if mime_type.startswith("video/"):
+                validated_data["text"] = None
+            room_media.name = f"{now.timestamp()}_{get_valid_filename(room_media.name)}"
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = WaitingRoom
+        exclude = ("created_at", "updated_at", "is_deleted", "deleted_at", "doctor")
