@@ -52,7 +52,6 @@ class WaitingRoomSerializer(serializers.ModelSerializer):
             mime_type = room_media.content_type
             if mime_type.startswith("video/"):
                 validated_data["text"] = None
-            room_media.name = f"{now.timestamp()}_{get_valid_filename(room_media.name)}"
         return super().update(instance, validated_data)
 
     class Meta:
