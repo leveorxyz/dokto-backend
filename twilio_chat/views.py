@@ -10,7 +10,7 @@ from twilio.jwt.access_token.grants import VideoGrant, ChatGrant
 
 from django.conf import settings
 
-from core.views import CustomRetrieveUpdateAPIView
+from core.views import CustomRetrieveAPIView, CustomRetrieveUpdateAPIView
 from core.permissions import DoctorPermission, OwnProfilePermission
 from .serializers import (
     VideoChatTokenSerializer,
@@ -308,4 +308,22 @@ class WaitingRoomAPIView(CustomRetrieveUpdateAPIView):
     def get_object(self):
         obj = generics.get_object_or_404(self.get_queryset())
         self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class PatientWaitingRoomView(CustomRetrieveAPIView):
+    serializer_class = WaitingRoomSerializer
+    permission_classes = [AllowAny]
+    queryset = WaitingRoom.objects.all()
+
+    def get_object(self):
+        doctor_username = self.kwargs.get("doctor_username")
+        try:
+            doctor = DoctorInfo.objects.get(username=doctor_username)
+            _ = WaitingRoom.objects.get_or_create(doctor=doctor, defaults={})
+        except DoctorInfo.DoesNotExist:
+            pass
+        obj = generics.get_object_or_404(
+            self.get_queryset(), doctor__username=doctor_username
+        )
         return obj
