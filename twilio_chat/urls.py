@@ -33,4 +33,9 @@ urlpatterns = [
         name="remove_participant_video",
     ),
     path("waiting-room/", views.WaitingRoomAPIView.as_view(), name="waiting_room"),
+    path(
+        "waiting-room/<str:doctor_username>",
+        views.PatientWaitingRoomView.as_view(),
+        name="patient_waiting_room",
+    ),
 ]

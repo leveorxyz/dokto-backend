@@ -52,7 +52,10 @@ class LoginView(GenericAPIView):
             if field not in request.data:
                 raise ValidationError(f"{field} is required")
         try:
-            user = User.objects.get(email=request.data["email"])
+            user: User = User.objects.get(email=request.data["email"])
+            if user.check_password(request.data["password"]):
+                user.is_active = True
+                user.save()
         except User.DoesNotExist:
             raise ValidationError("Invalid credentials")
         serializer = UserLoginSerializer(user)
