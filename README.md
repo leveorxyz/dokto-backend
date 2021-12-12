@@ -176,9 +176,21 @@ cp example.env .env
 - The `.env` file should look like this:
 
 ```text
-SECRET_KEY=<yoursecretkey>
+SECRET_KEY=your_secret_key
 VERSION=v1
 DEBUG=True
+EMAIL_HOST_USER=user@example.com
+EMAIL_HOST_PASSWORD=abcd
+BACKEND_URL=http://127.0.0.1:8000
+FERNET_KEY=MnMxhswjMy2vpJOt9B1qSS8ZZNZ8WTr5Pet3UePaLQU=
+FRONTEND_URL=https://dokto.toybethdev.net
+TWILIO_ACCOUNT_SID=account_sid
+TWILIO_API_KEY=api_key
+TWILIO_API_SECRET=api_secret
+TWILIO_CONVERSATION_SERVICE_SID=conversation_service
+TWILIO_AUTH_TOKEN=auth_token
+DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/NAME
+BRANCH=dev
 ```
 
 - Create and migrate the database.
