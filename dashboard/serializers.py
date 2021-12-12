@@ -429,3 +429,20 @@ class DoctorAccountSettingsSerializer(Serializer):
             "account_delete_password",
             "reason_to_delete",
         ]
+
+
+class DoctorProfessionalProfileSerializer(ModelSerializer):
+    license_file = CharField(required=False, allow_null=True)
+
+    def update(self, instance, validated_data):
+        if "license_file" in validated_data:
+            instance.license_file = validated_data.pop("license_file")
+
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = DoctorInfo
+        fields = [
+            "professional_bio",
+            "license_file",
+        ]
