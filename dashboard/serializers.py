@@ -15,6 +15,7 @@ from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from core.serializers import (
     ReadWriteSerializerMethodField,
     CustomCreateUpdateDeleteObjectOperationSerializer,
+    FieldListUpdateSerializer,
 )
 from user.models import (
     DoctorAvailableHours,
@@ -232,7 +233,7 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
         }
 
 
-class DoctorSpecialtySettingsSerializer(ModelSerializer):
+class DoctorSpecialtySettingsSerializer(FieldListUpdateSerializer):
     """
     Serializer for `dashboard > specialties and services` page.
     """
@@ -246,23 +247,11 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
     def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "specialty" in validated_data:
-            specialty = validated_data.pop("specialty")
-            new_specialty = set(specialty)
-            old_specialty = set(
-                doctor_info.doctorspecialty_set.all().values_list(
-                    "specialty", flat=True
-                )
-            )
-            added_specialty = new_specialty - old_specialty
-            removed_specialty = old_specialty - new_specialty
-            DoctorSpecialty.objects.filter(
-                doctor_info=doctor_info, specialty__in=removed_specialty
-            ).delete()
-            DoctorSpecialty.objects.bulk_create(
-                [
-                    DoctorSpecialty(doctor_info=doctor_info, specialty=spec)
-                    for spec in added_specialty
-                ]
+            _ = self.perform_list_field_update(
+                validated_data.pop("specialty"),
+                DoctorSpecialty,
+                "specialty",
+                {"doctor_info": doctor_info},
             )
         return doctor_info
 
