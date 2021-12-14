@@ -87,3 +87,32 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
     class Meta:
         model = CoreModel
         fields = "__all__"
+
+
+class FieldListUpdateSerializer(ModelSerializer):
+    def perform_list_field_update(
+        self,
+        updated_value: list,
+        related_model: CoreModel,
+        field_name: str,
+        query_params={},
+    ) -> int:
+        new_data = set(updated_value)
+        old_data = set(
+            related_model.objects.filter(**query_params).values_list(
+                field_name, flat=True
+            )
+        )
+        to_add = new_data - old_data
+        to_delete = old_data - new_data
+        related_model.objects.filter(
+            **{f"{field_name}__in": to_delete}, **query_params
+        ).delete()
+        related_model.objects.bulk_create(
+            [related_model(**{field_name: item, **query_params}) for item in to_add]
+        )
+        return len(to_add) + len(to_delete)
+
+    class Meta:
+        model = CoreModel
+        fields = "__all__"
