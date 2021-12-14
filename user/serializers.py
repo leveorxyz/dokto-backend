@@ -143,6 +143,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     date_of_birth = DateField(required=True, write_only=True)
     accepted_insurance = ListField(child=CharField(), required=False, write_only=True)
     accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
+    license_expiration = DateField(required=True, write_only=True)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info

@@ -278,6 +278,7 @@ class DoctorInfo(CoreModel):
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
     profession = models.CharField(max_length=100, blank=True, null=True, default=None)
+    license_expiration = models.DateField(blank=True, null=True)
 
     @classmethod
     def get_hidden_fields(self, *args, **kwargs) -> list:
