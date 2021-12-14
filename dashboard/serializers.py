@@ -35,10 +35,8 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
     Serializes the `Dashboard > Profile Settings > Profile Details` page
     """
 
-    full_name = CharField(source="user.full_name",
-                          required=False, allow_null=True)
-    contact_no = CharField(source="user.contact_no",
-                           required=False, allow_null=True)
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
@@ -276,16 +274,13 @@ class DoctorProfileSerializer(ModelSerializer):
     street = CharField(source="user.street", required=False, allow_null=True)
     state = CharField(source="user.state", required=False, allow_null=True)
     city = CharField(source="user.city", required=False, allow_null=True)
-    zip_code = CharField(source="user.zip_code",
-                         required=False, allow_null=True)
-    contact_no = CharField(source="user.contact_no",
-                           required=False, allow_null=True)
+    zip_code = CharField(source="user.zip_code", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
     avg_rating = SerializerMethodField(required=False, allow_null=True)
-    qualification_suffix = SerializerMethodField(
-        required=False, allow_null=True)
+    qualification_suffix = SerializerMethodField(required=False, allow_null=True)
     education = DoctorEducationSerializerWithID(
         many=True,
         required=False,
@@ -371,8 +366,7 @@ class DoctorAccountSettingsSerializer(Serializer):
     account_delete_password = CharField(
         required=False, allow_null=True, write_only=True
     )
-    reason_to_delete = CharField(
-        required=False, allow_null=True, write_only=True)
+    reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
 
     def validate(self, data):
         user = self.context["request"].user
@@ -381,8 +375,7 @@ class DoctorAccountSettingsSerializer(Serializer):
         if data.get("new_password") and not data.get("old_password"):
             raise ValidationError("you need to provide old password!")
         if data.get("account_delete_password") and not data.get("reason_to_delete"):
-            raise ValidationError(
-                "you need to provide the reason of account deletion!")
+            raise ValidationError("you need to provide the reason of account deletion!")
         if (
             "old_password" in data
             and "new_password" in data
@@ -405,15 +398,12 @@ class DoctorAccountSettingsSerializer(Serializer):
             user.is_deleted = True
             instance.is_deleted = True
             if validated_data.get("reason_to_delete"):
-                instance.reason_to_delete = validated_data.pop(
-                    "reason_to_delete")
+                instance.reason_to_delete = validated_data.pop("reason_to_delete")
         if validated_data.get("notification_email"):
-            instance.notification_email = validated_data.pop(
-                "notification_email")
+            instance.notification_email = validated_data.pop("notification_email")
         if "temporary_disable" in validated_data:
             user.is_active = False
-            instance.temporary_disable = validated_data.pop(
-                "temporary_disable")
+            instance.temporary_disable = validated_data.pop("temporary_disable")
         user.save()
         instance.save()
 
@@ -436,16 +426,18 @@ class DoctorProfessionalProfileSerializer(FieldListUpdateSerializer):
     language = ReadWriteSerializerMethodField(required=False, allow_null=True)
 
     def get_language(self, doctor_info: DoctorInfo) -> list:
-        return doctor_info.doctorlanguage_set.all().values_list(
-            "language", flat=True
-        )
+        return doctor_info.doctorlanguage_set.all().values_list("language", flat=True)
 
     def update(self, instance, validated_data):
         if "license_file" in validated_data:
             instance.license_file = validated_data.pop("license_file")
         if "language" in validated_data:
-            _ = self.perform_list_field_update(validated_data.pop(
-                "language"), DoctorLanguage, "language", {"doctor_info": instance})
+            _ = self.perform_list_field_update(
+                validated_data.pop("language"),
+                DoctorLanguage,
+                "language",
+                {"doctor_info": instance},
+            )
 
         return super().update(instance, validated_data)
 
