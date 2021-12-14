@@ -167,6 +167,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+- Then install wheel, build-essential, python3-dev and psycopg2
+
+```bash
+pip install wheel
+sudo apt install build-essential
+sudo apt install python3-dev
+pip install psycopg2
+```
+
 - Copy the `example.env` file to `.env` and fill in the values.
 
 ```bash

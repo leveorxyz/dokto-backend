@@ -15,10 +15,12 @@ from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from core.serializers import (
     ReadWriteSerializerMethodField,
     CustomCreateUpdateDeleteObjectOperationSerializer,
+    FieldListUpdateSerializer,
 )
 from user.models import (
     DoctorAvailableHours,
     DoctorInfo,
+    DoctorLanguage,
     DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
@@ -232,7 +234,7 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
         }
 
 
-class DoctorSpecialtySettingsSerializer(ModelSerializer):
+class DoctorSpecialtySettingsSerializer(FieldListUpdateSerializer):
     """
     Serializer for `dashboard > specialties and services` page.
     """
@@ -246,23 +248,11 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
     def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "specialty" in validated_data:
-            specialty = validated_data.pop("specialty")
-            new_specialty = set(specialty)
-            old_specialty = set(
-                doctor_info.doctorspecialty_set.all().values_list(
-                    "specialty", flat=True
-                )
-            )
-            added_specialty = new_specialty - old_specialty
-            removed_specialty = old_specialty - new_specialty
-            DoctorSpecialty.objects.filter(
-                doctor_info=doctor_info, specialty__in=removed_specialty
-            ).delete()
-            DoctorSpecialty.objects.bulk_create(
-                [
-                    DoctorSpecialty(doctor_info=doctor_info, specialty=spec)
-                    for spec in added_specialty
-                ]
+            _ = self.perform_list_field_update(
+                validated_data.pop("specialty"),
+                DoctorSpecialty,
+                "specialty",
+                {"doctor_info": doctor_info},
             )
         return doctor_info
 
@@ -429,3 +419,34 @@ class DoctorAccountSettingsSerializer(Serializer):
             "account_delete_password",
             "reason_to_delete",
         ]
+
+
+class DoctorProfessionalProfileSerializer(FieldListUpdateSerializer):
+    license_file = CharField(required=False, allow_null=True)
+    language = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_language(self, doctor_info: DoctorInfo) -> list:
+        return doctor_info.doctorlanguage_set.all().values_list("language", flat=True)
+
+    def update(self, instance, validated_data):
+        if "license_file" in validated_data:
+            instance.license_file = validated_data.pop("license_file")
+        if "language" in validated_data:
+            _ = self.perform_list_field_update(
+                validated_data.pop("language"),
+                DoctorLanguage,
+                "language",
+                {"doctor_info": instance},
+            )
+
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = DoctorInfo
+        fields = [
+            "professional_bio",
+            "license_file",
+            "license_expiration",
+            "language",
+        ]
+        extra_kwargs = {field: {"required": False} for field in fields}

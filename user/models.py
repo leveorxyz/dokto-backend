@@ -278,6 +278,7 @@ class DoctorInfo(CoreModel):
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
     profession = models.CharField(max_length=100, blank=True, null=True, default=None)
+    license_expiration = models.DateField(blank=True, null=True)
 
     @classmethod
     def get_hidden_fields(self, *args, **kwargs) -> list:
@@ -390,6 +391,11 @@ class DoctorReview(CoreModel):
     patient_name = models.CharField(max_length=80, null=True, blank=True)
     star_count = models.FloatField(null=True, blank=True)
     comment = models.TextField(max_length=5000, null=True, blank=True)
+
+
+class DoctorAcceptedInsurance(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    insurance = models.CharField(max_length=50)
 
 
 class ClinicInfo(CoreModel):
