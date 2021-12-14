@@ -19,6 +19,7 @@ from core.permissions import (
 from user.models import DoctorInfo
 from user.serializers import DoctorReviewSerializer
 from .serializers import (
+    DoctorAcceptedInsuranceSerializer,
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
     DoctorSpecialtySettingsSerializer,
@@ -165,3 +166,14 @@ class DoctorReviewListCreateAPIView(CustomListCreateAPIView):
             DoctorInfo, username=doctor_username
         )
         serializer.create(serializer.validated_data)
+
+
+class DoctorInsuranceAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = DoctorAcceptedInsuranceSerializer
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return DoctorInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user=self.request.user)

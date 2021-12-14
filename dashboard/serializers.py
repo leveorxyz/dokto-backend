@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.contrib.auth.hashers import make_password
-from rest_framework.fields import DateField
+from rest_framework import serializers
+from rest_framework.fields import DateField, ListField
 from rest_framework.serializers import (
     Serializer,
     ModelSerializer,
@@ -18,6 +19,7 @@ from core.serializers import (
     FieldListUpdateSerializer,
 )
 from user.models import (
+    DoctorAcceptedInsurance,
     DoctorAvailableHours,
     DoctorInfo,
     DoctorLanguage,
@@ -450,3 +452,39 @@ class DoctorProfessionalProfileSerializer(FieldListUpdateSerializer):
             "language",
         ]
         extra_kwargs = {field: {"required": False} for field in fields}
+
+
+class DoctorAcceptedInsuranceSerializer(FieldListUpdateSerializer):
+    accepted_insurance = ReadWriteSerializerMethodField(required=False, allow_null=True)
+    accept_all_insurance = ListField(
+        child=CharField(), required=False, allow_null=True, write_only=True
+    )
+
+    def get_accepted_insurance(self, doctor_info: DoctorInfo) -> list:
+        return doctor_info.doctoracceptedinsurance_set.all().values_list(
+            "insurance", flat=True
+        )
+
+    def validate(self, attrs):
+        if "accepted_insurance" not in attrs and "accept_all_insurance" not in attrs:
+            raise ValidationError(
+                "You need to provide accepted insurance or accept all insurance"
+            )
+        if "accept_all_insurance" in attrs and attrs["accept_all_insurance"] != ["all"]:
+            raise ValidationError("You can only accept all insurance")
+        if "accept_all_insurance" in attrs:
+            attrs["accepted_insurance"] = ["all"]
+        return super().validate(attrs)
+
+    def update(self, instance, validated_data):
+        self.perform_list_field_update(
+            validated_data.pop("accepted_insurance"),
+            DoctorAcceptedInsurance,
+            "insurance",
+            {"doctor_info": instance},
+        )
+        return instance
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["accepted_insurance", "accept_all_insurance"]
