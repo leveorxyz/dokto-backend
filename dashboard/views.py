@@ -1,10 +1,10 @@
-from os import name
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.decorators import permission_classes
-from django.contrib.auth.hashers import make_password
 from drf_spectacular.utils import extend_schema
 
 from core.views import (
@@ -153,10 +153,7 @@ class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
 class DoctorReviewListCreateAPIView(CustomListCreateAPIView):
     serializer_class = DoctorReviewSerializer
     filterset_fields = ["created_at__gte", "created_at__lte"]
-
-    @permission_classes([AllowAny])
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         doctor_username = self.kwargs.get("username")
