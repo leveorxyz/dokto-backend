@@ -20,6 +20,7 @@ from .models import (
     DoctorAvailableHours,
     DoctorEducation,
     DoctorReview,
+    DoctorAcceptedInsurance,
     User,
     DoctorInfo,
     DoctorExperience,
@@ -140,6 +141,8 @@ class DoctorRegistrationSerializer(ModelSerializer):
         choices=PatientInfo.Gender.choices, required=True, write_only=True
     )
     date_of_birth = DateField(required=True, write_only=True)
+    accepted_insurance = ListField(child=CharField(), required=False, write_only=True)
+    accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
@@ -158,6 +161,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
             [model(**{keyword: item, **extra_info}) for item in data]
         )
 
+    def validate(self, attrs):
+        if "accepted_insurance" not in attrs and (
+            "accept_all_insurance" not in attrs
+            or len(attrs["accept_all_insurance"]) == 0
+        ):
+            raise ValidationError("You must accept at least one insurance")
+        return super().validate(attrs)
+
     def create(self, validated_data: dict):
         # Generate username
         username = generate_username(DoctorInfo, validated_data.get("full_name"))
@@ -172,10 +183,13 @@ class DoctorRegistrationSerializer(ModelSerializer):
             raise e
 
         experience_data = []
+        insurance_data = []
         if "experience" in validated_data:
             experience_data = validated_data.pop("experience")
         if "accepted_insurance" in validated_data:
-            validated_data.pop("accepted_insurance")
+            insurance_data = validated_data.pop("accepted_insurance")
+        else:
+            insurance_data = ["all"]
         education_data = validated_data.pop("education")
         specialty_data = validated_data.pop("specialty")
         language = validated_data.pop("language")
@@ -214,6 +228,12 @@ class DoctorRegistrationSerializer(ModelSerializer):
             specialty_data, DoctorSpecialty, "specialty", doctor_info=doctor_info
         )
         self.from_list(language, DoctorLanguage, "language", doctor_info=doctor_info)
+        self.from_list(
+            insurance_data,
+            DoctorAcceptedInsurance,
+            "insurance",
+            doctor_info=doctor_info,
+        )
 
         user.send_email_verification_mail()
 
@@ -243,6 +263,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 "specialty",
                 "education",
                 "experience",
+                "accept_all_insurance",
             ]
         )
 
