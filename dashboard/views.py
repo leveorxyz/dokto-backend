@@ -4,7 +4,6 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from rest_framework.decorators import permission_classes
 from drf_spectacular.utils import extend_schema
 
 from core.views import (
