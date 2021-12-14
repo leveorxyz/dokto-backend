@@ -109,7 +109,7 @@ class DoctorAvailableHoursSerializer(ModelSerializer):
 class DoctorReviewSerializer(ModelSerializer):
     class Meta:
         model = DoctorReview
-        fields = ("patient_name", "star_count", "comment")
+        fields = ("patient_name", "star_count", "comment", "created_at")
 
 
 class DoctorRegistrationSerializer(ModelSerializer):

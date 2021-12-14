@@ -20,6 +20,7 @@ from core.serializers import (
 from user.models import (
     DoctorAvailableHours,
     DoctorInfo,
+    DoctorLanguage,
     DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
@@ -420,12 +421,23 @@ class DoctorAccountSettingsSerializer(Serializer):
         ]
 
 
-class DoctorProfessionalProfileSerializer(ModelSerializer):
+class DoctorProfessionalProfileSerializer(FieldListUpdateSerializer):
     license_file = CharField(required=False, allow_null=True)
+    language = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_language(self, doctor_info: DoctorInfo) -> list:
+        return doctor_info.doctorlanguage_set.all().values_list("language", flat=True)
 
     def update(self, instance, validated_data):
         if "license_file" in validated_data:
             instance.license_file = validated_data.pop("license_file")
+        if "language" in validated_data:
+            _ = self.perform_list_field_update(
+                validated_data.pop("language"),
+                DoctorLanguage,
+                "language",
+                {"doctor_info": instance},
+            )
 
         return super().update(instance, validated_data)
 
@@ -435,5 +447,6 @@ class DoctorProfessionalProfileSerializer(ModelSerializer):
             "professional_bio",
             "license_file",
             "license_expiration",
+            "language",
         ]
         extra_kwargs = {field: {"required": False} for field in fields}

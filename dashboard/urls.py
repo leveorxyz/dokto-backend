@@ -5,6 +5,7 @@ from .views import (
     DoctorProfileAPIView,
     DoctorProfileDetailsAPIView,
     DoctorProfilePublicAPIView,
+    DoctorReviewListCreateAPIView,
     DoctorSpecialtySettingsAPIView,
     DoctorEducationExperienceSettingsAPIView,
     DoctorAvailableHoursSettingsAPIView,
@@ -51,5 +52,10 @@ urlpatterns = [
         "doctor/professional-profile/",
         DoctorProfessionalProfileAPIView.as_view(),
         name="doctor-professional-profile",
+    ),
+    path(
+        "doctor/review/<str:username>/",
+        DoctorReviewListCreateAPIView.as_view(),
+        name="doctor-review",
     ),
 ]

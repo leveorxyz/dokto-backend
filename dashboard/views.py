@@ -1,12 +1,13 @@
-from os import name
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
-from django.contrib.auth.hashers import make_password
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from drf_spectacular.utils import extend_schema
 
 from core.views import (
+    CustomListCreateAPIView,
     CustomRetrieveAPIView,
     CustomRetrieveUpdateAPIView,
     CustomListUpdateAPIView,
@@ -16,6 +17,7 @@ from core.permissions import (
     DoctorPermission,
 )
 from user.models import DoctorInfo
+from user.serializers import DoctorReviewSerializer
 from .serializers import (
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
@@ -145,3 +147,21 @@ class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
+
+
+class DoctorReviewListCreateAPIView(CustomListCreateAPIView):
+    serializer_class = DoctorReviewSerializer
+    filterset_fields = ["created_at__gte", "created_at__lte"]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        doctor_username = self.kwargs.get("username")
+        doctor_info = get_object_or_404(DoctorInfo, username=doctor_username)
+        return doctor_info.doctorreview_set.all()
+
+    def perform_create(self, serializer):
+        doctor_username = self.kwargs.get("username")
+        serializer.validated_data["doctor_info"] = get_object_or_404(
+            DoctorInfo, username=doctor_username
+        )
+        serializer.create(serializer.validated_data)
