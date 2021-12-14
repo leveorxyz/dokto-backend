@@ -392,6 +392,11 @@ class DoctorReview(CoreModel):
     comment = models.TextField(max_length=5000, null=True, blank=True)
 
 
+class DoctorAcceptedInsurance(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    insurance = models.CharField(max_length=50)
+
+
 class ClinicInfo(CoreModel):
     username = models.CharField(
         _("username"),
