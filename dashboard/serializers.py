@@ -445,4 +445,6 @@ class DoctorProfessionalProfileSerializer(ModelSerializer):
         fields = [
             "professional_bio",
             "license_file",
+            "license_expiration",
         ]
+        extra_kwargs = {field: {"required": False} for field in fields}
