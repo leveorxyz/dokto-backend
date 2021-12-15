@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "constant",
     "ehr",
     "appointment",
+    "onboarding",
 ]
 
 MIDDLEWARE = [
