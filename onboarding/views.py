@@ -9,6 +9,8 @@ from core.permissions import ClinicPermission
 
 
 class OnboardMailAPIView(CustomAPIView):
+    http_method_names = ["post", "options"]
+
     @permission_classes((IsAuthenticated, ClinicPermission))
     def post(self, request, *args, **kwargs):
         if "doctor_id" not in request.data:

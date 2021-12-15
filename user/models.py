@@ -414,6 +414,37 @@ class ClinicInfo(CoreModel):
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
 
+    def send_onboard_mail(self, doctor_id=None, *args, **kwargs):
+        if not doctor_id:
+            raise ValidationError("doctor_id is required")
+        doctor_user: User = None
+        try:
+            doctor_user = DoctorInfo.objects.get(id=doctor_id).user
+        except DoctorInfo.DoesNotExist:
+            raise ValidationError("doctor_id is not valid")
+        invite_token = ExpiringActivationTokenGenerator().generate_token(
+            text=self.email
+        )
+        link = (
+            "/".join(
+                [
+                    settings.FRONTEND_URL,
+                    "onboard",
+                ]
+            )
+            + f"?token={invite_token.decode('utf-8')}"
+        )
+        send_mail(
+            to_email=doctor_user.email,
+            subject=f"Dokto doctor onboarding",
+            template_name="email/password_reset.html",
+            input_context={
+                "name": doctor_user.full_name,
+                "link": link,
+                "host_url": Site.objects.get_current().domain,
+            },
+        )
+
     @classmethod
     def get_hidden_fields(cls):
         return super().get_hidden_fields() + ["user"]
