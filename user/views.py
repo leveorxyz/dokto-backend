@@ -7,6 +7,7 @@ from rest_framework.filters import SearchFilter
 from django.contrib.auth import authenticate, logout
 from drf_spectacular.utils import (
     OpenApiExample,
+    OpenApiParameter,
     extend_schema,
     OpenApiResponse,
 )
@@ -99,6 +100,15 @@ class DoctorSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
     queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
     serializer_class = DoctorRegistrationSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("onboard-token", str, required=False),
+        ],
+        request=DoctorRegistrationSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class PatientSignupView(CustomCreateAPIView):
