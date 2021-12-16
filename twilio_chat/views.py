@@ -358,13 +358,16 @@ class ConversationRemoveDoctorAPIView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         result_dict = {}
-        for participant_id, twilio_participant in participants_user_id:
-            if User.objects.get(id=participant_id).user_type == "DOCTOR":
-                result_dict[participant.sid] = (
-                    service.conversations(conversation.sid)
-                    .participants(sid=twilio_participant.sid)
-                    .delete()
-                )
+        try:
+            for participant_id, twilio_participant in participants_user_id:
+                if User.objects.get(id=participant_id).user_type == "DOCTOR":
+                    result_dict[participant.sid] = (
+                        service.conversations(conversation.sid)
+                        .participants(sid=twilio_participant.sid)
+                        .delete()
+                    )
+        except TwilioRestException as e:
+            pass
         else:
             return Response(
                 data={
