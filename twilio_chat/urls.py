@@ -38,4 +38,9 @@ urlpatterns = [
         views.PatientWaitingRoomView.as_view(),
         name="patient_waiting_room",
     ),
+    path(
+        "conversation-remove-doctor/",
+        views.ConversationRemoveDoctorAPIView.as_view(),
+        name="conversation_remove_doctor",
+    ),
 ]

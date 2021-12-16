@@ -327,3 +327,53 @@ class PatientWaitingRoomView(CustomRetrieveAPIView):
             self.get_queryset(), doctor__username=doctor_username
         )
         return obj
+
+
+class ConversationRemoveDoctorAPIView(generics.CreateAPIView):
+    serializer_class = ConversationaRemoveParticipantSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.data
+
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        service = client.conversations.services(
+            settings.TWILIO_CONVERSATION_SERVICE_SID
+        )
+        participants_user_id = []
+        try:
+            conversation = client.conversations.conversations(
+                validated_data.get("channel_unique_name")
+            ).fetch()
+            participants = service.conversations(conversation.sid).participants.list()
+            for participant in participants:
+                participants_user_id.append(
+                    (participant.identity.split("_")[0], participant)
+                )
+        except TwilioRestException as e:
+            return Response(
+                data={"status_code": 400, "message": e.msg, "result": None},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        result_dict = {}
+        for participant_id, twilio_participant in participants_user_id:
+            if User.objects.get(id=participant_id).user_type == "DOCTOR":
+                result_dict[participant.sid] = (
+                    service.conversations(conversation.sid)
+                    .participants(sid=twilio_participant.sid)
+                    .delete()
+                )
+        else:
+            return Response(
+                data={
+                    "status_code": 201,
+                    "message": "Success",
+                    "result": {
+                        "channel": conversation._properties,
+                        "participants": result_dict,
+                    },
+                },
+                status=status.HTTP_201_CREATED,
+            )
