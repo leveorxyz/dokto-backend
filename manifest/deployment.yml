@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dokto-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dokto-backend
+  template:
+    metadata:
+      labels:
+        app: dokto-backend
+    spec:
+      containers:
+      - name: dokto-backend
+        image: dokto.azurecr.io/toybethsystems/dokto-backend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 500Mi
+        
