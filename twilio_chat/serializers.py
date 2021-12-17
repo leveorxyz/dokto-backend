@@ -44,7 +44,6 @@ class VideoRemoveParticipantSerializer(serializers.Serializer):
 
 class WaitingRoomSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
-        now = datetime.now()
         room_media = validated_data.get("room_media", None)
         if room_media:
             if instance.room_media.name:
@@ -52,8 +51,11 @@ class WaitingRoomSerializer(serializers.ModelSerializer):
             mime_type = room_media.content_type
             if mime_type.startswith("video/"):
                 validated_data["text"] = None
+            instance.room_media_mime_type = mime_type
+        instance.save()
         return super().update(instance, validated_data)
 
     class Meta:
         model = WaitingRoom
         exclude = ("created_at", "updated_at", "is_deleted", "deleted_at", "doctor")
+        extra_kwargs = {"room_media_mime_type": {"read_only": True}}
