@@ -1,5 +1,7 @@
 from django.db.models import Sum
 from django.contrib.auth.hashers import make_password
+from rest_framework import serializers
+from rest_framework.fields import DateField, ListField
 from rest_framework.serializers import (
     Serializer,
     ModelSerializer,
@@ -7,28 +9,28 @@ from rest_framework.serializers import (
     CharField,
     EmailField,
     BooleanField,
+    ChoiceField,
 )
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
 from core.serializers import (
     ReadWriteSerializerMethodField,
     CustomCreateUpdateDeleteObjectOperationSerializer,
+    FieldListUpdateSerializer,
 )
 from user.models import (
+    DoctorAcceptedInsurance,
     DoctorAvailableHours,
     DoctorInfo,
+    DoctorLanguage,
     DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
     PatientInfo,
 )
 from user.serializers import (
-    DoctorEducationSerializer,
-    DoctorExpericenceSerializer,
-    DoctorAvailableHoursSerializer,
     DoctorReviewSerializer,
 )
-from user.utils import generate_file_and_name
 
 
 class DoctorProfileDetailsSerializer(ModelSerializer):
@@ -41,6 +43,16 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
+    date_of_birth = DateField(required=False, allow_null=True)
+    gender = ChoiceField(
+        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
+    )
+    email = EmailField(source="user.email", read_only=True)
+    street = CharField(source="user.street", required=False)
+    city = CharField(source="user.city", required=False)
+    state = CharField(source="user.state", required=False)
+    country = CharField(required=False)
+    zip_code = CharField(source="user.zip_code", required=False)
 
     def update(self, instance: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "user" in validated_data:
@@ -50,7 +62,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
                 profile_photo_data = user_data.pop("profile_photo")
                 instance.user.profile_photo = profile_photo_data
 
-        instance = super().update(instance, validated_data)
+        instance.update_from_validated_data(validated_data)
         return instance
 
     class Meta:
@@ -61,6 +73,13 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
             "contact_no",
             "profile_photo",
             "professional_bio",
+            "email",
+            "street",
+            "city",
+            "country",
+            "zip_code",
+            "date_of_birth",
+            "state",
         ]
 
 
@@ -90,7 +109,7 @@ class DoctorEducationSerializerWithID(ModelSerializer):
         ]
         extra_kwargs = {
             "id": {"read_only": False, "required": False},
-            "doctor_info": {"required": False},
+            "doctor_info": {"required": False, "write_only": True},
             "course": {"required": False},
             "year": {"required": False},
             "college": {"required": False},
@@ -124,7 +143,7 @@ class DoctorExpericenceSerializerWithID(ModelSerializer):
         ]
         extra_kwargs = {
             "id": {"read_only": False, "required": False},
-            "doctor_info": {"required": False},
+            "doctor_info": {"required": False, "write_only": True},
             "establishment_name": {"required": False},
             "job_title": {"required": False},
             "start_date": {"required": False},
@@ -211,14 +230,14 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
         ]
         extra_kwargs = {
             "id": {"read_only": False, "required": False},
-            "doctor_info": {"required": False},
+            "doctor_info": {"required": False, "write_only": True},
             "day_of_week": {"required": False},
             "start_time": {"required": False},
             "end_time": {"required": False},
         }
 
 
-class DoctorSpecialtySettingsSerializer(ModelSerializer):
+class DoctorSpecialtySettingsSerializer(FieldListUpdateSerializer):
     """
     Serializer for `dashboard > specialties and services` page.
     """
@@ -232,23 +251,11 @@ class DoctorSpecialtySettingsSerializer(ModelSerializer):
 
     def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
         if "specialty" in validated_data:
-            specialty = validated_data.pop("specialty")
-            new_specialty = set(specialty)
-            old_specialty = set(
-                doctor_info.doctorspecialty_set.all().values_list(
-                    "specialty", flat=True
-                )
-            )
-            added_specialty = new_specialty - old_specialty
-            removed_specialty = old_specialty - new_specialty
-            DoctorSpecialty.objects.filter(
-                doctor_info=doctor_info, specialty__in=removed_specialty
-            ).delete()
-            DoctorSpecialty.objects.bulk_create(
-                [
-                    DoctorSpecialty(doctor_info=doctor_info, specialty=spec)
-                    for spec in added_specialty
-                ]
+            _ = self.perform_list_field_update(
+                validated_data.pop("specialty"),
+                DoctorSpecialty,
+                "specialty",
+                {"doctor_info": doctor_info},
             )
         return doctor_info
 
@@ -443,8 +450,8 @@ class PatientProfileDetailsSerializer(ModelSerializer):
 class PatientAccountSettingsSerializer(Serializer):
     old_password = CharField(required=False, allow_null=True, write_only=True)
     new_password = CharField(required=False, allow_null=True, write_only=True)
-    ## TODO: uncomment this after notification email is implemented in model
-    # notification_email = EmailField(required=False, allow_null=True)  
+    # TODO: uncomment this after notification email is implemented in model
+    # notification_email = EmailField(required=False, allow_null=True)
     account_delete_password = CharField(
         required=False, allow_null=True, write_only=True
     )
@@ -497,3 +504,70 @@ class PatientAccountSettingsSerializer(Serializer):
             "account_delete_password",
             "reason_to_delete",
         ]
+
+
+class DoctorProfessionalProfileSerializer(FieldListUpdateSerializer):
+    license_file = CharField(required=False, allow_null=True)
+    language = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_language(self, doctor_info: DoctorInfo) -> list:
+        return doctor_info.doctorlanguage_set.all().values_list("language", flat=True)
+
+    def update(self, instance, validated_data):
+        if "license_file" in validated_data:
+            instance.license_file = validated_data.pop("license_file")
+        if "language" in validated_data:
+            _ = self.perform_list_field_update(
+                validated_data.pop("language"),
+                DoctorLanguage,
+                "language",
+                {"doctor_info": instance},
+            )
+
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = DoctorInfo
+        fields = [
+            "professional_bio",
+            "license_file",
+            "license_expiration",
+            "language",
+        ]
+        extra_kwargs = {field: {"required": False} for field in fields}
+
+
+class DoctorAcceptedInsuranceSerializer(FieldListUpdateSerializer):
+    accepted_insurance = ReadWriteSerializerMethodField(required=False, allow_null=True)
+    accept_all_insurance = ListField(
+        child=CharField(), required=False, allow_null=True, write_only=True
+    )
+
+    def get_accepted_insurance(self, doctor_info: DoctorInfo) -> list:
+        return doctor_info.doctoracceptedinsurance_set.all().values_list(
+            "insurance", flat=True
+        )
+
+    def validate(self, attrs):
+        if "accepted_insurance" not in attrs and "accept_all_insurance" not in attrs:
+            raise ValidationError(
+                "You need to provide accepted insurance or accept all insurance"
+            )
+        if "accept_all_insurance" in attrs and attrs["accept_all_insurance"] != ["all"]:
+            raise ValidationError("You can only accept all insurance")
+        if "accept_all_insurance" in attrs:
+            attrs["accepted_insurance"] = ["all"]
+        return super().validate(attrs)
+
+    def update(self, instance, validated_data):
+        self.perform_list_field_update(
+            validated_data.pop("accepted_insurance"),
+            DoctorAcceptedInsurance,
+            "insurance",
+            {"doctor_info": instance},
+        )
+        return instance
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["accepted_insurance", "accept_all_insurance"]

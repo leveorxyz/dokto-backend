@@ -52,6 +52,7 @@ urlpatterns = [
     path("__debug__/", include(debug_toolbar.urls)),
     path("constant/", include("constant.urls")),
     path("appointment/", include("appointment.urls")),
+    path("onboarding/", include("onboarding.urls")),
     url(
         r"^media/(?P<path>.*)$",
         serve,

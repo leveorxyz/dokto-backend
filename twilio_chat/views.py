@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from twilio.jwt.access_token import AccessToken
@@ -10,16 +10,22 @@ from twilio.jwt.access_token.grants import VideoGrant, ChatGrant
 
 from django.conf import settings
 
-
+from core.views import CustomRetrieveAPIView, CustomRetrieveUpdateAPIView
+from core.permissions import DoctorPermission, OwnProfilePermission
 from .serializers import (
     VideoChatTokenSerializer,
     AppointmentVideoChatTokenSerializer,
     CreateConversessionSerializer,
     ConversationaRemoveParticipantSerializer,
     VideoRemoveParticipantSerializer,
+    WaitingRoomSerializer,
 )
+from .models import WaitingRoom
 from user.models import User, DoctorInfo
-from core.literals import TWILIO_CONVERSATION_ROOM_EXISTS
+from core.literals import (
+    TWILIO_CONVERSATION_ROOM_EXISTS,
+    TWILIO_CONVERSATION_PARTICIPANT_EXISTS,
+)
 
 
 class VideoChatTokenCreateAPIView(generics.CreateAPIView):
@@ -155,15 +161,22 @@ class CreateConversationAPIView(generics.CreateAPIView):
         participant_data = []
         for participant_name in participant_unique_names:
             try:
-                participant = service.conversations(
-                    conversation.sid
-                ).participants.create(identity=participant_name)
-            except TwilioRestException as e:
-                return Response(
-                    data={"status_code": 400, "message": e.msg, "result": None},
-                    status=status.HTTP_400_BAD_REQUEST,
+                _ = service.conversations(conversation.sid).participants.create(
+                    identity=participant_name
                 )
+            except TwilioRestException as e:
+                if e.msg == TWILIO_CONVERSATION_PARTICIPANT_EXISTS:
+                    pass
+                else:
+                    return Response(
+                        data={"status_code": 400, "message": e.msg, "result": None},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+        participants = service.conversations(conversation.sid).participants.list()
+        for participant in participants:
             participant_data.append(participant._properties)
+
         return Response(
             data={
                 "status_code": 201,
@@ -279,4 +292,91 @@ class VideoRemoveParticipantAPIView(generics.CreateAPIView):
                     "result": participant._properties,
                 },
                 status=status.HTTP_200_OK,
+            )
+
+
+class WaitingRoomAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = WaitingRoomSerializer
+    permissions_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        waiting_room, _ = WaitingRoom.objects.get_or_create(
+            doctor=self.request.user.doctor_info, defaults={}
+        )
+        return WaitingRoom.objects.filter(id=waiting_room.id)
+
+    def get_object(self):
+        obj = generics.get_object_or_404(self.get_queryset())
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class PatientWaitingRoomView(CustomRetrieveAPIView):
+    serializer_class = WaitingRoomSerializer
+    permission_classes = [AllowAny]
+    queryset = WaitingRoom.objects.all()
+
+    def get_object(self):
+        doctor_username = self.kwargs.get("doctor_username")
+        try:
+            doctor = DoctorInfo.objects.get(username=doctor_username)
+            _ = WaitingRoom.objects.get_or_create(doctor=doctor, defaults={})
+        except DoctorInfo.DoesNotExist:
+            pass
+        obj = generics.get_object_or_404(
+            self.get_queryset(), doctor__username=doctor_username
+        )
+        return obj
+
+
+class ConversationRemoveDoctorAPIView(generics.CreateAPIView):
+    serializer_class = ConversationaRemoveParticipantSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.data
+
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        service = client.conversations.services(
+            settings.TWILIO_CONVERSATION_SERVICE_SID
+        )
+        participants_user_id = []
+        try:
+            conversation = client.conversations.conversations(
+                validated_data.get("channel_unique_name")
+            ).fetch()
+            participants = service.conversations(conversation.sid).participants.list()
+            for participant in participants:
+                participants_user_id.append(
+                    (participant.identity.split("_")[0], participant)
+                )
+        except TwilioRestException as e:
+            return Response(
+                data={"status_code": 400, "message": e.msg, "result": None},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        result_dict = {}
+        try:
+            for participant_id, twilio_participant in participants_user_id:
+                if User.objects.get(id=participant_id).user_type == "DOCTOR":
+                    result_dict[participant.sid] = (
+                        service.conversations(conversation.sid)
+                        .participants(sid=twilio_participant.sid)
+                        .delete()
+                    )
+        except TwilioRestException as e:
+            pass
+        else:
+            return Response(
+                data={
+                    "status_code": 201,
+                    "message": "Success",
+                    "result": {
+                        "channel": conversation._properties,
+                        "participants": result_dict,
+                    },
+                },
+                status=status.HTTP_201_CREATED,
             )

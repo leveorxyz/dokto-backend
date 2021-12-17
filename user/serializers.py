@@ -9,6 +9,7 @@ from rest_framework.serializers import (
     IntegerField,
     URLField,
     ChoiceField,
+    EmailField,
 )
 from rest_framework.exceptions import ValidationError
 from cryptography.fernet import InvalidToken
@@ -19,6 +20,7 @@ from .models import (
     DoctorAvailableHours,
     DoctorEducation,
     DoctorReview,
+    DoctorAcceptedInsurance,
     User,
     DoctorInfo,
     DoctorExperience,
@@ -107,7 +109,7 @@ class DoctorAvailableHoursSerializer(ModelSerializer):
 class DoctorReviewSerializer(ModelSerializer):
     class Meta:
         model = DoctorReview
-        fields = ("patient_name", "star_count", "comment")
+        fields = ("patient_name", "star_count", "comment", "created_at")
 
 
 class DoctorRegistrationSerializer(ModelSerializer):
@@ -118,7 +120,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
     experience = ListField(
         child=DoctorExpericenceSerializer(), required=False, write_only=True
     )
-    specialty = ListField(child=CharField(), write_only=True)
     accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
 
     # Doctor fields
@@ -134,10 +135,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
     awards = CharField(write_only=True, required=False)
     country = CharField(required=True, write_only=True)
     professional_bio = CharField(required=True, write_only=True)
+    profession = CharField(required=False, write_only=True, allow_null=True)
     gender = ChoiceField(
         choices=PatientInfo.Gender.choices, required=True, write_only=True
     )
     date_of_birth = DateField(required=True, write_only=True)
+    accepted_insurance = ListField(child=CharField(), required=False, write_only=True)
+    accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
+    license_expiration = DateField(required=True, write_only=True)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
@@ -156,6 +161,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
             [model(**{keyword: item, **extra_info}) for item in data]
         )
 
+    def validate(self, attrs):
+        if "accepted_insurance" not in attrs and (
+            "accept_all_insurance" not in attrs
+            or len(attrs["accept_all_insurance"]) == 0
+        ):
+            raise ValidationError("You must accept at least one insurance")
+        return super().validate(attrs)
+
     def create(self, validated_data: dict):
         # Generate username
         username = generate_username(DoctorInfo, validated_data.get("full_name"))
@@ -170,12 +183,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
             raise e
 
         experience_data = []
+        insurance_data = []
         if "experience" in validated_data:
             experience_data = validated_data.pop("experience")
         if "accepted_insurance" in validated_data:
-            validated_data.pop("accepted_insurance")
+            insurance_data = validated_data.pop("accepted_insurance")
+        else:
+            insurance_data = ["all"]
         education_data = validated_data.pop("education")
-        specialty_data = validated_data.pop("specialty")
         language = validated_data.pop("language")
         identification_photo = validated_data.pop("identification_photo")
         license_file = validated_data.pop("license_file")
@@ -208,10 +223,13 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        self.from_list(
-            specialty_data, DoctorSpecialty, "specialty", doctor_info=doctor_info
-        )
         self.from_list(language, DoctorLanguage, "language", doctor_info=doctor_info)
+        self.from_list(
+            insurance_data,
+            DoctorAcceptedInsurance,
+            "insurance",
+            doctor_info=doctor_info,
+        )
 
         user.send_email_verification_mail()
 
@@ -238,9 +256,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 "language",
                 "profile_photo",
                 "identification_photo",
-                "specialty",
                 "education",
                 "experience",
+                "accept_all_insurance",
             ]
         )
 
@@ -462,3 +480,44 @@ class VerifyEmailSerializer(Serializer):
         user.save()
 
         return data
+
+
+class DoctorDirectorySerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name")
+    email = CharField(source="user.email")
+    street = CharField(source="user.street")
+    state = CharField(source="user.state")
+    city = CharField(source="user.city")
+    zip_code = CharField(source="user.zip_code")
+    contact_no = CharField(source="user.contact_no")
+
+    class Meta:
+        model = DoctorInfo
+        main_fields = list(
+            set(field.name for field in model._meta.fields)
+            - set(model.get_hidden_fields() + ["user"])
+        )
+        extra_fields = list(
+            set(field.name for field in User._meta.fields)
+            - set(User.get_hidden_fields() + ["user_type", "password", "last_login"])
+        )
+        fields = main_fields + extra_fields
+        extra_kwargs = {field: {"read_only": True} for field in extra_fields}
+
+
+class PasswordResetEmailSerializer(Serializer):
+    email = EmailField(required=True)
+
+    def validate(self, data):
+        try:
+            user = User.objects.get(email=data["email"])
+        except User.DoesNotExist:
+            raise ValidationError("User does not exist")
+
+        data["user"] = user
+        return data
+
+
+class PasswordResetSerializer(Serializer):
+    password = CharField(required=True)
+    token = CharField(required=True)

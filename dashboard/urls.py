@@ -1,9 +1,12 @@
 from django.urls import path
 
 from .views import (
+    DoctorInsuranceAPIView,
+    DoctorProfessionalProfileAPIView,
     DoctorProfileAPIView,
     DoctorProfileDetailsAPIView,
     DoctorProfilePublicAPIView,
+    DoctorReviewListCreateAPIView,
     DoctorSpecialtySettingsAPIView,
     DoctorEducationExperienceSettingsAPIView,
     DoctorAvailableHoursSettingsAPIView,
@@ -57,5 +60,18 @@ urlpatterns = [
         "patient/account-settings/",
         PatientAccountSettingsAPIView.as_view(),
         name="patient-account-settings",
+    ),
+    path(
+        "doctor/professional-profile/",
+        DoctorProfessionalProfileAPIView.as_view(),
+        name="doctor-professional-profile",
+    ),
+    path(
+        "doctor/review/<str:username>/",
+        DoctorReviewListCreateAPIView.as_view(),
+        name="doctor-review",
+    ),
+    path(
+        "doctor/insurance/", DoctorInsuranceAPIView.as_view(), name="doctor-insurance"
     ),
 ]

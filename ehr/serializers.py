@@ -11,9 +11,13 @@ from core.serializers import ReadWriteSerializerMethodField
 from user.models import User
 from .models import (
     AssessmentDiagnosis,
-    MedicalNotes,
+    ICDs,
+    PlanOfCare,
     PatientEncounters,
     PatientSocialHistory,
+    FunctionalAndCognitiveStatus,
+    ChiefComplaintsAndHPI,
+    PatientProcedure,
 )
 
 
@@ -75,8 +79,8 @@ class PatientSerializer(ModelSerializer):
 
 class PatientEncounterViewSerializer(serializers.ModelSerializer):
 
-    patient_name = serializers.CharField(source="patient.user.email")
-    provider_name = serializers.CharField(source="provider.user.email")
+    patient_name = serializers.CharField(source="patient.user.full_name")
+    provider_name = serializers.CharField(source="provider.user.full_name")
 
     class Meta:
         model = PatientEncounters
@@ -84,7 +88,7 @@ class PatientEncounterViewSerializer(serializers.ModelSerializer):
             "id",
             "visit_date",
             "location",
-            "visit_reason",
+            "reason",
             "signed",
             "patient",
             "provider",
@@ -105,15 +109,39 @@ class AssessmentDiagnosisSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class MedicalNotesSerializer(serializers.ModelSerializer):
+class PlanOfCareSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MedicalNotes
+        model = PlanOfCare
         fields = "__all__"
 
 
 class PatientSocialHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientSocialHistory
+        fields = "__all__"
+
+
+class ICDSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ICDs
+        fields = "__all__"
+
+
+class FunctionalAndCognitiveStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FunctionalAndCognitiveStatus
+        fields = "__all__"
+
+
+class ChiefComplaintsAndHPISerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChiefComplaintsAndHPI
+        fields = "__all__"
+
+
+class PatientProcedureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientProcedure
         fields = "__all__"
 
 

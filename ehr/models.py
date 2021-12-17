@@ -29,7 +29,8 @@ class PatientEncounters(CoreModel):
 
     visit_date = models.DateField(blank=True, null=True)
     location = models.CharField(max_length=250, blank=True, null=True)
-    visit_reason = models.CharField(max_length=512, blank=True, null=True)
+    # visit_reason = models.CharField(max_length=512, blank=True, null=True)
+    reason = models.CharField(max_length=512, blank=True, null=True)
 
     signed = models.BooleanField(blank=True, null=True)
 
@@ -46,9 +47,10 @@ class AssessmentDiagnosis(CoreModel):
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
     icd = models.CharField(max_length=100, blank=True, null=True)
-    description = models.CharField(max_length=512, blank=True, null=True)
-    snomed_code = models.CharField(max_length=100, blank=True, null=True)
-    snomed_description = models.CharField(max_length=512, blank=True, null=True)
+    # description = models.CharField(max_length=512, blank=True, null=True)
+    icd_description = models.CharField(max_length=512, blank=True, null=True)
+    disease_code = models.CharField(max_length=100, blank=True, null=True)
+    disease_description = models.CharField(max_length=512, blank=True, null=True)
     disease_name = models.CharField(max_length=256, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
@@ -59,7 +61,7 @@ class AssessmentDiagnosis(CoreModel):
     assessment = models.CharField(max_length=512, blank=True, null=True)
 
 
-class MedicalNotes(CoreModel):
+class PlanOfCare(CoreModel):
 
     patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
 
@@ -135,11 +137,15 @@ class PatientSocialHistory(CoreModel):
 
     # Martial Status
     home_environment = models.CharField(max_length=100, blank=True, null=True)
-    children = models.CharField(max_length=100, blank=True, null=True)
-    higher_education = models.CharField(max_length=100, blank=True, null=True)
+    # children = models.CharField(max_length=100, blank=True, null=True)
+    children = models.IntegerField(blank=True, null=True)
+    # higher_education = models.CharField(max_length=100, blank=True, null=True)
+    highest_education = models.CharField(max_length=100, blank=True, null=True)
     occupation = models.CharField(max_length=100, blank=True, null=True)
     sexual_orientation = models.CharField(max_length=100, blank=True, null=True)
     gender_identity = models.CharField(max_length=100, blank=True, null=True)
+    # new field below added
+    marital_status = models.CharField(max_length=100, blank=True, null=True)
 
     # Tobacco Info
     tobacco_status = models.CharField(max_length=100, blank=True, null=True)
@@ -161,3 +167,77 @@ class PatientSocialHistory(CoreModel):
     alcohol_use = models.CharField(max_length=100, blank=True, null=True)
     caffeine_use = models.CharField(max_length=100, blank=True, null=True)
     etoh = models.CharField(max_length=100, blank=True, null=True)
+
+
+class ICDs(models.Model):
+
+    code_description = models.CharField(max_length=200, blank=True, null=True)
+    icd_code = models.CharField(max_length=20, blank=True, null=True)
+    full_description = models.CharField(max_length=1024, blank=True, null=True)
+
+
+#############MODEL##########################
+class FunctionalAndCognitiveStatus(CoreModel):
+    # class CodeType(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class ModuleType(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Status(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    moduleType = models.CharField(max_length=125, blank=True, null=True)
+    codeType = models.CharField(max_length=125, blank=True, null=True)
+    status = models.CharField(max_length=125, blank=True, null=True)
+    code = models.CharField(max_length=100, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    description = models.CharField(max_length=512, blank=True, null=True)
+
+
+class ChiefComplaintsAndHPI(CoreModel):
+    # class ChiefComplaint(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Severity(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Duration(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class ModifyingFactors(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    chiefComplaint = models.CharField(max_length=125, blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    severity = models.CharField(max_length=125, blank=True, null=True)
+    duration = models.CharField(max_length=125, blank=True, null=True)
+    modifying_factors = models.CharField(max_length=125, blank=True, null=True)
+    associated_symptons = models.CharField(max_length=100, blank=True, null=True)
+    description = models.CharField(max_length=512, blank=True, null=True)
+    context = models.CharField(max_length=100, blank=True, null=True)
+    hpi = models.CharField(max_length=512, blank=True, null=True)
+
+
+class PatientProcedure(CoreModel):
+    # class Type(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+    # class Status(models.TextChoices):
+    #     ACUTE = "ACUTE", _("acute")
+    #     CHRONIC = "CHRONIC", _("chronic")
+
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    procedure_type = models.CharField(max_length=125, blank=True, null=True)
+    code = models.CharField(max_length=100, blank=True, null=True)
+    description = models.CharField(max_length=512, blank=True, null=True)
+
+    status = models.CharField(max_length=125, blank=True, null=True)
+    date = models.DateField(blank=True, null=True)

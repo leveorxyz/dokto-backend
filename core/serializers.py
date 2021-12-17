@@ -28,6 +28,10 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
                 for instance in data
                 if operation == instance.get("operation")
             ]
+        elif operation == "update":
+            filtered_data = [
+                instance for instance in data if operation == instance.get("operation")
+            ]
         return filtered_data
 
     def _perform_create(
@@ -59,6 +63,7 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
         update_count = 0
         filtered_data = self._operation_filter(data, "update")
         for instance in filtered_data:
+            instance.pop("operation")
             update_count += operation_model.objects.filter(
                 id=instance.pop("id"), **kwargs
             ).update(**instance)
@@ -78,6 +83,35 @@ class CustomCreateUpdateDeleteObjectOperationSerializer(ModelSerializer):
             "update": self._perform_update(data, operation_model, **update_kwargs),
             "delete": self._perform_delete(data, operation_model, **delete_kwargs),
         }
+
+    class Meta:
+        model = CoreModel
+        fields = "__all__"
+
+
+class FieldListUpdateSerializer(ModelSerializer):
+    def perform_list_field_update(
+        self,
+        updated_value: list,
+        related_model: CoreModel,
+        field_name: str,
+        query_params={},
+    ) -> int:
+        new_data = set(updated_value)
+        old_data = set(
+            related_model.objects.filter(**query_params).values_list(
+                field_name, flat=True
+            )
+        )
+        to_add = new_data - old_data
+        to_delete = old_data - new_data
+        related_model.objects.filter(
+            **{f"{field_name}__in": to_delete}, **query_params
+        ).delete()
+        related_model.objects.bulk_create(
+            [related_model(**{field_name: item, **query_params}) for item in to_add]
+        )
+        return len(to_add) + len(to_delete)
 
     class Meta:
         model = CoreModel

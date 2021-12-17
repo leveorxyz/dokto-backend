@@ -3,14 +3,26 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.permissions import AllowAny
-from rest_framework.authtoken.models import Token
-from rest_framework.status import HTTP_404_NOT_FOUND
+from rest_framework.filters import SearchFilter
 from django.contrib.auth import authenticate, logout
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    extend_schema,
+    OpenApiResponse,
+)
+from drf_spectacular.types import OpenApiTypes
 
-from core.views import CustomRetrieveAPIView, CustomCreateAPIView
+from core.views import (
+    CustomListAPIView,
+    CustomRetrieveAPIView,
+    CustomCreateAPIView,
+    CustomAPIView,
+)
 from core.utils import set_user_ip
-from .models import User, DoctorInfo, PharmacyInfo, ClinicInfo
+from .models import User, DoctorInfo, DoctorSpecialty
 from .serializers import (
+    DoctorDirectorySerializer,
     UserSerializer,
     UserLoginSerializer,
     VerifyEmailSerializer,
@@ -18,6 +30,8 @@ from .serializers import (
     ClinicRegistrationSerializer,
     PharmacyRegistrationSerializer,
     PatientRegistrationSerializer,
+    PasswordResetEmailSerializer,
+    PasswordResetSerializer,
 )
 
 
@@ -39,7 +53,10 @@ class LoginView(GenericAPIView):
             if field not in request.data:
                 raise ValidationError(f"{field} is required")
         try:
-            user = User.objects.get(email=request.data["email"])
+            user: User = User.objects.get(email=request.data["email"])
+            if user.check_password(request.data["password"]):
+                user.is_active = True
+                user.save()
         except User.DoesNotExist:
             raise ValidationError("Invalid credentials")
         serializer = UserLoginSerializer(user)
@@ -70,60 +87,28 @@ class LoginView(GenericAPIView):
         )
 
 
-class LogoutView(APIView):
+class LogoutView(CustomAPIView):
+    http_method_names = ["post", "options"]
+
     def post(self, request):
         # Flushing current request session
-        set_user_ip(request)
         logout(request)
-        return Response(
-            {
-                "status_code": 200,
-                "message": "Logout successful.",
-                "result": None,
-            }
-        )
-
-
-class UsernameExists(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, user_type=None, username=None):
-        if not user_type or not username:
-            raise ValidationError("Invalid request parameters.")
-
-        # Checking if username exists
-        user_model = {
-            "doctor": DoctorInfo,
-            "pharmacy": PharmacyInfo,
-            "clinic": ClinicInfo,
-        }
-
-        try:
-            if user_model[user_type].objects.filter(username=username).exists():
-                return Response(
-                    {
-                        "status_code": 200,
-                        "message": "Exists.",
-                        "result": None,
-                    }
-                )
-        except KeyError:
-            raise ValidationError("Invalid user type.")
-
-        return Response(
-            {
-                "status_code": 404,
-                "message": "Does not exist.",
-                "result": None,
-            },
-            status=HTTP_404_NOT_FOUND,
-        )
+        return super().post(request=request)
 
 
 class DoctorSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
     queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
     serializer_class = DoctorRegistrationSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("onboard-token", str, required=False),
+        ],
+        request=DoctorRegistrationSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 class PatientSignupView(CustomCreateAPIView):
@@ -158,3 +143,69 @@ class VerifyEmailView(APIView):
                 "result": UserLoginSerializer(instance=validated_data["user"]).data,
             }
         )
+
+
+class DoctorsListView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    filter_backends = [SearchFilter]
+    serializer_class = DoctorDirectorySerializer
+    queryset = DoctorInfo.objects.all()
+    search_fields = ["user__full_name", "username"]
+
+    def filter_queryset(self, queryset):
+        filtered_queryset = super().filter_queryset(queryset)
+        if "search" in self.request.query_params:
+            specialty_query = DoctorSpecialty.objects.filter(
+                specialty__icontains=self.request.query_params["search"]
+            ).values_list("doctor_info_id", flat=True)
+            specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
+            return (filtered_queryset | specialty_queryset).distinct()
+        return filtered_queryset
+
+
+class PasswordResetEmailView(CustomAPIView):
+    permission_classes = [AllowAny]
+    http_method_names = ["post", "options"]
+
+    @extend_schema(
+        request=PasswordResetEmailSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[OpenApiExample(name="example 1", value={})],
+                response=[],
+            )
+        },
+    )
+    def post(self, request):
+        # Extracting data from request and validating it
+        data = request.data
+        serializer = PasswordResetEmailSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        user: User = serializer.validated_data["user"]
+        user.send_password_reset_mail()
+        return super().post(request=request)
+
+
+class PasswordResetView(CustomAPIView):
+    permission_classes = [AllowAny]
+    http_method_names = ["post", "options"]
+
+    @extend_schema(
+        request=PasswordResetSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Success.",
+                examples=[OpenApiExample(name="example 1", value={})],
+                response=[],
+            )
+        },
+    )
+    def post(self, request):
+        # Extracting data from request and validating it
+        data = request.data
+        serializer = PasswordResetSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
+        User.verify_password_reset(**validated_data)
+        return super().post(request=request)
