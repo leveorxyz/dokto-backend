@@ -417,7 +417,7 @@ class DoctorAccountSettingsSerializer(Serializer):
         field = [
             "old_password",
             "new_password",
-            "notification_mail",
+            "notification_email",
             "temporary_disable",
             "account_delete_password",
             "reason_to_delete",
@@ -470,8 +470,7 @@ class PatientProfileDetailsSerializer(ModelSerializer):
 class PatientAccountSettingsSerializer(Serializer):
     old_password = CharField(required=False, allow_null=True, write_only=True)
     new_password = CharField(required=False, allow_null=True, write_only=True)
-    # TODO: uncomment this after notification email is implemented in model
-    # notification_email = EmailField(required=False, allow_null=True)
+    notification_email = EmailField(required=False, allow_null=True)
     account_delete_password = CharField(
         required=False, allow_null=True, write_only=True
     )
@@ -520,7 +519,7 @@ class PatientAccountSettingsSerializer(Serializer):
         field = [
             "old_password",
             "new_password",
-            "notification_mail",
+            "notification_email",
             "account_delete_password",
             "reason_to_delete",
         ]

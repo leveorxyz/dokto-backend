@@ -448,7 +448,7 @@ class ClinicInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user"]
+        return super().get_hidden_fields() + ["user", "notification_email"]
 
 
 class PharmacyInfo(CoreModel):
@@ -470,7 +470,7 @@ class PharmacyInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user"]
+        return super().get_hidden_fields() + ["user", "notification_email"]
 
 
 class PatientInfo(CoreModel):
@@ -527,6 +527,7 @@ class PatientInfo(CoreModel):
             "user",
             "id",
             "display_id",
+            "notification_email",
         ]
 
     @property
