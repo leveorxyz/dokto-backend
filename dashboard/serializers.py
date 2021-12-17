@@ -430,6 +430,15 @@ class PatientProfileDetailsSerializer(ModelSerializer):
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
+    date_of_birth = DateField(required=False, allow_null=True)
+    gender = ChoiceField(
+        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
+    )
+    email = EmailField(source="user.email", read_only=True)
+    street = CharField(source="user.street", required=False)
+    city = CharField(source="user.city", required=False)
+    state = CharField(source="user.state", required=False)
+    zip_code = CharField(source="user.zip_code", required=False)
 
     def update(self, instance: PatientInfo, validated_data: dict) -> PatientInfo:
         if "user" in validated_data:
@@ -439,12 +448,23 @@ class PatientProfileDetailsSerializer(ModelSerializer):
                 profile_photo_data = user_data.pop("profile_photo")
                 instance.user.profile_photo = profile_photo_data
 
-        instance = super().update(instance, validated_data)
+        instance.update_from_validated_data(validated_data)
         return instance
 
     class Meta:
         model = PatientInfo
-        fields = ["full_name", "gender", "date_of_birth", "contact_no", "profile_photo"]
+        fields = [
+            "full_name",
+            "gender",
+            "contact_no",
+            "profile_photo",
+            "email",
+            "street",
+            "city",
+            "zip_code",
+            "date_of_birth",
+            "state",
+        ]
 
 
 class PatientAccountSettingsSerializer(Serializer):
