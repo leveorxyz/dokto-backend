@@ -13,3 +13,4 @@ class WaitingRoom(CoreModel):
     room_media = models.FileField(
         upload_to=DOCTOR_WAITING_ROOM_MEDIA_DIRECTORY, blank=True, null=True
     )
+    room_media_mime_type = models.CharField(max_length=100, blank=True, null=True)
