@@ -1,5 +1,12 @@
-from requests.api import delete
-from rest_framework.serializers import SerializerMethodField, ModelSerializer
+from rest_framework.serializers import (
+    Serializer,
+    SerializerMethodField,
+    ModelSerializer,
+    CharField,
+    EmailField,
+)
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from django.contrib.auth.hashers import make_password
 
 from .models import CoreModel
 
@@ -116,3 +123,63 @@ class FieldListUpdateSerializer(ModelSerializer):
     class Meta:
         model = CoreModel
         fields = "__all__"
+
+
+class AbstractAccountSettingsSerializer(Serializer):
+    old_password = CharField(required=False, allow_null=True, write_only=True)
+    new_password = CharField(required=False, allow_null=True, write_only=True)
+    notification_email = EmailField(required=False, allow_null=True)
+    account_delete_password = CharField(
+        required=False, allow_null=True, write_only=True
+    )
+    reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
+
+    def validate(self, data):
+        user = self.context["request"].user
+        if data.get("old_password") and not data.get("new_password"):
+            raise ValidationError("you need to provide new password!")
+        if data.get("new_password") and not data.get("old_password"):
+            raise ValidationError("you need to provide old password!")
+        if data.get("account_delete_password") and not data.get("reason_to_delete"):
+            raise ValidationError("you need to provide the reason of account deletion!")
+        if (
+            "old_password" in data
+            and "new_password" in data
+            and not user.check_password(data.get("old_password"))
+        ):
+            raise AuthenticationFailed("Incorrect password!")
+        if "account_delete_password" in data and not user.check_password(
+            data.get("account_delete_password")
+        ):
+            raise AuthenticationFailed("Incorrect password!")
+        return data
+
+    def update(self, instance, validated_data):
+        user = self.context["request"].user
+        if validated_data.get("old_password"):
+            new_password = make_password(validated_data.pop("new_password"))
+            user.password = new_password
+        if validated_data.get("account_delete_password"):
+            user.is_active = False
+            user.is_deleted = True
+            instance.is_deleted = True
+            if validated_data.get("reason_to_delete"):
+                instance.reason_to_delete = validated_data.pop("reason_to_delete")
+        if validated_data.get("notification_email"):
+            instance.notification_email = validated_data.pop("notification_email")
+        user.save()
+        instance.save()
+
+        return instance
+
+    class Meta:
+        model = CoreModel
+        fields = [
+            "old_password",
+            "new_password",
+            "notification_email",
+            "temporary_disable",
+            "account_delete_password",
+            "reason_to_delete",
+        ]
+        abstract = True

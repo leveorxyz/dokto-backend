@@ -1,6 +1,5 @@
 from django.db.models import Sum
 from django.contrib.auth.hashers import make_password
-from rest_framework import serializers
 from rest_framework.fields import DateField, ListField
 from rest_framework.serializers import (
     Serializer,
@@ -14,11 +13,13 @@ from rest_framework.serializers import (
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
 from core.serializers import (
+    AbstractAccountSettingsSerializer,
     ReadWriteSerializerMethodField,
     CustomCreateUpdateDeleteObjectOperationSerializer,
     FieldListUpdateSerializer,
 )
 from user.models import (
+    ClinicInfo,
     DoctorAcceptedInsurance,
     DoctorAvailableHours,
     DoctorInfo,
@@ -26,6 +27,8 @@ from user.models import (
     DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
+    PatientInfo,
+    PharmacyInfo,
 )
 from user.serializers import (
     DoctorReviewSerializer,
@@ -360,67 +363,59 @@ class DoctorProfileSerializer(ModelSerializer):
         ]
 
 
-class DoctorAccountSettingsSerializer(Serializer):
-    old_password = CharField(required=False, allow_null=True, write_only=True)
-    new_password = CharField(required=False, allow_null=True, write_only=True)
-    notification_email = EmailField(required=False, allow_null=True)
-    temporary_disable = BooleanField(required=False, allow_null=True)
-    account_delete_password = CharField(
-        required=False, allow_null=True, write_only=True
+class DoctorAccountSettingsSerializer(AbstractAccountSettingsSerializer):
+    class Meta:
+        model = DoctorInfo
+        fields = AbstractAccountSettingsSerializer.Meta.fields
+
+
+class PatientProfileDetailsSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
     )
-    reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
+    date_of_birth = DateField(required=False, allow_null=True)
+    gender = ChoiceField(
+        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
+    )
+    email = EmailField(source="user.email", read_only=True)
+    street = CharField(source="user.street", required=False)
+    city = CharField(source="user.city", required=False)
+    state = CharField(source="user.state", required=False)
+    zip_code = CharField(source="user.zip_code", required=False)
 
-    def validate(self, data):
-        user = self.context["request"].user
-        if data.get("old_password") and not data.get("new_password"):
-            raise ValidationError("you need to provide new password!")
-        if data.get("new_password") and not data.get("old_password"):
-            raise ValidationError("you need to provide old password!")
-        if data.get("account_delete_password") and not data.get("reason_to_delete"):
-            raise ValidationError("you need to provide the reason of account deletion!")
-        if (
-            "old_password" in data
-            and "new_password" in data
-            and not user.check_password(data.get("old_password"))
-        ):
-            raise AuthenticationFailed("Incorrect password!")
-        if "account_delete_password" in data and not user.check_password(
-            data.get("account_delete_password")
-        ):
-            raise AuthenticationFailed("Incorrect password!")
-        return data
+    def update(self, instance: PatientInfo, validated_data: dict) -> PatientInfo:
+        if "user" in validated_data:
+            user_data = validated_data.pop("user")
+            instance.user.update_from_validated_data(user_data)
+            if "profile_photo" in user_data:
+                profile_photo_data = user_data.pop("profile_photo")
+                instance.user.profile_photo = profile_photo_data
 
-    def update(self, instance, validated_data):
-        user = self.context["request"].user
-        if validated_data.get("old_password"):
-            new_password = make_password(validated_data.pop("new_password"))
-            user.password = new_password
-        if validated_data.get("account_delete_password"):
-            user.is_active = False
-            user.is_deleted = True
-            instance.is_deleted = True
-            if validated_data.get("reason_to_delete"):
-                instance.reason_to_delete = validated_data.pop("reason_to_delete")
-        if validated_data.get("notification_email"):
-            instance.notification_email = validated_data.pop("notification_email")
-        if "temporary_disable" in validated_data:
-            user.is_active = False
-            instance.temporary_disable = validated_data.pop("temporary_disable")
-        user.save()
-        instance.save()
-
+        instance.update_from_validated_data(validated_data)
         return instance
 
     class Meta:
-        model = DoctorInfo
-        field = [
-            "old_password",
-            "new_password",
-            "notification_mail",
-            "temporary_disable",
-            "account_delete_password",
-            "reason_to_delete",
+        model = PatientInfo
+        fields = [
+            "full_name",
+            "gender",
+            "contact_no",
+            "profile_photo",
+            "email",
+            "street",
+            "city",
+            "zip_code",
+            "date_of_birth",
+            "state",
         ]
+
+
+class PatientAccountSettingsSerializer(AbstractAccountSettingsSerializer):
+    class Meta:
+        model = PatientInfo
+        fields = AbstractAccountSettingsSerializer.Meta.fields
 
 
 class DoctorProfessionalProfileSerializer(FieldListUpdateSerializer):
@@ -488,3 +483,15 @@ class DoctorAcceptedInsuranceSerializer(FieldListUpdateSerializer):
     class Meta:
         model = DoctorInfo
         fields = ["accepted_insurance", "accept_all_insurance"]
+
+
+class PharmacyAccountSettingsSerializer(AbstractAccountSettingsSerializer):
+    class Meta:
+        model = PharmacyInfo
+        fields = AbstractAccountSettingsSerializer.Meta.fields
+
+
+class ClinicAccountSettingsSerializer(AbstractAccountSettingsSerializer):
+    class Meta:
+        model = ClinicInfo
+        fields = AbstractAccountSettingsSerializer.Meta.fields

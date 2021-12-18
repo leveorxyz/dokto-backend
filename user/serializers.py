@@ -120,7 +120,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
     experience = ListField(
         child=DoctorExpericenceSerializer(), required=False, write_only=True
     )
-    specialty = ListField(child=CharField(), write_only=True)
     accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
 
     # Doctor fields
@@ -192,7 +191,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
         else:
             insurance_data = ["all"]
         education_data = validated_data.pop("education")
-        specialty_data = validated_data.pop("specialty")
         language = validated_data.pop("language")
         identification_photo = validated_data.pop("identification_photo")
         license_file = validated_data.pop("license_file")
@@ -225,9 +223,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        self.from_list(
-            specialty_data, DoctorSpecialty, "specialty", doctor_info=doctor_info
-        )
         self.from_list(language, DoctorLanguage, "language", doctor_info=doctor_info)
         self.from_list(
             insurance_data,
@@ -261,7 +256,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 "language",
                 "profile_photo",
                 "identification_photo",
-                "specialty",
                 "education",
                 "experience",
                 "accept_all_insurance",

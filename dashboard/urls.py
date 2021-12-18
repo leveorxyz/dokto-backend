@@ -11,6 +11,8 @@ from .views import (
     DoctorEducationExperienceSettingsAPIView,
     DoctorAvailableHoursSettingsAPIView,
     DoctorAccountSettingsAPIView,
+    PatientProfileDetailsAPIView,
+    AccountSettingsSerializer,
 )
 
 urlpatterns = [
@@ -48,6 +50,16 @@ urlpatterns = [
         "doctor/account-settings/",
         DoctorAccountSettingsAPIView.as_view(),
         name="doctor-account-settings",
+    ),
+    path(
+        "patient/profile-settings/",
+        PatientProfileDetailsAPIView.as_view(),
+        name="patient-profile-settings",
+    ),
+    path(
+        "account-settings/",
+        AccountSettingsSerializer.as_view(),
+        name="account-settings",
     ),
     path(
         "doctor/professional-profile/",

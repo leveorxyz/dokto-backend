@@ -413,6 +413,7 @@ class ClinicInfo(CoreModel):
         User, on_delete=models.CASCADE, related_name="clinic_info"
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+    notification_email = models.EmailField(blank=True, null=True)
 
     def send_onboard_mail(self, doctor_id=None, *args, **kwargs):
         if not doctor_id:
@@ -447,7 +448,7 @@ class ClinicInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user"]
+        return super().get_hidden_fields() + ["user", "notification_email"]
 
 
 class PharmacyInfo(CoreModel):
@@ -465,10 +466,11 @@ class PharmacyInfo(CoreModel):
         User, on_delete=models.CASCADE, related_name="pharmacy_info"
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+    notification_email = models.EmailField(blank=True, null=True)
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user"]
+        return super().get_hidden_fields() + ["user", "notification_email"]
 
 
 class PatientInfo(CoreModel):
@@ -516,6 +518,7 @@ class PatientInfo(CoreModel):
     )
     referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
     name_of_parent = models.CharField(max_length=100, blank=True, null=True)
+    notification_email = models.EmailField(blank=True, null=True)
 
     @classmethod
     def get_hidden_fields(cls):
@@ -524,6 +527,7 @@ class PatientInfo(CoreModel):
             "user",
             "id",
             "display_id",
+            "notification_email",
         ]
 
     @property
