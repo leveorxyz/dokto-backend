@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (
     AllowAny,
@@ -5,6 +6,7 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
 )
 from drf_spectacular.utils import extend_schema
+from core.serializers import AbstractAccountSettingsSerializer
 
 from core.views import (
     CustomListCreateAPIView,
@@ -17,9 +19,10 @@ from core.permissions import (
     DoctorPermission,
     PatientPermission,
 )
-from user.models import DoctorInfo, PatientInfo
+from user.models import ClinicInfo, DoctorInfo, PatientInfo, PharmacyInfo
 from user.serializers import DoctorReviewSerializer
 from .serializers import (
+    ClinicAccountSettingsSerializer,
     DoctorAcceptedInsuranceSerializer,
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
@@ -30,6 +33,7 @@ from .serializers import (
     PatientProfileDetailsSerializer,
     PatientAccountSettingsSerializer,
     DoctorProfessionalProfileSerializer,
+    PharmacyAccountSettingsSerializer,
 )
 
 
@@ -161,10 +165,53 @@ class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
         return obj
 
 
-class PatientAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated, PatientPermission, OwnProfilePermission]
-    serializer_class = PatientAccountSettingsSerializer
-    queryset = PatientInfo.objects.all()
+class AccountSettingsSerializer(CustomRetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, OwnProfilePermission]
+
+    @extend_schema(
+        responses=AbstractAccountSettingsSerializer,
+        request=AbstractAccountSettingsSerializer,
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        responses=AbstractAccountSettingsSerializer,
+        request=AbstractAccountSettingsSerializer,
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        responses=AbstractAccountSettingsSerializer,
+        request=AbstractAccountSettingsSerializer,
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    def get_queryset(self, *args, **kwargs):
+        user_type = self.request.user.user_type
+        user_type_model_map = {
+            "DOCTOR": DoctorInfo,
+            "PATIENT": PatientInfo,
+            "CLINIC": ClinicInfo,
+            "PHARMACY": PharmacyInfo,
+        }
+        if user_type not in user_type_model_map:
+            raise ValidationError("Not implemented for this user")
+        return user_type_model_map[user_type].objects.all()
+
+    def get_serializer_class(self):
+        user_type = self.request.user.user_type
+        user_type_model_map = {
+            "DOCTOR": DoctorAccountSettingsSerializer,
+            "PATIENT": PatientAccountSettingsSerializer,
+            "CLINIC": ClinicAccountSettingsSerializer,
+            "PHARMACY": PharmacyAccountSettingsSerializer,
+        }
+        if user_type not in user_type_model_map:
+            raise ValidationError("Not implemented for this user")
+        return user_type_model_map[user_type]
 
     def get_object(self):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)

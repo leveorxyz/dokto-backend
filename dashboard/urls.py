@@ -12,7 +12,7 @@ from .views import (
     DoctorAvailableHoursSettingsAPIView,
     DoctorAccountSettingsAPIView,
     PatientProfileDetailsAPIView,
-    PatientAccountSettingsAPIView,
+    AccountSettingsSerializer,
 )
 
 urlpatterns = [
@@ -57,9 +57,9 @@ urlpatterns = [
         name="patient-profile-settings",
     ),
     path(
-        "patient/account-settings/",
-        PatientAccountSettingsAPIView.as_view(),
-        name="patient-account-settings",
+        "account-settings/",
+        AccountSettingsSerializer.as_view(),
+        name="account-settings",
     ),
     path(
         "doctor/professional-profile/",
