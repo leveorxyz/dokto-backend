@@ -138,7 +138,7 @@ class PatientSocialHistory(CoreModel):
     # Martial Status
     home_environment = models.CharField(max_length=100, blank=True, null=True)
     #children = models.CharField(max_length=100, blank=True, null=True)
-    children = models.IntegerField(max_length=100, blank=True, null=True)
+    children = models.IntegerField(blank=True, null=True)
     #higher_education = models.CharField(max_length=100, blank=True, null=True)
     highest_education = models.CharField(max_length=100, blank=True, null=True)
     occupation = models.CharField(max_length=100, blank=True, null=True)
@@ -238,6 +238,7 @@ class ChiefComplaintsAndHPI(CoreModel):
     description = models.CharField(max_length=512, blank=True, null=True)
     context=models.CharField(max_length=100, blank=True, null=True)
     hpi = models.CharField(max_length=512, blank=True, null=True)
+    timing = models.CharField(max_length=512, blank=True, null=True)
 
 
 

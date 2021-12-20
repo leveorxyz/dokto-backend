@@ -4,6 +4,7 @@ from core.views import (
     CustomCreateAPIView,
     CustomListAPIView,
     CustomListCreateAPIView,
+    CustomRetrieveAPIView,
     CustomRetrieveUpdateDestroyAPIView,
 )
 from ehr.models import (
@@ -263,7 +264,7 @@ class FunctionalAndCognitiveStatusUpdateView(CustomRetrieveUpdateDestroyAPIView)
     serializer_class = FunctionalAndCognitiveStatusSerializer
 
 
-class  ChiefComplaintsAndHPIByEncounterIDView(CustomListAPIView):
+class  ChiefComplaintsAndHPIByEncounterIDView(CustomRetrieveAPIView):
     permission_classes = [AllowAny]
     """
         Chief Complaints And HPI endpoint
