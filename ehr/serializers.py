@@ -100,6 +100,7 @@ class PatientEncounterViewSerializer(serializers.ModelSerializer):
             "provider",
             "patient_name",
             "provider_name",
+            "timing"
         ]
 
 
