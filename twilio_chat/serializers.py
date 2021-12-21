@@ -52,6 +52,8 @@ class WaitingRoomSerializer(serializers.ModelSerializer):
             if mime_type.startswith("video/"):
                 validated_data["text"] = None
             instance.room_media_mime_type = mime_type
+        else:
+            instance.room_media_mime_type = None
         instance.save()
         return super().update(instance, validated_data)
 
