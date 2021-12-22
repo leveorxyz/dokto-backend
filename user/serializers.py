@@ -135,7 +135,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
     awards = CharField(write_only=True, required=False)
     country = CharField(required=True, write_only=True)
     professional_bio = CharField(required=True, write_only=True)
-    profession = CharField(required=False, write_only=True, allow_null=True)
     gender = ChoiceField(
         choices=PatientInfo.Gender.choices, required=True, write_only=True
     )
@@ -243,7 +242,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         )
         extra_fields = list(
             set(field.name for field in DoctorInfo._meta.fields)
-            - set(DoctorInfo.get_hidden_fields())
+            - set(DoctorInfo.get_hidden_fields() + ["profession"])
         )
         fields = (
             main_fields
