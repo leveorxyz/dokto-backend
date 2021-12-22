@@ -9,12 +9,13 @@ from .models import InboxChannel, InboxMessage
 class InboxChannelSerializer(ModelSerializer):
     unread_count = SerializerMethodField()
 
-    def get_unread_count(self, obj):
+    def get_unread_count(self, obj) -> int:
         return obj.get_unread_msg_count(self.context["request"].user)
 
     class Meta:
         model = InboxChannel
         fields = ("id", "first_user", "second_user", "unread_count")
+        extra_kwargs = {"first_user": {"read_only": True}}
 
 
 class InboxMessageSerializer(ModelSerializer):
@@ -29,7 +30,9 @@ class InboxMessageSerializer(ModelSerializer):
 
     def create(self, validated_data):
         validated_data["sender"] = self.context["request"].user
-        return super().create(validated_data)
+        message = InboxMessage.from_validated_data(validated_data)
+        message.save()
+        return message
 
     class Meta:
         model = InboxMessage
@@ -39,6 +42,7 @@ class InboxMessageSerializer(ModelSerializer):
             "message": {"required": True},
             "subject": {"required": False},
             "read_status": {"read_only": True},
+            "sender": {"read_only": True},
         }
 
 
