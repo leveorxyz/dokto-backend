@@ -33,6 +33,7 @@ class PatientEncounters(CoreModel):
     reason = models.CharField(max_length=512, blank=True, null=True)
 
     signed = models.BooleanField(blank=True, null=True)
+    timing = models.CharField(max_length=512, blank=True, null=True)
 
     # gender = models.CharField(
     #     max_length=7, choices=Gender.choices, blank=True, null=True
@@ -223,6 +224,7 @@ class ChiefComplaintsAndHPI(CoreModel):
     description = models.CharField(max_length=512, blank=True, null=True)
     context = models.CharField(max_length=100, blank=True, null=True)
     hpi = models.CharField(max_length=512, blank=True, null=True)
+    timing = models.CharField(max_length=512, blank=True, null=True)
 
 
 class PatientProcedure(CoreModel):
@@ -241,3 +243,71 @@ class PatientProcedure(CoreModel):
 
     status = models.CharField(max_length=125, blank=True, null=True)
     date = models.DateField(blank=True, null=True)
+
+
+class ReviewOfSystem(CoreModel):
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    general = models.CharField(max_length=512, blank=True, null=True)
+    head = models.CharField(max_length=512, blank=True, null=True)
+    eyes = models.CharField(max_length=512, blank=True, null=True)
+    ears = models.CharField(max_length=512, blank=True, null=True)
+    nose = models.CharField(max_length=512, blank=True, null=True)
+    mouth = models.CharField(max_length=512, blank=True, null=True)
+    neck = models.CharField(max_length=512, blank=True, null=True)
+    breast = models.CharField(max_length=512, blank=True, null=True)
+    chest = models.CharField(max_length=512, blank=True, null=True)
+    heart = models.CharField(max_length=512, blank=True, null=True)
+    abdomen = models.CharField(max_length=512, blank=True, null=True)
+    gu = models.CharField(max_length=512, blank=True, null=True)
+    gyn = models.CharField(max_length=512, blank=True, null=True)
+    musculoskeletal = models.CharField(max_length=512, blank=True, null=True)
+    neurologic = models.CharField(max_length=512, blank=True, null=True)
+    psychiatric = models.CharField(max_length=512, blank=True, null=True)
+
+
+class PhysicalExam(CoreModel):
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    general_appearance = models.CharField(max_length=512, blank=True, null=True)
+    head = models.CharField(max_length=512, blank=True, null=True)
+    eyes = models.CharField(max_length=512, blank=True, null=True)
+    ears = models.CharField(max_length=512, blank=True, null=True)
+    nose = models.CharField(max_length=512, blank=True, null=True)
+    throat = models.CharField(max_length=512, blank=True, null=True)
+    neck = models.CharField(max_length=512, blank=True, null=True)
+    cardiac = models.CharField(max_length=512, blank=True, null=True)
+    lungs = models.CharField(max_length=512, blank=True, null=True)
+    abdomen = models.CharField(max_length=512, blank=True, null=True)
+    musculoskeletal = models.CharField(max_length=512, blank=True, null=True)
+    back = models.CharField(max_length=512, blank=True, null=True)
+    extremities = models.CharField(max_length=512, blank=True, null=True)
+    lower_extremities = models.CharField(max_length=512, blank=True, null=True)
+    neurological = models.CharField(max_length=512, blank=True, null=True)
+    skin = models.CharField(max_length=512, blank=True, null=True)
+    res = models.CharField(max_length=512, blank=True, null=True)
+    psychiatric = models.CharField(max_length=512, blank=True, null=True)
+    rectal = models.CharField(max_length=512, blank=True, null=True)
+
+
+class Orders(CoreModel):
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    lab_order = models.TextField(blank=True, null=True)
+    imaging_order = models.TextField(blank=True, null=True)
+
+
+class Vitals(CoreModel):
+    patient_encounter = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+
+    reading_date = models.DateField(blank=True, null=True)
+    reading_time = models.TimeField(blank=True, null=True)
+    height = models.FloatField(blank=True, null=True)
+    weight = models.FloatField(blank=True, null=True)
+    bmi = models.FloatField(blank=True, null=True)
+    temperature = models.FloatField(blank=True, null=True)
+    pulse = models.FloatField(blank=True, null=True)
+    respiratory_rate = models.FloatField(blank=True, null=True)
+    o2_saturation = models.FloatField(blank=True, null=True)
+    pain = models.FloatField(blank=True, null=True)
+    blood_pressure = models.FloatField(blank=True, null=True)

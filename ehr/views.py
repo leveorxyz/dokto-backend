@@ -13,29 +13,39 @@ from drf_spectacular.types import OpenApiTypes
 from core.views import (
     CustomCreateAPIView,
     CustomListAPIView,
+    CustomListCreateAPIView,
+    CustomRetrieveAPIView,
     CustomRetrieveUpdateDestroyAPIView,
     CustomAPIView,
 )
 from ehr.models import (
     ChiefComplaintsAndHPI,
     ICDs,
+    Orders,
     PatientProcedure,
+    PhysicalExam,
     PlanOfCare,
     PatientEncounters,
     AssessmentDiagnosis,
     PatientSocialHistory,
     FunctionalAndCognitiveStatus,
+    ReviewOfSystem,
+    Vitals,
 )
 from .serializers import (
     AssessmentDiagnosisSerializer,
     ChiefComplaintsAndHPISerializer,
+    OrdersSerializer,
     PatientProcedureSerializer,
+    PhysicalExamSerializer,
     PlanOfCareSerializer,
     PatientEncounterSerializer,
     PatientEncounterViewSerializer,
     PatientSocialHistorySerializer,
     ICDSerializer,
     FunctionalAndCognitiveStatusSerializer,
+    ReviewOfSystemSerializer,
+    VitalsSerializer,
 )
 
 # Create your views here.
@@ -55,7 +65,7 @@ class AllEncounters(CustomListAPIView):
         - provider: uuid
         - visit_date: string
         - location: string
-        - visit_reason: string
+        - reason: string
         - signed: boolean
     """
     # queryset = PatientEncounters.objects.all()
@@ -80,7 +90,7 @@ class AddEncounters(CustomCreateAPIView):
         - provider: uuid
         - visit_date: string
         - location: string
-        - visit_reason: string
+        - reason: string
         - signed: boolean
     """
     queryset = PatientEncounters.objects.all()
@@ -255,7 +265,7 @@ class FunctionalAndCognitiveStatusByEncounterIdView(CustomListAPIView):
         Request fields
         ---
         - patient_encounter: uuid
-        
+
 
     """
     # queryset = FunctionalAndCognitiveStatus.objects.all()
@@ -278,7 +288,7 @@ class FunctionalAndCognitiveStatusView(CustomCreateAPIView):
         Request fields
         ---
         - patient_encounter: uuid
-        
+
 
     """
     queryset = FunctionalAndCognitiveStatus.objects.all()
@@ -291,7 +301,7 @@ class FunctionalAndCognitiveStatusUpdateView(CustomRetrieveUpdateDestroyAPIView)
     serializer_class = FunctionalAndCognitiveStatusSerializer
 
 
-class ChiefComplaintsAndHPIByEncounterIDView(CustomListAPIView):
+class ChiefComplaintsAndHPIByEncounterIDView(CustomRetrieveAPIView):
     permission_classes = [AllowAny]
     """
         Chief Complaints And HPI endpoint
@@ -301,7 +311,7 @@ class ChiefComplaintsAndHPIByEncounterIDView(CustomListAPIView):
         Request fields
         ---
         - patient_encounter: uuid
-        
+
 
     """
     serializer_class = ChiefComplaintsAndHPISerializer
@@ -323,7 +333,7 @@ class ChiefComplaintsAndHPIView(CustomCreateAPIView):
         Request fields
         ---
         - patient_encounter: uuid
-        
+
 
     """
     queryset = ChiefComplaintsAndHPI.objects.all()
@@ -346,7 +356,7 @@ class PatientProcedureByEncounterIDView(CustomListAPIView):
         Request fields
         ---
         - patient_encounter: uuid
-        
+
 
     """
     serializer_class = PatientProcedureSerializer
@@ -368,10 +378,9 @@ class PatientProcedureView(CustomCreateAPIView):
         Request fields
         ---
         - patient_encounter: uuid
-        
 
     """
-    queryset = ChiefComplaintsAndHPI.objects.all()
+    queryset = PatientProcedure.objects.all()
     serializer_class = PatientProcedureSerializer
 
 
@@ -379,3 +388,170 @@ class PatientProcedureUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
     queryset = PatientProcedure.objects.all()
     serializer_class = PatientProcedureSerializer
+
+
+class ReviewOfSystemByEncounterIDView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient ReviewOfSystem endpoint
+
+        Request method: GET
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+    """
+    serializer_class = PatientProcedureSerializer
+
+    def get_queryset(self):
+        patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
+        return ReviewOfSystem.objects.filter(
+            patient_encounter_id=patient_encounter_uuid
+        )
+
+
+class ReviewOfSystemView(CustomCreateAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient ReviewOfSystem endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+    """
+    queryset = ReviewOfSystem.objects.all()
+    serializer_class = ReviewOfSystemSerializer
+
+
+class ReviewOfSystemUpdateView(CustomRetrieveUpdateDestroyAPIView):
+    permission_classes = [AllowAny]
+    queryset = ReviewOfSystem.objects.all()
+    serializer_class = ReviewOfSystemSerializer
+
+
+class PhysicalExamByEncounterIDView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient PhysicalExam endpoint
+
+        Request method: GET
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+    """
+    serializer_class = PatientProcedureSerializer
+
+    def get_queryset(self):
+        patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
+        return PhysicalExam.objects.filter(patient_encounter_id=patient_encounter_uuid)
+
+
+class PhysicalExamView(CustomCreateAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient PhysicalExam endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+    """
+    queryset = PhysicalExam.objects.all()
+    serializer_class = PhysicalExamSerializer
+
+
+class PhysicalExamUpdateView(CustomRetrieveUpdateDestroyAPIView):
+    permission_classes = [AllowAny]
+    queryset = PhysicalExam.objects.all()
+    serializer_class = PhysicalExamSerializer
+
+
+class OrdersByEncounterIDView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient Orders endpoint
+
+        Request method: GET
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+    """
+    serializer_class = PatientProcedureSerializer
+
+    def get_queryset(self):
+        patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
+        return Orders.objects.filter(patient_encounter_id=patient_encounter_uuid)
+
+
+class OrdersView(CustomCreateAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient Orders endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+    """
+    queryset = Orders.objects.all()
+    serializer_class = OrdersSerializer
+
+
+class OrdersUpdateView(CustomRetrieveUpdateDestroyAPIView):
+    permission_classes = [AllowAny]
+    queryset = Orders.objects.all()
+    serializer_class = OrdersSerializer
+
+
+class VitalsByEncounterIDView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient Vitals endpoint
+
+        Request method: GET
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+    """
+    serializer_class = PatientProcedureSerializer
+
+    def get_queryset(self):
+        patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
+        return Vitals.objects.filter(patient_encounter_id=patient_encounter_uuid)
+
+
+class VitalsView(CustomCreateAPIView):
+    permission_classes = [AllowAny]
+    """
+        Patient Vitals endpoint
+
+        Request method: POST
+
+        Request fields
+        ---
+        - patient_encounter: uuid
+
+
+    """
+    queryset = Vitals.objects.all()
+    serializer_class = VitalsSerializer
+
+
+class VitalsUpdateView(CustomRetrieveUpdateDestroyAPIView):
+    permission_classes = [AllowAny]
+    queryset = Vitals.objects.all()
+    serializer_class = VitalsSerializer

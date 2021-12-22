@@ -18,6 +18,10 @@ from .models import (
     FunctionalAndCognitiveStatus,
     ChiefComplaintsAndHPI,
     PatientProcedure,
+    ReviewOfSystem,
+    PhysicalExam,
+    Orders,
+    Vitals,
 )
 
 
@@ -94,6 +98,7 @@ class PatientEncounterViewSerializer(serializers.ModelSerializer):
             "provider",
             "patient_name",
             "provider_name",
+            "timing",
         ]
 
 
@@ -142,6 +147,30 @@ class ChiefComplaintsAndHPISerializer(serializers.ModelSerializer):
 class PatientProcedureSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientProcedure
+        fields = "__all__"
+
+
+class ReviewOfSystemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewOfSystem
+        fields = "__all__"
+
+
+class PhysicalExamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhysicalExam
+        fields = "__all__"
+
+
+class OrdersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Orders
+        fields = "__all__"
+
+
+class VitalsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vitals
         fields = "__all__"
 
 
