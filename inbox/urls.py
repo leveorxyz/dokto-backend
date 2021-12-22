@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("channel", views.InboxChannelListView.as_view(), name="inbox-channel-list"),
+    path("channel/", views.InboxChannelListView.as_view(), name="inbox-channel-list"),
     path(
         "channel/create/",
         views.InboxCreateChannelAPIView.as_view(),
@@ -15,7 +15,7 @@ urlpatterns = [
         name="inbox-send-message",
     ),
     path(
-        "read-message/<uuid:channel_id>",
+        "read-message/<uuid:channel_id>/",
         views.InboxReadMessageAPIView.as_view(),
         name="inbox-read-message",
     ),
