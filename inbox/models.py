@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 from core.models import CoreModel
 from user.models import User
@@ -14,10 +15,19 @@ class InboxChannel(CoreModel):
         User, on_delete=models.CASCADE, related_name="second_user"
     )
 
+    def get_unread_msg_count(self, user: User) -> int:
+        return self.channel.filter(~Q(sender=user) & Q(read_status=False)).count()
+
+    def __str__(self) -> str:
+        return f"{self.id}"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
 
 class InboxMessage(CoreModel):
     channel = models.ForeignKey(
-        InboxChannel, on_delete=models.CASCADE, related_name="channel"
+        InboxChannel, on_delete=models.CASCADE, related_name="message"
     )
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
     message = models.TextField(max_length=512, blank=True, null=True, default=None)
