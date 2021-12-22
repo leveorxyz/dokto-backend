@@ -33,6 +33,7 @@ class PatientEncounters(CoreModel):
     reason = models.CharField(max_length=512, blank=True, null=True)
 
     signed = models.BooleanField(blank=True, null=True)
+    timing = models.CharField(max_length=512, blank=True, null=True)
 
     # gender = models.CharField(
     #     max_length=7, choices=Gender.choices, blank=True, null=True
