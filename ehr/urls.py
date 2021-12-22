@@ -189,18 +189,18 @@ urlpatterns = [
         name="patient-orders-update",
     ),
     path(
-        "encounters/Vitals/",
+        "encounters/vitals/",
         VitalsView.as_view(),
-        name="patient-Vitals",
+        name="patient-vitals",
     ),
     path(
-        "encounters/Vitals/<uuid:patient_encounter_uuid>/",
+        "encounters/vitals/<uuid:patient_encounter_uuid>/",
         VitalsByEncounterIDView.as_view(),
-        name="patient-Vitals",
+        name="patient-vitals",
     ),
     path(
-        "encounters/Vitals-update/<uuid:pk>/",
+        "encounters/vitals-update/<uuid:pk>/",
         VitalsUpdateView.as_view(),
-        name="patient-Vitals-update",
+        name="patient-vitals-update",
     ),
 ]
