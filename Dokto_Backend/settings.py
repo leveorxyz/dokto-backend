@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "ehr",
     "appointment",
     "onboarding",
+    "inbox",
 ]
 
 MIDDLEWARE = [

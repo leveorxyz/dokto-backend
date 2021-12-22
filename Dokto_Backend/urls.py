@@ -53,6 +53,7 @@ urlpatterns = [
     path("constant/", include("constant.urls")),
     path("appointment/", include("appointment.urls")),
     path("onboarding/", include("onboarding.urls")),
+    path("inbox/", include("inbox.urls")),
     url(
         r"^media/(?P<path>.*)$",
         serve,
