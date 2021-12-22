@@ -12,9 +12,15 @@ from .views import (
     FunctionalAndCognitiveStatusUpdateView,
     FunctionalAndCognitiveStatusView,
     ICDsView,
+    OrdersByEncounterIDView,
+    OrdersUpdateView,
+    OrdersView,
     PatientProcedureByEncounterIDView,
     PatientProcedureUpdateView,
     PatientProcedureView,
+    PhysicalExamByEncounterIDView,
+    PhysicalExamUpdateView,
+    PhysicalExamView,
     PlanOfCareUpdateView,
     PlanOfCareView,
     PlanOfCareByEncounterIDView,
@@ -22,6 +28,12 @@ from .views import (
     PatientSocialHistoryUpdateView,
     PatientSocialHistoryView,
     PatientSocialHistoryByEncounterIDView,
+    ReviewOfSystemByEncounterIDView,
+    ReviewOfSystemUpdateView,
+    ReviewOfSystemView,
+    VitalsByEncounterIDView,
+    VitalsUpdateView,
+    VitalsView,
 )
 
 urlpatterns = [
@@ -130,5 +142,65 @@ urlpatterns = [
         "encounters/patient-procedure-update/<uuid:pk>/",
         PatientProcedureUpdateView.as_view(),
         name="patient-patient-procedure-update",
+    ),
+    path(
+        "encounters/review-of-system/",
+        ReviewOfSystemView.as_view(),
+        name="patient-review-of-system",
+    ),
+    path(
+        "encounters/review-of-system/<uuid:patient_encounter_uuid>/",
+        ReviewOfSystemByEncounterIDView.as_view(),
+        name="patient-review-of-system",
+    ),
+    path(
+        "encounters/review-of-system-update/<uuid:pk>/",
+        ReviewOfSystemUpdateView.as_view(),
+        name="patient-review-of-system-update",
+    ),
+    path(
+        "encounters/physical-exam/",
+        PhysicalExamView.as_view(),
+        name="patient-physical-exam",
+    ),
+    path(
+        "encounters/physical-exam/<uuid:patient_encounter_uuid>/",
+        PhysicalExamByEncounterIDView.as_view(),
+        name="patient-physical-exam",
+    ),
+    path(
+        "encounters/physical-exam-update/<uuid:pk>/",
+        PhysicalExamUpdateView.as_view(),
+        name="patient-physical-exam-update",
+    ),
+    path(
+        "encounters/orders/",
+        OrdersView.as_view(),
+        name="patient-orders",
+    ),
+    path(
+        "encounters/orders/<uuid:patient_encounter_uuid>/",
+        OrdersByEncounterIDView.as_view(),
+        name="patient-orders",
+    ),
+    path(
+        "encounters/orders-update/<uuid:pk>/",
+        OrdersUpdateView.as_view(),
+        name="patient-orders-update",
+    ),
+    path(
+        "encounters/Vitals/",
+        VitalsView.as_view(),
+        name="patient-Vitals",
+    ),
+    path(
+        "encounters/Vitals/<uuid:patient_encounter_uuid>/",
+        VitalsByEncounterIDView.as_view(),
+        name="patient-Vitals",
+    ),
+    path(
+        "encounters/Vitals-update/<uuid:pk>/",
+        VitalsUpdateView.as_view(),
+        name="patient-Vitals-update",
     ),
 ]
