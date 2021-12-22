@@ -12,6 +12,14 @@ class InboxChannelSerializer(ModelSerializer):
     def get_unread_count(self, obj) -> int:
         return obj.get_unread_msg_count(self.context["request"].user)
 
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        if InboxChannel.objects.filter(
+            Q(first_user=data["first_user"], second_user=data["second_user"])
+            | Q(first_user=data["second_user"], second_user=data["first_user"])
+        ).exists():
+            raise ValidationError("Channel already exists")
+
     class Meta:
         model = InboxChannel
         fields = ("id", "first_user", "second_user", "unread_count")
