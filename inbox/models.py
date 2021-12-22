@@ -16,7 +16,7 @@ class InboxChannel(CoreModel):
     )
 
     def get_unread_msg_count(self, user: User) -> int:
-        return self.channel.filter(~Q(sender=user) & Q(read_status=False)).count()
+        return self.message.filter(~Q(sender=user) & Q(read_status=False)).count()
 
     def __str__(self) -> str:
         return f"{self.id}"
