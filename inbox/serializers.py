@@ -17,7 +17,7 @@ class InboxChannelSerializer(ModelSerializer):
         fields = ("id", "first_user", "second_user", "unread_count")
 
 
-class InboxSendMessageSerializer(ModelSerializer):
+class InboxMessageSerializer(ModelSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         if not InboxChannel.objects.filter(
@@ -33,4 +33,29 @@ class InboxSendMessageSerializer(ModelSerializer):
 
     class Meta:
         model = InboxMessage
-        fields = ["channel", "message", "subject"]
+        fields = ["channel", "message", "subject", "sender", "read_status"]
+        extra_kwargs = {
+            "channel": {"required": True},
+            "message": {"required": True},
+            "subject": {"required": False},
+            "read_status": {"read_only": True},
+        }
+
+
+class InboxChannelMessage(ModelSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.sender != self.context["request"].user:
+            instance.read_status = True
+            instance.save()
+        return data
+
+    class Meta:
+        model = InboxMessage
+        fields = ["channel", "message", "subject", "sender", "read_status"]
+        extra_kwargs = {
+            "channel": {"required": True},
+            "message": {"required": True},
+            "subject": {"required": False},
+            "read_status": {"read_only": True},
+        }

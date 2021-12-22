@@ -9,4 +9,9 @@ urlpatterns = [
         views.InboxSendMessageAPIView.as_view(),
         name="inbox-send-message",
     ),
+    path(
+        "read-message/<uuid:channel_id>",
+        views.InboxReadMessageAPIView.as_view(),
+        name="inbox-read-message",
+    ),
 ]

@@ -1,8 +1,13 @@
 from django.db.models import Q
+from rest_framework.generics import get_object_or_404
 
 from core.views import CustomCreateAPIView, CustomListAPIView
 from .models import InboxChannel, InboxMessage
-from .serializers import InboxChannelSerializer, InboxSendMessageSerializer
+from .serializers import (
+    InboxChannelSerializer,
+    InboxMessageSerializer,
+    InboxChannelMessage,
+)
 
 # Create your views here.
 
@@ -16,5 +21,15 @@ class InboxChannelListView(CustomListAPIView):
 
 
 class InboxSendMessageAPIView(CustomCreateAPIView):
-    serializer_class = InboxSendMessageSerializer
+    serializer_class = InboxMessageSerializer
     queryset = InboxMessage.objects.all()
+
+
+class InboxReadMessageAPIView(CustomListAPIView):
+    serializer_class = InboxChannelMessage
+
+    def get_queryset(self):
+        return InboxMessage.objects.filter()
+
+    def get_object(self, channel_id):
+        return get_object_or_404(self.get_queryset(), channel_id=channel_id)
