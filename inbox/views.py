@@ -33,3 +33,13 @@ class InboxReadMessageAPIView(CustomListAPIView):
 
     def get_object(self, channel_id):
         return get_object_or_404(self.get_queryset(), channel_id=channel_id)
+
+
+class InboxCreateChannelAPIView(CustomCreateAPIView):
+    serializer_class = InboxChannelSerializer
+    queryset = InboxChannel.objects.all()
+
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method.upper() == "POST":
+            self.request.data["first_user"] = self.request.user.id
+        return super().get_serializer(*args, **kwargs)
