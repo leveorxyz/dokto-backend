@@ -228,8 +228,16 @@ class DoctorReviewListCreateAPIView(CustomListCreateAPIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter(name="created_at__gte", type=OpenApiTypes.DATE),
-            OpenApiParameter(name="created_at__lte", type=OpenApiTypes.DATE),
+            OpenApiParameter(
+                name="created_at__gte",
+                type=OpenApiTypes.DATE,
+                description="Filter review by creation time. Picks records greater than or equal to the input value. Format: YYYY-MM-DD",
+            ),
+            OpenApiParameter(
+                name="created_at__lte",
+                type=OpenApiTypes.DATE,
+                description="Filter review by creation time. Picks records smaller than or equal to the input value. Format: YYYY-MM-DD",
+            ),
         ],
         responses=DoctorReviewSerializer,
     )
