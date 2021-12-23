@@ -419,6 +419,7 @@ class ClinicInfo(CoreModel):
     _license_file = models.FileField(
         upload_to=CLINIC_LICENSE_FILE_DIRECTORY, blank=True, null=True, default=None
     )
+    license_expiration = models.DateField(blank=True, null=True)
 
     @property
     def license_file(self):
