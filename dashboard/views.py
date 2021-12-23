@@ -1,3 +1,4 @@
+from drf_spectacular.types import OpenApiTypes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (
@@ -5,7 +6,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from core.serializers import AbstractAccountSettingsSerializer
 
 from core.views import (
@@ -35,6 +36,7 @@ from .serializers import (
     DoctorProfessionalProfileSerializer,
     PharmacyAccountSettingsSerializer,
 )
+from .filters import ReviewFilter
 
 
 class DoctorProfilePublicAPIView(CustomRetrieveAPIView):
@@ -221,8 +223,18 @@ class AccountSettingsSerializer(CustomRetrieveUpdateAPIView):
 
 class DoctorReviewListCreateAPIView(CustomListCreateAPIView):
     serializer_class = DoctorReviewSerializer
-    filterset_fields = ["created_at__gte", "created_at__lte"]
+    filterset_class = ReviewFilter
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="created_at__gte", type=OpenApiTypes.DATE),
+            OpenApiParameter(name="created_at__lte", type=OpenApiTypes.DATE),
+        ],
+        responses=DoctorReviewSerializer,
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         doctor_username = self.kwargs.get("username")
