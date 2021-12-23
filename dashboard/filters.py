@@ -1,5 +1,5 @@
 from django_filters import DateFilter, rest_framework as filters
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from user.models import DoctorReview
 
@@ -20,12 +20,13 @@ class ReviewFilter(filters.FilterSet):
         return queryset.filter(**{f"{name}__{lookup_exp}": value})
 
     def created_at_gte_method(self, queryset, name, value):
-        value += timedelta(hours=0, seconds=0, minutes=0)
         return self.lookup_filter_method(queryset, name, value, "gte")
 
     def created_at_lte_method(self, queryset, name, value):
-        value += timedelta(hours=23, seconds=59, minutes=59)
-        return self.lookup_filter_method(queryset, name, value, "lte")
+        parsed_value = value.strftime("%Y-%m-%d")
+        parsed_value += "T23:59:59Z"
+        parsed_value = datetime.strptime(parsed_value, "%Y-%m-%dT%H:%M:%SZ")
+        return self.lookup_filter_method(queryset, name, parsed_value, "lte")
 
     class Meta:
         model = DoctorReview
