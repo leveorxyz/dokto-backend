@@ -54,11 +54,14 @@ class User(AbstractUser, CoreModel):
     is_verified = models.BooleanField(
         _("is verified"), default=False, blank=True, null=True
     )
-    street = models.CharField(_("street"), max_length=100, blank=True, null=True)
+    street = models.CharField(
+        _("street"), max_length=100, blank=True, null=True)
     state = models.CharField(_("state"), max_length=50, blank=True, null=True)
     city = models.CharField(_("city"), max_length=50, blank=True, null=True)
-    zip_code = models.CharField(_("zip code"), max_length=15, blank=True, null=True)
-    contact_no = models.CharField(_("contact no"), max_length=20, blank=True, null=True)
+    zip_code = models.CharField(
+        _("zip code"), max_length=15, blank=True, null=True)
+    contact_no = models.CharField(
+        _("contact no"), max_length=20, blank=True, null=True)
     _profile_photo = models.ImageField(
         upload_to=PROFILE_PHOTO_DIRECTORY,
         blank=True,
@@ -71,7 +74,8 @@ class User(AbstractUser, CoreModel):
     def from_validated_data(cls, validated_data: dict):
         fields = [field.name for field in User._meta.fields]
 
-        validated_data["password"] = make_password(validated_data.pop("password"))
+        validated_data["password"] = make_password(
+            validated_data.pop("password"))
         constructor_kwargs = {
             field: validated_data.pop(field)
             for field in fields
@@ -244,7 +248,8 @@ class DoctorInfo(CoreModel):
         _("username"),
         max_length=150,
         unique=True,
-        help_text=_("Required. 150 characters or fewer. Letters and digits only."),
+        help_text=_(
+            "Required. 150 characters or fewer. Letters and digits only."),
         validators=[username_validator],
         error_messages={
             "unique": _("A user with that username already exists."),
@@ -261,7 +266,8 @@ class DoctorInfo(CoreModel):
     identification_type = models.CharField(
         max_length=20, choices=IdentificationType.choices, null=True, blank=True
     )
-    identification_number = models.CharField(max_length=50, blank=True, null=True)
+    identification_number = models.CharField(
+        max_length=50, blank=True, null=True)
     _identification_photo = models.ImageField(
         upload_to=DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY, blank=True, null=True
     )
@@ -276,8 +282,10 @@ class DoctorInfo(CoreModel):
     notification_email = models.EmailField(blank=True, null=True)
     reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
     temporary_disable = models.BooleanField(blank=True, default=False)
-    accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
-    profession = models.CharField(max_length=100, blank=True, null=True, default=None)
+    accepted_insurance = models.CharField(
+        max_length=100, blank=True, null=True)
+    profession = models.CharField(
+        max_length=100, blank=True, null=True, default=None)
     license_expiration = models.DateField(blank=True, null=True)
 
     @classmethod
@@ -302,7 +310,8 @@ class DoctorInfo(CoreModel):
     def identification_photo(self, identification_photo_data):
         if self._identification_photo.name:
             del self.identification_photo
-        file_name, file = generate_file_and_name(identification_photo_data, self.id)
+        file_name, file = generate_file_and_name(
+            identification_photo_data, self.id)
         self._identification_photo.save(file_name, file, save=True)
         self.save()
 
@@ -355,7 +364,8 @@ class DoctorEducation(CoreModel):
 
 
 class DoctorExperience(CoreModel):
-    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE, default=None)
+    doctor_info = models.ForeignKey(
+        DoctorInfo, on_delete=models.CASCADE, default=None)
     establishment_name = models.CharField(max_length=50)
     job_title = models.CharField(max_length=50)
     start_date = models.DateField()
@@ -403,7 +413,8 @@ class ClinicInfo(CoreModel):
         _("username"),
         max_length=150,
         unique=True,
-        help_text=_("Required. 150 characters or fewer. Letters and digits only."),
+        help_text=_(
+            "Required. 150 characters or fewer. Letters and digits only."),
         validators=[username_validator],
         error_messages={
             "unique": _("A user with that username already exists."),
@@ -412,8 +423,10 @@ class ClinicInfo(CoreModel):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="clinic_info"
     )
-    number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+    number_of_practitioners = models.IntegerField(
+        blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True, default=None)
 
     def send_onboard_mail(self, doctor_id=None, *args, **kwargs):
         if not doctor_id:
@@ -448,7 +461,7 @@ class ClinicInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user", "notification_email"]
+        return super().get_hidden_fields() + ["user", "notification_email", "website"]
 
 
 class PharmacyInfo(CoreModel):
@@ -456,7 +469,8 @@ class PharmacyInfo(CoreModel):
         _("username"),
         max_length=150,
         unique=True,
-        help_text=_("Required. 150 characters or fewer. Letters and digits only."),
+        help_text=_(
+            "Required. 150 characters or fewer. Letters and digits only."),
         validators=[username_validator],
         error_messages={
             "unique": _("A user with that username already exists."),
@@ -465,7 +479,8 @@ class PharmacyInfo(CoreModel):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="pharmacy_info"
     )
-    number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
+    number_of_practitioners = models.IntegerField(
+        blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
 
     @classmethod
@@ -504,7 +519,8 @@ class PatientInfo(CoreModel):
     display_id = models.PositiveIntegerField(default=1)
 
     # Insurance Info
-    insurance_type = models.CharField(max_length=20, choices=InsuranceType.choices)
+    insurance_type = models.CharField(
+        max_length=20, choices=InsuranceType.choices)
     insurance_name = models.CharField(max_length=50, null=True, blank=True)
     insurance_number = models.CharField(max_length=50, null=True, blank=True)
     insurance_policy_holder_name = models.CharField(
@@ -512,11 +528,13 @@ class PatientInfo(CoreModel):
     )
 
     # Insurance reference
-    referring_doctor_full_name = models.CharField(max_length=50, null=True, blank=True)
+    referring_doctor_full_name = models.CharField(
+        max_length=50, null=True, blank=True)
     referring_doctor_phone_number = models.CharField(
         max_length=20, null=True, blank=True
     )
-    referring_doctor_address = models.CharField(max_length=100, null=True, blank=True)
+    referring_doctor_address = models.CharField(
+        max_length=100, null=True, blank=True)
     name_of_parent = models.CharField(max_length=100, blank=True, null=True)
     notification_email = models.EmailField(blank=True, null=True)
 
@@ -540,7 +558,8 @@ class PatientInfo(CoreModel):
     def identification_photo(self, identification_photo_data):
         if self._identification_photo.name:
             del self.identification_photo
-        file_name, file = generate_file_and_name(identification_photo_data, self.id)
+        file_name, file = generate_file_and_name(
+            identification_photo_data, self.id)
         self._identification_photo.save(file_name, file, save=True)
         self.save()
 
