@@ -533,3 +533,9 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
             "state",
             "website",
         ]
+
+
+class ClinicLicenseSerializer(ModelSerializer):
+    class Meta:
+        model = ClinicInfo
+        fields = ["license_file", "license_expiration"]
