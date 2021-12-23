@@ -154,9 +154,12 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
 class PatientProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, PatientPermission, OwnProfilePermission]
     serializer_class = PatientProfileDetailsSerializer
+    queryset = PatientInfo.objects.all()
 
-    def get_queryset(self, *args, **kwargs):
-        return PatientInfo.objects.all()
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
