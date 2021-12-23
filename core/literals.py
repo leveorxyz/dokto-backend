@@ -4,6 +4,7 @@ DOCTOR_EDUCATION_PHOTO_DIRECTORY = "doctor_education_photo"
 DOCTOR_LICENSE_FILE_DIRECTORY = "doctor_license_file"
 PATIENT_IDENTIFICATION_PHOTO_DIRECTORY = "patient_identification_photo"
 DOCTOR_WAITING_ROOM_MEDIA_DIRECTORY = "doctor_waiting_room_media"
+CLINIC_LICENSE_FILE_DIRECTORY = "clinic_license_file"
 
 # Twilio error strings
 TWILIO_CONVERSATION_ROOM_EXISTS = (
