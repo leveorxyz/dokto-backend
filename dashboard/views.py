@@ -16,6 +16,7 @@ from core.views import (
     CustomListUpdateAPIView,
 )
 from core.permissions import (
+    ClinicPermission,
     OwnProfilePermission,
     DoctorPermission,
     PatientPermission,
@@ -24,6 +25,7 @@ from user.models import ClinicInfo, DoctorInfo, PatientInfo, PharmacyInfo
 from user.serializers import DoctorReviewSerializer
 from .serializers import (
     ClinicAccountSettingsSerializer,
+    ClinicProfileDetailsSerializer,
     DoctorAcceptedInsuranceSerializer,
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
@@ -263,6 +265,17 @@ class DoctorInsuranceAPIView(CustomRetrieveUpdateAPIView):
 
     def get_queryset(self):
         return DoctorInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user=self.request.user)
+
+
+class ClinicProfileAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = ClinicProfileDetailsSerializer
+    permission_classes = [IsAuthenticated, ClinicPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return ClinicInfo.objects.filter(user=self.request.user)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset(), user=self.request.user)
