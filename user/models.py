@@ -477,7 +477,13 @@ class ClinicInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user", "notification_email", "website"]
+        return super().get_hidden_fields() + [
+            "user",
+            "notification_email",
+            "website",
+            "_license_file",
+            "license_expiration",
+        ]
 
 
 class PharmacyInfo(CoreModel):
