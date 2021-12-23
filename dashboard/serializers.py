@@ -1,6 +1,5 @@
 from django.db.models import Sum
-from django.contrib.auth.hashers import make_password
-from rest_framework.fields import DateField, ListField
+from rest_framework.fields import DateField, ListField, URLField
 from rest_framework.serializers import (
     Serializer,
     ModelSerializer,
@@ -10,7 +9,7 @@ from rest_framework.serializers import (
     BooleanField,
     ChoiceField,
 )
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework.exceptions import ValidationError
 
 from core.serializers import (
     AbstractAccountSettingsSerializer,
