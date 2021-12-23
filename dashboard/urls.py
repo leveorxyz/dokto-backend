@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    ClinicLicenseAPIView,
     ClinicProfileAPIView,
     DoctorInsuranceAPIView,
     DoctorProfessionalProfileAPIView,
@@ -80,4 +81,5 @@ urlpatterns = [
         ClinicProfileAPIView.as_view(),
         name="clinic-profile-settings",
     ),
+    path("clinic/license/", ClinicLicenseAPIView.as_view(), name="clinic-license"),
 ]
