@@ -1,3 +1,4 @@
+from drf_spectacular.types import OpenApiTypes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (
@@ -5,7 +6,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from core.serializers import AbstractAccountSettingsSerializer
 
 from core.views import (
@@ -15,6 +16,7 @@ from core.views import (
     CustomListUpdateAPIView,
 )
 from core.permissions import (
+    ClinicPermission,
     OwnProfilePermission,
     DoctorPermission,
     PatientPermission,
@@ -23,6 +25,8 @@ from user.models import ClinicInfo, DoctorInfo, PatientInfo, PharmacyInfo
 from user.serializers import DoctorReviewSerializer
 from .serializers import (
     ClinicAccountSettingsSerializer,
+    ClinicProfileDetailsSerializer,
+    ClinicLicenseSerializer,
     DoctorAcceptedInsuranceSerializer,
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
@@ -35,6 +39,7 @@ from .serializers import (
     DoctorProfessionalProfileSerializer,
     PharmacyAccountSettingsSerializer,
 )
+from .filters import ReviewFilter
 
 
 class DoctorProfilePublicAPIView(CustomRetrieveAPIView):
@@ -221,8 +226,26 @@ class AccountSettingsSerializer(CustomRetrieveUpdateAPIView):
 
 class DoctorReviewListCreateAPIView(CustomListCreateAPIView):
     serializer_class = DoctorReviewSerializer
-    filterset_fields = ["created_at__gte", "created_at__lte"]
+    filterset_class = ReviewFilter
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="created_at__gte",
+                type=OpenApiTypes.DATE,
+                description="Filter review by creation time. Picks records greater than or equal to the input value. Format: YYYY-MM-DD",
+            ),
+            OpenApiParameter(
+                name="created_at__lte",
+                type=OpenApiTypes.DATE,
+                description="Filter review by creation time. Picks records smaller than or equal to the input value. Format: YYYY-MM-DD",
+            ),
+        ],
+        responses=DoctorReviewSerializer,
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         doctor_username = self.kwargs.get("username")
@@ -243,6 +266,28 @@ class DoctorInsuranceAPIView(CustomRetrieveUpdateAPIView):
 
     def get_queryset(self):
         return DoctorInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user=self.request.user)
+
+
+class ClinicProfileAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = ClinicProfileDetailsSerializer
+    permission_classes = [IsAuthenticated, ClinicPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return ClinicInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user=self.request.user)
+
+
+class ClinicLicenseAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = ClinicLicenseSerializer
+    permission_classes = [IsAuthenticated, ClinicPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return ClinicInfo.objects.filter(user=self.request.user)
 
     def get_object(self):
         return get_object_or_404(self.get_queryset(), user=self.request.user)

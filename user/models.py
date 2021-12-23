@@ -17,6 +17,7 @@ from core.literals import (
     DOCTOR_IDENTIFICATION_PHOTO_DIRECTORY,
     DOCTOR_LICENSE_FILE_DIRECTORY,
     PATIENT_IDENTIFICATION_PHOTO_DIRECTORY,
+    CLINIC_LICENSE_FILE_DIRECTORY,
 )
 from core.modelutils import send_mail
 from .utils import generate_file_and_name
@@ -414,6 +415,34 @@ class ClinicInfo(CoreModel):
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True, default=None)
+    _license_file = models.FileField(
+        upload_to=CLINIC_LICENSE_FILE_DIRECTORY, blank=True, null=True, default=None
+    )
+    license_expiration = models.DateField(blank=True, null=True)
+
+    @property
+    def license_file(self):
+        domain = Site.objects.get_current().domain
+        if self._license_file.name:
+            return domain + self._license_file.url
+
+    @license_file.setter
+    def license_file(self, license_file_data):
+        if self._license_file.name:
+            del self.license_file
+        file_name, file = generate_file_and_name(license_file_data, self.id)
+        self._license_file.save(file_name, file, save=True)
+        self.save()
+
+    @license_file.deleter
+    def license_file(self):
+        if self._license_file.name:
+            self._license_file.delete(save=True)
+
+    def delete(self, *args, **kwargs):
+        del self.license_file
+        return super(ClinicInfo, self).delete(*args, **kwargs)
 
     def send_onboard_mail(self, doctor_id=None, *args, **kwargs):
         if not doctor_id:
@@ -448,7 +477,13 @@ class ClinicInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user", "notification_email"]
+        return super().get_hidden_fields() + [
+            "user",
+            "notification_email",
+            "website",
+            "_license_file",
+            "license_expiration",
+        ]
 
 
 class PharmacyInfo(CoreModel):
