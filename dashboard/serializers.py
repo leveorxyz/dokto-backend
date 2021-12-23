@@ -536,6 +536,8 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
 
 
 class ClinicLicenseSerializer(ModelSerializer):
+    license_file = CharField(required=False, allow_null=True)
+
     class Meta:
         model = ClinicInfo
         fields = ["license_file", "license_expiration"]
