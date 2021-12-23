@@ -527,7 +527,7 @@ class VitalsByEncounterIDView(CustomListAPIView):
         - patient_encounter: uuid
 
     """
-    serializer_class = PatientProcedureSerializer
+    serializer_class = VitalsSerializer
 
     def get_queryset(self):
         patient_encounter_uuid = self.kwargs["patient_encounter_uuid"]
