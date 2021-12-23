@@ -531,4 +531,5 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
             "city",
             "zip_code",
             "state",
+            "website",
         ]
