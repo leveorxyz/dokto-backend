@@ -21,9 +21,14 @@ from core.literals import (
     PHARMACY_LICENSE_FILE_DIRECTORY,
 )
 from core.modelutils import send_mail
+from subscription.models import SubscriptionModelMixin, SubscriptionPlanTypes
 from .utils import generate_file_and_name
 
 # Create your models here.
+
+HOME_VISIT_COUNTRIES = [
+    'US', 'CANADA', 'MEXICO'
+]
 
 username_validator = UnicodeUsernameValidator()
 
@@ -231,7 +236,7 @@ class UserIp(CoreModel):
         return f"{self.user.id}-{self.ip_address}"
 
 
-class DoctorInfo(CoreModel):
+class DoctorInfo(CoreModel, SubscriptionModelMixin):
     class Gender(models.TextChoices):
         MALE = "MALE", _("male")
         FEMALE = "FEMALE", _("female")
@@ -347,6 +352,19 @@ class DoctorInfo(CoreModel):
         del self.license_file
         return super(DoctorInfo, self).delete(*args, **kwargs)
 
+    def can_use_pay_as_you_go(self):
+        if self.country in HOME_VISIT_COUNTRIES:
+            return False, f"Doctors in f{self.country} can't use pay as you go plan" # TODO: Find ways to return country full name
+
+    def confirm_subscription_cancelled(self):
+        pass
+
+    def change_membership_type(self):
+        pass
+
+    def get_subscription_info(self):
+        return 5000, SubscriptionPlanTypes.DOTOR_SUSBCRIPTION_TYPE, 1 # TODO: Add check for home visit, Q: How do I recognize doctors performing home visit
+
     def __str__(self):
         return f"{self.id}-{self.username}"
 
@@ -423,7 +441,7 @@ class DoctorService(CoreModel):
     price = models.CharField(max_length=50)
 
 
-class ClinicInfo(CoreModel):
+class ClinicInfo(CoreModel, SubscriptionModelMixin):
     username = models.CharField(
         _("username"),
         max_length=150,
@@ -509,8 +527,23 @@ class ClinicInfo(CoreModel):
             "license_expiration",
         ]
 
+    # Subscription concrete methods
+    
+    def confirm_subscription_extended(self):
+        #TODO: find all doctors and extend subscription
+        pass
 
-class PharmacyInfo(CoreModel):
+    def confirm_subscription_cancelled(self):
+        pass
+
+    def change_membership_type(self):
+        pass
+
+    def get_subscription_info(self):
+        return 5000 * self.number_of_practitioners, SubscriptionPlanTypes.CLINIC_SUBSCRIPTION_PLAN, self.number_of_practitioners # TODO: Add check for no of registered practitioners
+
+
+class PharmacyInfo(CoreModel, SubscriptionModelMixin):
     username = models.CharField(
         _("username"),
         max_length=150,
@@ -600,6 +633,16 @@ class PharmacyAvailableHours(CoreModel):
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
 
+    # Subscription concrete methods
+
+    def confirm_subscription_cancelled(self):
+        pass
+
+    def change_membership_type(self):
+        pass
+
+    def get_subscription_info(self):
+        return 10000, SubscriptionPlanTypes.PHARMACY_SUBSCRIPTION_PLAN, 1
 
 class PatientInfo(CoreModel):
     class Gender(models.TextChoices):

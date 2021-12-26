@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "onboarding",
     "inbox",
     "wallet",
+    "subscription",
 ]
 
 MIDDLEWARE = [
