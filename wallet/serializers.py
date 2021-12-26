@@ -1,7 +1,8 @@
 from typing import OrderedDict
+from django.db.models import fields
 from rest_framework import serializers
 
-from .models import WalletIncomingPayment, WalletPayout
+from .models import Wallet, WalletIncomingPayment, WalletPayout
 
 
 class TransactionHistorySerializer(serializers.Serializer):
@@ -26,8 +27,16 @@ class PayoutSerializer(serializers.ModelSerializer):
         model = WalletPayout
         fields = '__all__'
 
+
 class PaymentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = WalletIncomingPayment
+        fields = '__all__'
+
+
+class WalletSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Wallet
         fields = '__all__'

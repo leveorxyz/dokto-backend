@@ -1,14 +1,11 @@
 from django.db.models.expressions import Value
 from django.db.models.fields import CharField
 from django.shortcuts import render
-from rest_framework import serializers
-from rest_framework.mixins import ListModelMixin
-from rest_framework.permissions import AllowAny
-from rest_framework.views import APIView
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.viewsets import GenericViewSet
 
 from wallet.models import PaymentStatus, Wallet, WalletIncomingPayment, WalletPayout
-from wallet.serializers import PaymentSerializer, PayoutSerializer, TransactionHistorySerializer
+from wallet.serializers import PaymentSerializer, PayoutSerializer, TransactionHistorySerializer, WalletSerializer
 
 # Create your views here.
 class TransactionHistoryView(GenericViewSet, ListModelMixin):
@@ -26,7 +23,7 @@ class PayoutHistoryView(GenericViewSet, ListModelMixin):
 
     def get_queryset(self):
         wallet = Wallet.objects.get(user=self.request.user)
-        return WalletPayout.objects.filter(wallet=wallet)
+        return WalletPayout.objects.filter(wallet=wallet).order_by('-created_at')
 
 
 class PaymentHistoryView(GenericViewSet, ListModelMixin):
@@ -34,4 +31,10 @@ class PaymentHistoryView(GenericViewSet, ListModelMixin):
 
     def get_queryset(self):
         wallet = Wallet.objects.get(user=self.request.user)
-        return WalletIncomingPayment.objects.filter(wallet=wallet)
+        return WalletIncomingPayment.objects.filter(wallet=wallet).order_by('-created_at')
+
+class WalletDetailView(GenericViewSet, RetrieveModelMixin):
+    serializer_class = WalletSerializer
+
+    def get_object(self, *args, **kwargs):
+        return Wallet.objects.get(user=self.request.user)

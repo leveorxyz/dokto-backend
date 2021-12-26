@@ -26,6 +26,14 @@ class Wallet(CoreModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     amount = models.IntegerField(default=0)
 
+    def disburse_to_wallet(self, amount, ehr):
+        # TODO: Consider using subscription to determine amount to add to wallet
+        # TODO: Considering moving it to utils
+        WalletIncomingPayment.objects.create(wallet=self, ehr=ehr, amount_charged=amount, amount=amount, status=PaymentStatus.SUCCESS)
+        self.amount += amount
+        self.save()
+        # TODO: Add unit tests
+
 
 class WalletPayout(CoreModel):
     wallet = ForeignKey(Wallet, on_delete=models.Case)
