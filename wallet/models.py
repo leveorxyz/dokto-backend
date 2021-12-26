@@ -36,7 +36,7 @@ class WalletPayout(CoreModel):
 
 class WalletIncomingPayment(CoreModel):
     wallet = ForeignKey(Wallet, on_delete=models.Case)
-    ehr = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE)
+    ehr = models.ForeignKey(PatientEncounters, on_delete=models.CASCADE, null=True, blank=True)
     amount_charged = models.IntegerField()
     amount = models.IntegerField()  #Check: Q: Do we use subscription type as at the time of creating the ehr or subscription type as at the time of adding payment
     status = models.CharField(choices=PaymentStatus.choices, max_length=2, default=PaymentStatus.PENDING)
