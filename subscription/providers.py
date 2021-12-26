@@ -1,9 +1,12 @@
-from datetime import datetime
+from datetime import datetime, time, timedelta
 import base64
+import hashlib
+import hmac
+from django.http import response
 import requests
 import uuid
 from requests.models import HTTPBasicAuth
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 import stripe
 from django.conf import settings
 import subscription
@@ -22,50 +25,129 @@ STRIPE_PLAN_T0_PRICE_CONVERSION_DICT = {
     SubscriptionPlanTypes.DOCTOR_WITH_HOME_SERVICE: '',
 }
 
+class SupportedStripeEventTypes:
+    SUBSCRIPTION_CREATED = 'customer.subscription.created'
+    all = [SUBSCRIPTION_CREATED, ]
+    subscription_extended_statuses = [SUBSCRIPTION_CREATED]
 
-PAYPAL_SUBSCRIPTION_RETURN_URL = 'AAA' # TODO: Move it to settings
-PAYPAL_SUBSCRIPTION_CANCEL_URL = 'AAA' # TODO: Move it to settings
+
+
+PAYPAL_SUBSCRIPTION_RETURN_URL = 'https://example.com/' # TODO: Move it to settings
+PAYPAL_SUBSCRIPTION_CANCEL_URL = 'https://example.com/' # TODO: Move it to settings
 PAYPAL_PLAN_T0_PLAN_ID_CONVERSION_DICT = {
     SubscriptionPlanTypes.DOTOR_SUSBCRIPTION_TYPE: '',
     SubscriptionPlanTypes.PHARMACY_SUBSCRIPTION_PLAN: '',
     SubscriptionPlanTypes.CLINIC_SUBSCRIPTION_PLAN: '',
     SubscriptionPlanTypes.DOCTOR_WITH_HOME_SERVICE: '',
 }
+STRIPE_WEBHOOK_SIGNATURE = 'aaaa'
 
+PAYSTACK_SECRET_KEY = 'sk_test_b8fdadbb4426e37276abdf0a28528b4085ddb4a9'
 
 FLUTTERWAVE_BASE_URL = 'https://api.flutterwave.com/v3/' # TODO: Move it to settings
 FLUTTERWAVE_WEBHOOK_VERIFICATION_HASH = 'sssssss'
 
 class StripeProvider():
-    def create_subscription(self, user: User, no_of_doctors: int, payment_method_id: str, stripe_price_id: str):
+    def create_subscription(self, user: User, no_of_doctors: int, source_id: str, stripe_price_id: str):
         customer = stripe.Customer.create(
             email = user.email,
-            payment_method=payment_method_id
+            source=source_id
         )
-        print(customer)
+        # print(customer)
         subscription_data = stripe.Subscription.create(
             customer=customer.id,
             items=[
                 {'price': stripe_price_id, 'quantity': no_of_doctors},
             ],
         )
-        print(subscription_data)
         return subscription_data.id, ""
-    
+
     def subscribe(self, user: User, amount: int, plan_type: str, quantity: int, serializer: SubscriptionChargeSerializer):
         return self.create_subscription(user, quantity, serializer.stripe_payment_method_id, STRIPE_PLAN_T0_PRICE_CONVERSION_DICT.get(plan_type))
 
+    def handle_webhook(self, request):
+        if(request.headers.get('stripe-signature')) != STRIPE_WEBHOOK_SIGNATURE:
+            raise PermissionDenied()
+        data = request.data
+        event_type = data.get('type')
+        if event_type not in SupportedStripeEventTypes.all:
+            return ;
+        if event_type in SupportedStripeEventTypes.subscription_extended_statuses:
+            subscription_id = data['object']['id']
+            subscription = SubscriptionHistory.objects.filter(payment_ref=subscription_id).filter(payment_method=SubscriptionPaymantProvider.STRIPE).first()
+            if not subscription:
+                raise Exception()
+            status = data['status']
+            if status != 'active':
+                return ;
+            start_time = datetime.fromtimestamp(data['current_period_start'])
+            end_time = datetime.fromtimestamp(data['current_period_end'])
+            invoice_id = data['latest_invoice']
+            subscription.add_new_payment(invoice_id, start_time, end_time)
+
+
+class PaystackEventType:
+    SUBSCRIPTION_CREATED = 'subscription.create'
+    all = [SUBSCRIPTION_CREATED]
 
 class PaystackProvider():
-    pass
+    def init_subscription(self, user: User, amount: int):
+        res = requests.post("https://api.paystack.co/plan", json={ "name": "Monthly Retainer", 
+            "interval": "monthly", 
+            "amount": amount,
+        }, headers={
+            'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'
+        })
+        if res.status_code != 201:
+            raise Exception()
+        plan_code = res.json()['data']['plan_code']
+        res = requests.post("https://api.paystack.co/transaction/initialize", json={
+            "email": "customer@email.com",
+            "amount": amount,
+            "plan": plan_code
+        }, headers={
+            'Authorization': f'Bearer {PAYSTACK_SECRET_KEY}'
+        })
+        if res.status_code != 200:
+            raise Exception()
+        data = res.json()['data']
+        return plan_code, data['authorization_url']
+        
 
+    def subscribe(self, user: User, amount: int, plan_type: str, quantity: int):
+        return self.init_subscription(user, amount)
+
+    def handle_webhook(self, request):
+        calculated_signature = hmac.new(PAYSTACK_SECRET_KEY.encode('utf-8'), request.body, hashlib.sha512).hexdigest()
+        signature = request.headers.get('X-Paystack-Signature')
+        if calculated_signature != signature:
+            raise PermissionDenied()
+        data = request.data
+        event_type = data['event']
+        if event_type not in PaystackEventType.all:
+            print(8888)
+            return ;
+        if data['data']['status'] != 'active':
+            return ;
+        payment_ref = data['data']['plan']['plan_code']
+        subscription = SubscriptionHistory.objects.filter(payment_ref=payment_ref).filter(payment_method=SubscriptionPaymantProvider.PAYSTACK).first()
+        start_time = datetime.strptime(data['data']['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        end_time = datetime.strptime(data['data']['next_payment_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        id = data['data']['id']
+        print(start_time)
+        subscription.add_new_payment(id, start_time, end_time)
+        
+        
+class PaypalEventTypes:
+    SUBSCRIPTION_CREATED = 'BILLING.SUBSCRIPTION.ACTIVATED'
+    all = [SUBSCRIPTION_CREATED,]
 
 class PaypalProvider():
 
     def init_subscription(self, user: User, no_of_doctors: int, paypal_plan_id: str):
-        response = PayPalAPI().send("POST", 'billing/subscriptions', json={
+        response = PayPalAPI().send('billing/subscriptions', "POST", json={
             'plan_id': paypal_plan_id,
-            'start_time': datetime.now(),
+            'start_time': (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'quantity': no_of_doctors, # TODO: ISSUE Max is 32
             'subscriber': {
                 'name': {
@@ -112,6 +194,32 @@ class PaypalProvider():
         if not approval_url:
             raise Exception()
         return sub_id, approval_url
+
+    def verify_webhook(self, request):
+        # TODO: Implement webhook verification
+        return True
+
+    def _handle_webhook(self, data):
+        event_type = data['event_type']
+        print(event_type)
+        if event_type not in PaypalEventTypes.all:
+            return
+        obj = data['resource']
+        subscription_id = obj['id']
+        status = obj['status']
+        if status != 'ACTIVE':
+            return
+        start_time_string = obj['billing_info']['last_payment']['time'] # Np payment ID from paypal but payment time can 
+                                                                        # also uniquely identify a subscription payment
+        start_time = datetime.strptime(start_time_string, '%Y-%m-%dT%H:%M:%SZ')
+        end_time = datetime.strptime(obj['billing_info']['next_billing_time'], '%Y-%m-%dT%H:%M:%SZ')
+        subscription = SubscriptionHistory.objects.filter(payment_ref=subscription_id).filter(payment_method=SubscriptionPaymantProvider.PAYPAL).first()
+        subscription.add_new_payment(start_time_string, start_time, end_time)
+
+    def handle_webhook(self, request):
+        if not self.verify_webhook(request):
+            raise Exception()
+        self._handle_webhook(request.data)
 
     def subscribe(self, user: User, amount: int, plan_type: str, quantity: int):
         return self.init_subscription(user, quantity, PAYPAL_PLAN_T0_PLAN_ID_CONVERSION_DICT.get(plan_type))

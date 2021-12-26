@@ -67,12 +67,27 @@ class SubscriptionPaymantProvider(models.TextChoices):
 class SubscriptionHistory(CoreModel):
     payment_method = models.CharField(max_length=3, choices=SubscriptionPaymantProvider.choices)
     payment_ref = models.CharField(max_length=30)
-    subscription_start = models.DateField()
-    subscription_end = models.DateField()
+    subscription_start = models.DateField(null=True)
+    subscription_end = models.DateField(null=True)
     user = models.ForeignKey("user.User", on_delete=models.PROTECT)
-    paid = models.BooleanField(default=False)
+    paid = models.BooleanField(default=False) # TODO: Depreciate in favour of active
+    active = models.BooleanField(default=False)
     
-    def set_paid(self):
+    def add_new_payment(self, ref, start, end):
+        self.paid = True
+        today = datetime.today()
+        if not self.subscription_end:
+            self.subscription_end = end
+        if self.subscription_end < end:
+            self.subscription_end = end
+        if self.subscription_end > today:
+            self.active = True
+        if not self.subscription_start:
+            self.subscription_start = start
+        self.save()
+        SubscriptionHistoryPayment.objects.create(subscription=self, payment_ref=ref, start=start, end=end)
+    
+    def set_paid(self): # TODO: To depreciate against add_new_payment
         # TODO: Unit tests around all possible issues
         subscription = self
         if self.paid:
@@ -91,3 +106,9 @@ class SubscriptionHistory(CoreModel):
         subscription.save()
         subscription_object = SubscriptionModelMixin.get_subscription_user(subscription.user)
         subscription_object.confirm_subscription_extended()
+
+class SubscriptionHistoryPayment(CoreModel):
+    subscription = models.ForeignKey(SubscriptionHistory, on_delete=models.CASCADE)
+    payment_ref = models.CharField(max_length=30)
+    start = models.DateField()
+    end = models.DateField()

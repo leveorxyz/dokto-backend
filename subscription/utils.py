@@ -1,3 +1,4 @@
+import json
 from paypalrestsdk import BillingPlan
 import requests
 from requests.models import HTTPBasicAuth
@@ -10,6 +11,9 @@ PAYPAL_CLIENT_ID = 'AfM2LwelUElLMq3IzR0rhPt9acRf5WJBrHYAiKpnQcq4sKBVafVCFN19Ec0j
 PAYPAL_CLIENT_SECRET = 'EGom80tuePMavzuvJwcRlpUNqL_F17P1ryHAsFJ7lLmvki4TTO2Q89UTlqSlpFI92nyyQzIlloBDK3Ur'
 
 class PayPalAPI():
+    def __init__(self):
+        self.paypal_token = None
+
     def authenticate(self):
         response = requests.post(PAYPAL_API_BASE_URL + 'oauth2/token', data={
             'grant_type': 'client_credentials'
@@ -22,8 +26,11 @@ class PayPalAPI():
         return access_token, expires_in
 
     def send(self, path, method, params={}, json={}):
-        token, _ = self.authenticate() # TODO: Save token in cache
-        headers = {'Authorization': f'Bearer {token}'}
+        self.paypal_token = 'A21AAI4DjJ2nvv6UlrfhGhiTiSAEHAZEWT32tiwioJBJIdIUSbvdpMrWoVpOGBHB_hOj3mBe_IM9v53Q24z0WhLs500Rf3TZw'
+        if not self.paypal_token:
+            token, _ = self.authenticate() # TODO: Save token in cache
+            self.paypal_token = token
+        headers = {'Authorization': f'Bearer {self.paypal_token}'}
         print(headers)
         response = requests.request(method, PAYPAL_API_BASE_URL + path, params=params, json=json, headers=headers)
         if response.status_code not in [200, 201]:
@@ -33,6 +40,9 @@ class PayPalAPI():
     
     def create_billing_plan(self, data):
         return self.send('billing/plans', 'POST', {}, data)
+
+    def create_billing_product(self, data):
+        return self.send('catalogs/products', 'POST', {}, data)
 
 def get_subscription_user(user: User):
     if user.user_type == UserType.CLINIC:
@@ -44,9 +54,17 @@ def get_subscription_user(user: User):
     raise Exception()
 
 def create_paypal_plan(name, price):
+    product = PayPalAPI().create_billing_product({
+        "name": "Video Streaming Service",
+        "description": "Video streaming service",
+        "type": "SERVICE",
+        "category": "SOFTWARE",
+    })
+    print(product.json())
+    product_id = product.json()['id']
 
     billing_plan = PayPalAPI().create_billing_plan({
-        "product_id": "PROD-XXCD1234QWER65782",
+        "product_id": product_id,
         "name": "Video Streaming Service Plan",
         "description": "Video Streaming Service basic plan",
         "status": "ACTIVE",
@@ -98,7 +116,7 @@ def create_paypal_plan(name, price):
             }
         ],
         "payment_preferences": {
-            "auto_bill_outstanding": true,
+            "auto_bill_outstanding": True,
             "setup_fee": {
             "value": "10",
             "currency_code": "USD"
@@ -108,7 +126,7 @@ def create_paypal_plan(name, price):
         },
         "taxes": {
             "percentage": "10",
-            "inclusive": false
+            "inclusive": False
         }
     })
     

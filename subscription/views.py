@@ -1,6 +1,8 @@
 from rest_framework import permissions, status
 from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import GenericAPIView
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.utils import serializer_helpers
 from rest_framework.views import APIView
@@ -9,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 from subscription.providers import FluterwaveProviver
 
 from .models import SubscriptionModelMixin
-from .providers import Provider, providers_dict
+from .providers import PaypalProvider, PaystackProvider, Provider, providers_dict
 from .serializers import ChangeMembershipSerializer, SubscriptionChargeSerializer, SubscriptionSerializer
 
 
@@ -83,9 +85,12 @@ class FlutterwaveWebhook(APIView):
         return Response({})
 
 
-class PaystackWebhook(APIView):
-    def post(self):
-        pass
+class PaystackWebhook(GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, *args, **kwargs):
+        PaystackProvider().handle_webhook(self.request)
+        return Response({})
 
 
 class StripeWebhook(APIView):
@@ -94,5 +99,8 @@ class StripeWebhook(APIView):
 
 
 class PaypalWebhook(APIView):
-    def post(self):
-        pass
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, *args, **kwargs):
+        PaypalProvider().handle_webhook(self.request)
+        return Response({})

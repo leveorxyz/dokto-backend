@@ -9,7 +9,7 @@ urlpatterns = [
     path("unsubscribe/", UnsubscribeView.as_view({'get': 'create'}), name="unsubscribe"),
     path("change_subscription_type/", ChangeSubscriptionView.as_view({'get': 'create'}), name="change-subscription-type"),
     path("flutterwave-webhook", authentication_classes([])(permission_classes([AllowAny])(FlutterwaveWebhook)).as_view()),
-    path("paystack-webhook", PaystackWebhook.as_view()),
+    path("paystack-webhook", PaystackWebhook.as_view(), name='paystack-webhook'),
     path("stripe-webhook", StripeWebhook.as_view()),
-    path("paypal-webhook", PaypalWebhook.as_view()),
+    path("paypal-webhook", PaypalWebhook.as_view(), name='paypal-webhook'),
 ]
