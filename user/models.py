@@ -296,6 +296,8 @@ class DoctorInfo(CoreModel, SubscriptionModelMixin):
             "reason_to_delete",
             "temporary_disable",
             "notification_email",
+            "current_subscription",
+            "subscription_type",
         ]
 
     @property
@@ -525,7 +527,7 @@ class ClinicInfo(CoreModel, SubscriptionModelMixin):
             "website",
             "_license_file",
             "license_expiration",
-        ]
+        ] + ["current_subscription", "subscription_type"]
 
     # Subscription concrete methods
     
@@ -608,7 +610,7 @@ class PharmacyInfo(CoreModel, SubscriptionModelMixin):
             "website",
             "_license_file",
             "license_expiration",
-        ]
+        ] + ["current_subscription", "subscription_type"]
 
 
 class PharmacyService(CoreModel):
