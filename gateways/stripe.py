@@ -29,6 +29,10 @@ class SupportedStripeEventTypes:
 
 
 class StripeProvider(Gateway):
+
+    def get_provider_type(self):
+        return SubscriptionPaymantProvider.STRIPE
+
     def create_subscription(self, user: User, no_of_doctors: int, source_id: str, stripe_price_id: str, history: SubscriptionHistory):
         customer = stripe.Customer.create(
             email = user.email,
@@ -59,6 +63,10 @@ class StripeProvider(Gateway):
     def _subscribe(self, user: User, amount: int, plan_type: str, quantity: int, serializer: SubscriptionChargeSerializer, history: SubscriptionHistory=None):
         return self.create_subscription(user, quantity, serializer.stripe_payment_method_id, STRIPE_PLAN_T0_PRICE_CONVERSION_DICT.get(plan_type), history)
 
+    def _cancel_subscription(self, subscription: SubscriptionHistory):
+        stripe.Subscription.delete(subscription.payment_ref)
+        return True
+
     def _is_webhook_update_data_type(self, data):
         event_type = data.get('type')
         if event_type == 'checkout.session.completed' and data['data']['mode'] == 'subscription':
@@ -69,7 +77,7 @@ class StripeProvider(Gateway):
         event_type = data.get('type')
         if event_type in [
             "customer.subscription.created",
-            "customer.subscription.updated",   
+            "customer.subscription.updated",
         ]:
             return True
         return False
@@ -77,7 +85,7 @@ class StripeProvider(Gateway):
     def _handle_update_data_webhook(self, data):
         history_id = data['data']['metadata'][SUBSCRIPTION_HISTORY_ID_METADATA_KEY]
         subscription_id = data['data']['subscription']
-        return history_id, subscription_id
+        return history_id, subscription_id, ''
 
     def _verify_webhook(self, request):
         if(request.headers.get('stripe-signature')) != STRIPE_WEBHOOK_SIGNATURE:
@@ -91,4 +99,4 @@ class StripeProvider(Gateway):
         start_time = datetime.fromtimestamp(data['current_period_start'])
         end_time = datetime.fromtimestamp(data['current_period_end'])
         invoice_id = data['latest_invoice']
-        return subscription_id, invoice_id, start_time, end_time
+        return None, subscription_id, invoice_id, start_time, end_time

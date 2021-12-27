@@ -21,7 +21,10 @@ PAYPAL_PLAN_T0_PLAN_ID_CONVERSION_DICT = {
 
 class PaypalEventTypes:
     SUBSCRIPTION_CREATED = 'BILLING.SUBSCRIPTION.ACTIVATED'
-    all = [SUBSCRIPTION_CREATED,]
+    SUBSCRIPTION_UPDATED = 'BILLING.SUBSCRIPTION.UPDATED'
+    SUBSCRIPTION_RENEWED = 'BILLING.SUBSCRIPTION.RENEWED'
+    
+    all = [SUBSCRIPTION_CREATED, SUBSCRIPTION_UPDATED, SUBSCRIPTION_RENEWED]
 
 
 PAYPAL_API_TEST_BASE_URL = 'https://api-m.sandbox.paypal.com/v1/'
@@ -52,7 +55,7 @@ class PayPalAPI(Gateway):
         headers = {'Authorization': f'Bearer {self.paypal_token}'}
         print(headers)
         response = requests.request(method, self.PAYPAL_API_BASE_URL + path, params=params, json=json, headers=headers)
-        if response.status_code not in [200, 201]:
+        if response.status_code not in [200, 201, 204]:
             print(response.content)
             raise Exception()
         return response
@@ -66,8 +69,10 @@ class PayPalAPI(Gateway):
 
 class PaypalProvider():
 
+    def get_provider_type(self):
+        return SubscriptionPaymantProvider.PAYPAL
+
     def init_subscription(self, user: User, no_of_doctors: int, paypal_plan_id: str):
-        # TODO: Check address
         response = PayPalAPI().send('billing/subscriptions', "POST", json={
             'plan_id': paypal_plan_id,
             'start_time': (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
@@ -99,7 +104,6 @@ class PaypalProvider():
             }
         })
 
-        print(response.json())
         status = response.json()['status']
         if status != 'APPROVAL_PENDING':
             raise Exception()
@@ -113,6 +117,12 @@ class PaypalProvider():
         if not approval_url:
             raise Exception()
         return sub_id, approval_url
+
+    def _cancel_subscription(self, subscription: SubscriptionHistory):
+        path = f'billing/subscriptions/{subscription.payment_ref}/cancel'
+        response = PayPalAPI().send('billing/subscriptions', "POST", json={
+            'reason': 'Reason' # TODO: Q: Should we collect reason from user?
+        })
 
     def _verify_webhook(self, request):
         # TODO: Implement webhook verification
@@ -128,7 +138,7 @@ class PaypalProvider():
         status = obj['status']
         if status != 'ACTIVE':
             return
-        start_time_string = obj['billing_info']['last_payment']['time'] # Np payment ID from paypal but payment time can 
+        start_time_string = obj['billing_info']['last_payment']['time'] # No payment ID from paypal but payment time can 
                                                                         # also uniquely identify a subscription payment
         start_time = datetime.strptime(start_time_string, '%Y-%m-%dT%H:%M:%SZ')
         end_time = datetime.strptime(obj['billing_info']['next_billing_time'], '%Y-%m-%dT%H:%M:%SZ')

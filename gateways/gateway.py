@@ -1,7 +1,7 @@
 from enum import Enum
 
 from stripe.api_resources import subscription
-from subscription.models import SubscriptionHistory, SubscriptionPaymantProvider
+from subscription.models import SubscriptionHistory, SubscriptionModelMixin, SubscriptionPaymantProvider
 from user.models import User
 
 class WebhookTypes(Enum):
@@ -29,6 +29,16 @@ class Gateway():
         history.save()
         return id, approval_url
 
+    def _cancel_subscription(self, subscription: SubscriptionHistory):
+        pass
+
+    def cancel_subscription(self, obj: SubscriptionModelMixin):
+        self._cancel_subscription(obj.current_subscription)
+        obj.cancelled = True
+        # Cancel now, but don't deactivate it on providers.
+        # Cron job will do the clean up later when the last payment runs out, i.e date > subscription_end
+        obj.save()
+
     def _verify_webhook(self, request):
         raise NotImplemented
 
@@ -51,15 +61,17 @@ class Gateway():
         if self._is_webhook_update_data_type(data):
             result = self._handle_update_data_webhook(data)
             if result:
-                history_id, subscription_id = result
+                history_id, subscription_id, extra_gateway_values = result
                 history = SubscriptionHistory.objects.get(pk=history_id)
                 history.payment_ref = subscription_id
+                history.extra_gateway_values = extra_gateway_values
                 history.save()
         if self._is_webhook_extension_type(data):
             result = self._handle_extension_webhook(data)
             if result:
-                payment_ref, new_payment_id, start_time, end_time = result
-                subscription = SubscriptionHistory.objects.filter(payment_ref=payment_ref).filter(payment_method=self.get_provider_type()).first()
+                subscription, payment_ref, new_payment_id, start_time, end_time = result
+                if not subscription:
+                    subscription = SubscriptionHistory.objects.filter(payment_ref=payment_ref).filter(payment_method=self.get_provider_type()).first()
                 subscription.add_new_payment(id, start_time, end_time)
         if self._is_webhook_cancellation_type(data):
             return;

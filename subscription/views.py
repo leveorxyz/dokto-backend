@@ -12,6 +12,7 @@ from gateways.flutterwave import FluterwaveProviver
 from gateways.gateway import Gateway
 from gateways.paypal import PaypalProvider
 from gateways.paystack import PaystackProvider
+from gateways.stripe import StripeProvider
 from subscription.utils import get_subscription_user
 from user.models import User
 from .models import SubscriptionModelMixin
@@ -69,6 +70,12 @@ class UnsubscribeView(SubscriptionBaseView):
     def validate(self):
         self.get_object().can_unsubscribe()
 
+    def handle(self):
+        obj = self.get_object()
+        payment_method = self.serializer.validated_data.get('payment_method')
+        sub_id, approval_url = Gateway.get_payment_gateway(payment_method).cancel_subscription(obj)
+        return Response({'subscription_id': sub_id, 'approval_url': approval_url})
+
 
 class ChangeSubscriptionView(SubscriptionBaseView):
     serializer_class = ChangeMembershipSerializer
@@ -80,32 +87,25 @@ class ChangeSubscriptionView(SubscriptionBaseView):
         self.get_object().change_membership_type(serializer.change_to)
 
 
-class FlutterwaveWebhook(APIView):
+class PaymentWebhookView(APIView):
     permission_classes = [permissions.AllowAny]
-    # def check_permissions(self, request):
-    #     return
-    # TODO: Handle permission
-    def post(self, *args, **kwargs):
-        FluterwaveProviver().handle_webhook(self.request)
-        return Response({})
-
-
-class PaystackWebhook(GenericAPIView):
-    permission_classes = [permissions.AllowAny]
+    provider: Gateway = None
 
     def post(self, *args, **kwargs):
-        PaystackProvider().handle_webhook(self.request)
-        return Response({})
+        self.provider.handle_webhook(self.request)
 
 
-class StripeWebhook(APIView):
-    def post(self):
-        pass
+class FlutterwaveWebhook(PaymentWebhookView):
+    provider = FluterwaveProviver()
 
 
-class PaypalWebhook(APIView):
-    permission_classes = [permissions.AllowAny]
+class PaystackWebhook(PaymentWebhookView):
+    provider = PaystackProvider()
 
-    def post(self, *args, **kwargs):
-        PaypalProvider().handle_webhook(self.request)
-        return Response({})
+
+class StripeWebhook(PaymentWebhookView):
+    provider = StripeProvider()
+
+
+class PaypalWebhook(PaymentWebhookView):
+    provider = PaypalProvider()
