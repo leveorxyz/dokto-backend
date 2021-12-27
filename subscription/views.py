@@ -4,6 +4,7 @@ import logging
 from rest_framework import permissions, status
 from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
+from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
@@ -15,7 +16,7 @@ from gateways.paystack import PaystackProvider
 from gateways.stripe import StripeProvider
 from subscription.utils import get_subscription_user
 from user.models import User
-from .models import SubscriptionModelMixin
+from .models import SubscriptionHistoryPayment, SubscriptionModelMixin
 
 from .serializers import ChangeMembershipSerializer, SubscriptionChargeSerializer, SubscriptionSerializer
 
@@ -115,3 +116,9 @@ class StripeWebhook(PaymentWebhookView):
 
 class PaypalWebhook(PaymentWebhookView):
     provider = PaypalProvider()
+
+class SubscriptionPaymentsView(GenericViewSet, ListModelMixin):
+    serializer_class = SubscriptionHistoryPayment
+
+    def get_queryset(self):
+        return SubscriptionHistoryPayment.objects.filter(subscription__user=self.request.user)
