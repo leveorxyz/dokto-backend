@@ -1,10 +1,10 @@
+import json
+import logging
+
 from rest_framework import permissions, status
 from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import GenericAPIView
-from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
-from rest_framework.utils import serializer_helpers
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
@@ -92,7 +92,13 @@ class PaymentWebhookView(APIView):
     provider: Gateway = None
 
     def post(self, *args, **kwargs):
-        self.provider.handle_webhook(self.request)
+        try:
+            # TODO: Remove try block and replace with celery task
+            self.provider.handle_webhook(self.request)
+        except Exception:
+            pass
+        logging.info("Webhook request :" + json.dumps(self.request.data))
+        return Response({})
 
 
 class FlutterwaveWebhook(PaymentWebhookView):
