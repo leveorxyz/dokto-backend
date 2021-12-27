@@ -70,8 +70,8 @@ class SubscriptionHistory(CoreModel):
     subscription_start = models.DateField(null=True)
     subscription_end = models.DateField(null=True)
     user = models.ForeignKey("user.User", on_delete=models.PROTECT)
-    paid = models.BooleanField(default=False) # TODO: Depreciate in favour of active
     active = models.BooleanField(default=False)
+    amount = models.IntegerField()
     
     def add_new_payment(self, ref, start, end):
         self.paid = True
@@ -86,25 +86,7 @@ class SubscriptionHistory(CoreModel):
             self.subscription_start = start
         self.save()
         SubscriptionHistoryPayment.objects.create(subscription=self, payment_ref=ref, start=start, end=end)
-    
-    def set_paid(self): # TODO: To depreciate against add_new_payment
-        # TODO: Unit tests around all possible issues
-        subscription = self
-        if self.paid:
-            subscription = SubscriptionHistory()
-            subscription.user = self.user
-            subscription.payment_ref = self.payment_ref
-            subscription.payment_method = self.payment_method
-        subscription.paid = True
-        today = datetime.now().date()
-        last_active_subscription = SubscriptionHistory.objects.filter(user=subscription.user).filter(paid=True).order_by('-subscription_end').first()
-        if not last_active_subscription or last_active_subscription.subscription_end < today:
-            subscription.subscription_start = today
-        else:
-            subscription.subscription_start = last_active_subscription.subscription_end + timedelta(days=1)
-        subscription.subscription_end = subscription.subscription_start + timedelta(days=30)
-        subscription.save()
-        subscription_object = SubscriptionModelMixin.get_subscription_user(subscription.user)
+        subscription_object = SubscriptionModelMixin.get_subscription_user(self.user)
         subscription_object.confirm_subscription_extended()
 
 class SubscriptionHistoryPayment(CoreModel):

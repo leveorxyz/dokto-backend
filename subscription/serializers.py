@@ -8,20 +8,7 @@ from .models import SubscriptionModelMixin, SubscriptionPaymantProvider, Subscri
 
 
 class SubscriptionSerializer(serializers.Serializer):
-    account_type = serializers.ChoiceField(SubscriptionUserTypes, write_only=True)
-    account_id = serializers.UUIDField(write_only=True)
     status = serializers.BooleanField(read_only=True)
-
-    def get_object(self) -> SubscriptionModelMixin:
-        account_type = self.validated_data.get('account_type')
-        account_id = self.validated_data.get('account_id')
-        if account_type == SubscriptionUserTypes.CLINIC:
-            return user_models.ClinicInfo.objects.get(pk=account_id)
-        if account_type == SubscriptionUserTypes.DOCTOR:
-            return user_models.DoctorInfo.objects.get(pk=account_id)
-        if account_type == SubscriptionUserTypes.PHARMACY:
-            return user_models.PharmacyInfo.objects.get(pk=account_id)
-        raise NotSupportedError()
 
 class SubscriptionChargeSerializer(SubscriptionSerializer):
     payment_method = serializers.ChoiceField(SubscriptionPaymantProvider)

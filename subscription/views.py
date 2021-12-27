@@ -8,10 +8,14 @@ from rest_framework.utils import serializer_helpers
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from subscription.providers import FluterwaveProviver
-
+from gateways.flutterwave import FluterwaveProviver
+from gateways.gateway import Gateway
+from gateways.paypal import PaypalProvider
+from gateways.paystack import PaystackProvider
+from subscription.utils import get_subscription_user
+from user.models import User
 from .models import SubscriptionModelMixin
-from .providers import PaypalProvider, PaystackProvider, Provider, providers_dict
+
 from .serializers import ChangeMembershipSerializer, SubscriptionChargeSerializer, SubscriptionSerializer
 
 
@@ -28,7 +32,8 @@ class SubscriptionBaseView(GenericViewSet):
 
     def get_object(self) -> SubscriptionModelMixin:
         if not self.object:
-            self.object = self.serializer.get_object()
+            user: User = self.request.user
+            self.object = get_subscription_user(user)
         return self.object
 
     def check_permission(self, request):
@@ -55,7 +60,7 @@ class SubscriptionView(SubscriptionBaseView):
         obj = self.get_object()
         payment_method = self.serializer.validated_data.get('payment_method')
         amount_to_pay, plan_type, quantity = obj.get_subscription_info()
-        sub_id, approval_url = Provider(payment_method).subscribe(self.request.user, amount_to_pay, plan_type, quantity)
+        sub_id, approval_url = Gateway.get_payment_gateway(payment_method).subscribe(self.request.user, amount_to_pay, plan_type, quantity)
         return Response({'subscription_id': sub_id, 'approval_url': approval_url})
 
 
