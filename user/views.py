@@ -12,6 +12,7 @@ from drf_spectacular.utils import (
     OpenApiResponse,
 )
 from drf_spectacular.types import OpenApiTypes
+from core.classes import CustomTokenAuthentication
 
 from core.views import (
     CustomListAPIView,
@@ -76,6 +77,15 @@ class LoginView(GenericAPIView):
             if not user:
                 raise AuthenticationFailed()
             result = serializer.data
+
+            # In case the token expires, create new token
+            token_key = result.get("token")
+            token_validator = CustomTokenAuthentication()
+            token_class = token_validator.get_model()
+            token = token_class.objects.get(key=token_key)
+            if token_validator.is_expired(token):
+                token.delete()
+                result["token"] = user.token
 
         # Returning token
         return Response(
@@ -158,7 +168,8 @@ class DoctorsListView(CustomListAPIView):
             specialty_query = DoctorSpecialty.objects.filter(
                 specialty__icontains=self.request.query_params["search"]
             ).values_list("doctor_info_id", flat=True)
-            specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
+            specialty_queryset = DoctorInfo.objects.filter(
+                id__in=specialty_query).all()
             return (filtered_queryset | specialty_queryset).distinct()
         return filtered_queryset
 
