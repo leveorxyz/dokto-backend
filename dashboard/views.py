@@ -57,8 +57,7 @@ class DoctorProfilePublicAPIView(CustomRetrieveAPIView):
 
 
 class DoctorProfileAPIView(CustomRetrieveAPIView):
-    permission_classes = [IsAuthenticated,
-                          OwnProfilePermission, DoctorPermission]
+    permission_classes = [IsAuthenticated, OwnProfilePermission, DoctorPermission]
     serializer_class = DoctorProfileSerializer
 
     def get_queryset(self):
@@ -71,8 +70,7 @@ class DoctorProfileAPIView(CustomRetrieveAPIView):
 
 
 class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated,
-                          DoctorPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorProfileDetailsSerializer
 
     def get_queryset(self, *args, **kwargs):
@@ -85,8 +83,7 @@ class DoctorProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated,
-                          DoctorPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorExperienceEducationSerializer
 
     def get_queryset(self):
@@ -99,8 +96,7 @@ class DoctorEducationExperienceSettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
-    permission_classes = [IsAuthenticated,
-                          DoctorPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorAvailableHoursSerializerWithID
 
     @extend_schema(
@@ -134,8 +130,7 @@ class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
 
 
 class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated,
-                          DoctorPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorSpecialtySettingsSerializer
 
     def get_queryset(self, *args, **kwargs):
@@ -148,8 +143,7 @@ class DoctorSpecialtySettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated,
-                          DoctorPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorAccountSettingsSerializer
     queryset = DoctorInfo.objects.all()
 
@@ -160,8 +154,7 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class PatientProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated,
-                          PatientPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, PatientPermission, OwnProfilePermission]
     serializer_class = PatientProfileDetailsSerializer
     queryset = PatientInfo.objects.all()
 
@@ -172,8 +165,7 @@ class PatientProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
 
 
 class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated,
-                          DoctorPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorProfessionalProfileSerializer
     queryset = DoctorInfo.objects.all()
 
@@ -275,8 +267,7 @@ class DoctorReviewListCreateAPIView(CustomListCreateAPIView):
 
 class DoctorInsuranceAPIView(CustomRetrieveUpdateAPIView):
     serializer_class = DoctorAcceptedInsuranceSerializer
-    permission_classes = [IsAuthenticated,
-                          DoctorPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
 
     def get_queryset(self):
         return DoctorInfo.objects.filter(user=self.request.user)
@@ -287,8 +278,7 @@ class DoctorInsuranceAPIView(CustomRetrieveUpdateAPIView):
 
 class ClinicProfileAPIView(CustomRetrieveUpdateAPIView):
     serializer_class = ClinicProfileDetailsSerializer
-    permission_classes = [IsAuthenticated,
-                          ClinicPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, ClinicPermission, OwnProfilePermission]
 
     def get_queryset(self):
         return ClinicInfo.objects.filter(user=self.request.user)
@@ -299,8 +289,7 @@ class ClinicProfileAPIView(CustomRetrieveUpdateAPIView):
 
 class ClinicLicenseAPIView(CustomRetrieveUpdateAPIView):
     serializer_class = ClinicLicenseSerializer
-    permission_classes = [IsAuthenticated,
-                          ClinicPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, ClinicPermission, OwnProfilePermission]
 
     def get_queryset(self):
         return ClinicInfo.objects.filter(user=self.request.user)
@@ -311,8 +300,7 @@ class ClinicLicenseAPIView(CustomRetrieveUpdateAPIView):
 
 class PharmacyProfileAPIView(CustomRetrieveUpdateAPIView):
     serializer_class = PharmacyProfileSerializer
-    permission_classes = [IsAuthenticated,
-                          PharmacyPermission, OwnProfilePermission]
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
 
     def get_queryset(self):
         return PharmacyInfo.objects.filter(user=self.request.user)
