@@ -515,6 +515,12 @@ class PharmacyInfo(CoreModel):
         return self.pharmacyservice_set.all().values_list("service", flat=True)
 
     @property
+    def hours_of_operation(self):
+        return self.pharmacyavailablehours_set.all().values(
+            "day_of_week", "start_time", "end_time"
+        )
+
+    @property
     def license_file(self):
         domain = Site.objects.get_current().domain
         if self._license_file.name:

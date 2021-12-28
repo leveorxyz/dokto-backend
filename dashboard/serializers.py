@@ -619,4 +619,5 @@ class PharmacyProfileDetailsSerializer(ModelSerializer):
             "bio",
             "website",
             "services",
+            "hours_of_operation",
         ]
