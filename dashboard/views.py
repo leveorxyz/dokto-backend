@@ -39,6 +39,7 @@ from .serializers import (
     PatientAccountSettingsSerializer,
     DoctorProfessionalProfileSerializer,
     PharmacyAccountSettingsSerializer,
+    PharmacyAvailableHoursSettingsSerializer,
     PharmacyLicenseSerializer,
     PharmacyProfileDetailsSerializer,
     PharmacyProfileSettingsSerializer,
@@ -349,6 +350,19 @@ class PharmacyProfilePublicAPIView(CustomRetrieveAPIView):
 class PharmacyServiesSettingsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
     serializer_class = PharmacyServicesSettingsSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        return PharmacyInfo.objects.all()
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class PharmacyAvailableHoursSettingsAPIView(CustomRetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
+    serializer_class = PharmacyAvailableHoursSettingsSerializer
 
     def get_queryset(self, *args, **kwargs):
         return PharmacyInfo.objects.all()

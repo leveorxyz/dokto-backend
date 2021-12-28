@@ -27,6 +27,7 @@ from user.models import (
     DoctorEducation,
     DoctorExperience,
     PatientInfo,
+    PharmacyAvailableHours,
     PharmacyInfo,
     PharmacyService,
 )
@@ -647,3 +648,28 @@ class PharmacyServicesSettingsSerializer(FieldListUpdateSerializer):
     class Meta:
         model = DoctorInfo
         fields = ["services"]
+
+
+class PharmacyAvailableHoursSettingsSerializer(ModelSerializer):
+    hours_of_operation = ReadWriteSerializerMethodField()
+
+    def get_hours_of_operation(self, pharmacy_info: PharmacyInfo) -> list:
+        return pharmacy_info.hours_of_operation
+
+    def update(self, instance, validated_data):
+        PharmacyAvailableHours.objects.filter(pharmacy_info=instance).delete()
+        available_hour_data = validated_data.pop("hours_of_operation")
+        PharmacyAvailableHours.objects.bulk_create(
+            [
+                PharmacyAvailableHours(
+                    pharmacy_info=instance,
+                    **available_hour,
+                )
+                for available_hour in available_hour_data
+            ]
+        )
+        return instance
+
+    class Meta:
+        model = PharmacyInfo
+        fields = ["hours_of_operation"]

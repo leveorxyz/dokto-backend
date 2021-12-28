@@ -15,6 +15,7 @@ from .views import (
     DoctorAccountSettingsAPIView,
     PatientProfileDetailsAPIView,
     AccountSettingsSerializer,
+    PharmacyAvailableHoursSettingsAPIView,
     PharmacyLicenseAPIView,
     PharmacyProfileAPIView,
     PharmacyProfilePublicAPIView,
@@ -107,5 +108,10 @@ urlpatterns = [
         "pharmacy/services-settings/",
         PharmacyServiesSettingsAPIView.as_view(),
         name="pharmacy-services-settings",
+    ),
+    path(
+        "pharmacy/available-hours/",
+        PharmacyAvailableHoursSettingsAPIView.as_view(),
+        name="pharmacy-available-hours",
     ),
 ]
