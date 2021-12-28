@@ -511,6 +511,10 @@ class PharmacyInfo(CoreModel):
     license_expiration = models.DateField(blank=True, null=True)
 
     @property
+    def services(self):
+        return self.pharmacyservice_set.all().values_list("service", flat=True)
+
+    @property
     def license_file(self):
         domain = Site.objects.get_current().domain
         if self._license_file.name:

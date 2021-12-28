@@ -618,4 +618,5 @@ class PharmacyProfileDetailsSerializer(ModelSerializer):
             "address",
             "bio",
             "website",
+            "services",
         ]
