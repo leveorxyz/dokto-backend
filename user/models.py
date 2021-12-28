@@ -507,7 +507,12 @@ class PharmacyInfo(CoreModel):
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user", "notification_email", "bio"]
+        return super().get_hidden_fields() + [
+            "user",
+            "notification_email",
+            "bio",
+            "website",
+        ]
 
 
 class PatientInfo(CoreModel):
