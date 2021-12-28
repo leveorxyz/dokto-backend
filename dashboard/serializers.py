@@ -532,6 +532,7 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
             "state",
             "website",
         ]
+        extra_kwargs = {"website": {"required": False}}
 
 
 class ClinicLicenseSerializer(ModelSerializer):
@@ -540,3 +541,43 @@ class ClinicLicenseSerializer(ModelSerializer):
     class Meta:
         model = ClinicInfo
         fields = ["license_file", "license_expiration"]
+
+
+class PharmacyProfileSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
+    email = EmailField(source="user.email", read_only=True)
+    street = CharField(source="user.street", required=False)
+    city = CharField(source="user.city", required=False)
+    state = CharField(source="user.state", required=False)
+    zip_code = CharField(source="user.zip_code", required=False)
+
+    def update(self, instance: PharmacyInfo, validated_data: dict) -> PharmacyInfo:
+        if "user" in validated_data:
+            user_data = validated_data.pop("user")
+            instance.user.update_from_validated_data(user_data)
+            if "profile_photo" in user_data:
+                profile_photo_data = user_data.pop("profile_photo")
+                instance.user.profile_photo = profile_photo_data
+
+        instance.update_from_validated_data(validated_data)
+        return instance
+
+    class Meta:
+        model = PharmacyInfo
+        fields = [
+            "full_name",
+            "contact_no",
+            "profile_photo",
+            "email",
+            "street",
+            "city",
+            "zip_code",
+            "state",
+            "website",
+            "bio",
+        ]
+        extra_kwargs = {"website": {"required": False}, "bio": {"required": False}}
