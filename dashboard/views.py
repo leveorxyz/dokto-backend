@@ -331,3 +331,15 @@ class PharmacyProfileAPIView(CustomRetrieveAPIView):
 
     def get_object(self):
         return get_object_or_404(self.get_queryset())
+
+
+class PharmacyProfilePublicAPIView(CustomRetrieveAPIView):
+    serializer_class = PharmacyProfileDetailsSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return PharmacyInfo.objects.all()
+
+    def get_object(self):
+        username = self.kwargs.get("username")
+        return get_object_or_404(self.get_queryset(), username=username)
