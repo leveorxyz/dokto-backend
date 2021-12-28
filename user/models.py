@@ -545,6 +545,11 @@ class PharmacyInfo(CoreModel):
         ]
 
 
+class PharmacyService(CoreModel):
+    pharmacy_info = models.ForeignKey(PharmacyInfo, on_delete=models.CASCADE)
+    service = models.CharField(max_length=200)
+
+
 class PatientInfo(CoreModel):
     class Gender(models.TextChoices):
         MALE = "MALE", _("male")
