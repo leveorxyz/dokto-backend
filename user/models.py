@@ -540,6 +540,8 @@ class PharmacyInfo(CoreModel):
             "notification_email",
             "bio",
             "website",
+            "_license_file",
+            "license_expiration",
         ]
 
 
