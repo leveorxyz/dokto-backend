@@ -19,6 +19,7 @@ from .views import (
     PharmacyProfileAPIView,
     PharmacyProfilePublicAPIView,
     PharmacyProfileSettingsAPIView,
+    PharmacyServiesSettingsAPIView,
 )
 
 urlpatterns = [
@@ -101,5 +102,10 @@ urlpatterns = [
         "public/pharmacy/profile/<str:username>/",
         PharmacyProfilePublicAPIView.as_view(),
         name="public-pharmacy-profile",
+    ),
+    path(
+        "pharmacy/services-settings/",
+        PharmacyServiesSettingsAPIView.as_view(),
+        name="pharmacy-services-settings",
     ),
 ]

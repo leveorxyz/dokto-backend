@@ -28,6 +28,7 @@ from user.models import (
     DoctorExperience,
     PatientInfo,
     PharmacyInfo,
+    PharmacyService,
 )
 from user.serializers import (
     DoctorReviewSerializer,
@@ -621,3 +622,28 @@ class PharmacyProfileDetailsSerializer(ModelSerializer):
             "services",
             "hours_of_operation",
         ]
+
+
+class PharmacyServicesSettingsSerializer(FieldListUpdateSerializer):
+    """
+    Serializer for `dashboard > specialties and services` page.
+    """
+
+    services = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_services(self, pharmacy_info: PharmacyInfo) -> list:
+        return pharmacy_info.services
+
+    def update(self, pharmacy_info: PharmacyInfo, validated_data: dict) -> PharmacyInfo:
+        if "services" in validated_data:
+            _ = self.perform_list_field_update(
+                validated_data.pop("services"),
+                PharmacyService,
+                "service",
+                {"pharmacy_info": pharmacy_info},
+            )
+        return pharmacy_info
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["services"]
