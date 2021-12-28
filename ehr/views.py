@@ -1,3 +1,4 @@
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from django.conf import settings
 import json
@@ -321,6 +322,12 @@ class ChiefComplaintsAndHPIByEncounterIDView(CustomRetrieveAPIView):
         return ChiefComplaintsAndHPI.objects.filter(
             patient_encounter_id=patient_encounter_uuid
         )
+
+    def get_object(self):
+        main_query = self.get_queryset()
+        if len(main_query) != 0:
+            return main_query.order_by("-created_at").first()
+        raise get_object_or_404(main_query)
 
 
 class ChiefComplaintsAndHPIView(CustomCreateAPIView):

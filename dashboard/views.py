@@ -20,6 +20,7 @@ from core.permissions import (
     OwnProfilePermission,
     DoctorPermission,
     PatientPermission,
+    PharmacyPermission,
 )
 from user.models import ClinicInfo, DoctorInfo, PatientInfo, PharmacyInfo
 from user.serializers import DoctorReviewSerializer
@@ -38,6 +39,11 @@ from .serializers import (
     PatientAccountSettingsSerializer,
     DoctorProfessionalProfileSerializer,
     PharmacyAccountSettingsSerializer,
+    PharmacyAvailableHoursSettingsSerializer,
+    PharmacyLicenseSerializer,
+    PharmacyProfileDetailsSerializer,
+    PharmacyProfileSettingsSerializer,
+    PharmacyServicesSettingsSerializer,
 )
 from .filters import ReviewFilter
 
@@ -294,3 +300,74 @@ class ClinicLicenseAPIView(CustomRetrieveUpdateAPIView):
 
     def get_object(self):
         return get_object_or_404(self.get_queryset(), user=self.request.user)
+
+
+class PharmacyProfileSettingsAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = PharmacyProfileSettingsSerializer
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return PharmacyInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset())
+
+
+class PharmacyLicenseAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = PharmacyLicenseSerializer
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return PharmacyInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset())
+
+
+class PharmacyProfileAPIView(CustomRetrieveAPIView):
+    serializer_class = PharmacyProfileDetailsSerializer
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return PharmacyInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset())
+
+
+class PharmacyProfilePublicAPIView(CustomRetrieveAPIView):
+    serializer_class = PharmacyProfileDetailsSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return PharmacyInfo.objects.all()
+
+    def get_object(self):
+        username = self.kwargs.get("username")
+        return get_object_or_404(self.get_queryset(), username=username)
+
+
+class PharmacyServiesSettingsAPIView(CustomRetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
+    serializer_class = PharmacyServicesSettingsSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        return PharmacyInfo.objects.all()
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class PharmacyAvailableHoursSettingsAPIView(CustomRetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
+    serializer_class = PharmacyAvailableHoursSettingsSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        return PharmacyInfo.objects.all()
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj

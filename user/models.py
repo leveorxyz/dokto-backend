@@ -18,6 +18,7 @@ from core.literals import (
     DOCTOR_LICENSE_FILE_DIRECTORY,
     PATIENT_IDENTIFICATION_PHOTO_DIRECTORY,
     CLINIC_LICENSE_FILE_DIRECTORY,
+    PHARMACY_LICENSE_FILE_DIRECTORY,
 )
 from core.modelutils import send_mail
 from .utils import generate_file_and_name
@@ -502,10 +503,79 @@ class PharmacyInfo(CoreModel):
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
+    website = models.URLField(blank=True, null=True, default=None)
+    _license_file = models.FileField(
+        upload_to=PHARMACY_LICENSE_FILE_DIRECTORY, blank=True, null=True, default=None
+    )
+    license_expiration = models.DateField(blank=True, null=True)
+
+    @property
+    def services(self):
+        return self.pharmacyservice_set.all().values_list("service", flat=True)
+
+    @property
+    def hours_of_operation(self):
+        return self.pharmacyavailablehours_set.all().values(
+            "day_of_week", "start_time", "end_time"
+        )
+
+    @property
+    def license_file(self):
+        domain = Site.objects.get_current().domain
+        if self._license_file.name:
+            return domain + self._license_file.url
+
+    @license_file.setter
+    def license_file(self, license_file_data):
+        if self._license_file.name:
+            del self.license_file
+        file_name, file = generate_file_and_name(license_file_data, self.id)
+        self._license_file.save(file_name, file, save=True)
+        self.save()
+
+    @license_file.deleter
+    def license_file(self):
+        if self._license_file.name:
+            self._license_file.delete(save=True)
+
+    def delete(self, *args, **kwargs):
+        del self.license_file
+        return super(PharmacyInfo, self).delete(*args, **kwargs)
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user", "notification_email"]
+        return super().get_hidden_fields() + [
+            "user",
+            "notification_email",
+            "bio",
+            "website",
+            "_license_file",
+            "license_expiration",
+        ]
+
+
+class PharmacyService(CoreModel):
+    pharmacy_info = models.ForeignKey(PharmacyInfo, on_delete=models.CASCADE)
+    service = models.CharField(max_length=200)
+
+
+class PharmacyAvailableHours(CoreModel):
+    class DayOfWeek(models.TextChoices):
+        SUNDAY = "SUN", _("sunday")
+        MONDAY = "MON", _("monday")
+        TUESDAY = "TUE", _("tuesday")
+        WEDNESDAY = "WED", _("wednesday")
+        THURSDAY = "THU", _("thursday")
+        FRIDAY = "FRI", _("friday")
+        SATURDAY = "SAT", _("saturday")
+
+    pharmacy_info = models.ForeignKey(PharmacyInfo, on_delete=models.CASCADE)
+    day_of_week = models.CharField(
+        max_length=3, choices=DayOfWeek.choices, blank=True, null=True
+    )
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
 
 
 class PatientInfo(CoreModel):

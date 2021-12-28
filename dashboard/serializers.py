@@ -27,7 +27,9 @@ from user.models import (
     DoctorEducation,
     DoctorExperience,
     PatientInfo,
+    PharmacyAvailableHours,
     PharmacyInfo,
+    PharmacyService,
 )
 from user.serializers import (
     DoctorReviewSerializer,
@@ -532,6 +534,7 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
             "state",
             "website",
         ]
+        extra_kwargs = {"website": {"required": False}}
 
 
 class ClinicLicenseSerializer(ModelSerializer):
@@ -540,3 +543,133 @@ class ClinicLicenseSerializer(ModelSerializer):
     class Meta:
         model = ClinicInfo
         fields = ["license_file", "license_expiration"]
+
+
+class PharmacyProfileSettingsSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
+    email = EmailField(source="user.email", read_only=True)
+    street = CharField(source="user.street", required=False)
+    city = CharField(source="user.city", required=False)
+    state = CharField(source="user.state", required=False)
+    zip_code = CharField(source="user.zip_code", required=False)
+
+    def update(self, instance: PharmacyInfo, validated_data: dict) -> PharmacyInfo:
+        if "user" in validated_data:
+            user_data = validated_data.pop("user")
+            instance.user.update_from_validated_data(user_data)
+            if "profile_photo" in user_data:
+                profile_photo_data = user_data.pop("profile_photo")
+                instance.user.profile_photo = profile_photo_data
+
+        instance.update_from_validated_data(validated_data)
+        return instance
+
+    class Meta:
+        model = PharmacyInfo
+        fields = [
+            "full_name",
+            "contact_no",
+            "profile_photo",
+            "email",
+            "street",
+            "city",
+            "zip_code",
+            "state",
+            "website",
+            "bio",
+        ]
+        extra_kwargs = {"website": {"required": False}, "bio": {"required": False}}
+
+
+class PharmacyLicenseSerializer(ModelSerializer):
+    license_file = CharField(required=False, allow_null=True)
+
+    class Meta:
+        model = PharmacyInfo
+        fields = ["license_file", "license_expiration"]
+
+
+class PharmacyProfileDetailsSerializer(ModelSerializer):
+    profile_photo = CharField(source="user.profile_photo")
+    full_name = CharField(source="user.full_name")
+    contact_no = CharField(source="user.contact_no")
+    email = EmailField(source="user.email")
+    address = SerializerMethodField()
+
+    def get_address(self, obj: PharmacyInfo) -> str:
+        address_fields = ["street", "city", "state", "zip_code"]
+        return ",".join(
+            [
+                getattr(obj.user, field)
+                for field in address_fields
+                if getattr(obj.user, field)
+            ]
+        )
+
+    class Meta:
+        model = PharmacyInfo
+        fields = [
+            "profile_photo",
+            "full_name",
+            "contact_no",
+            "email",
+            "address",
+            "bio",
+            "website",
+            "services",
+            "hours_of_operation",
+        ]
+
+
+class PharmacyServicesSettingsSerializer(FieldListUpdateSerializer):
+    """
+    Serializer for `dashboard > specialties and services` page.
+    """
+
+    services = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_services(self, pharmacy_info: PharmacyInfo) -> list:
+        return pharmacy_info.services
+
+    def update(self, pharmacy_info: PharmacyInfo, validated_data: dict) -> PharmacyInfo:
+        if "services" in validated_data:
+            _ = self.perform_list_field_update(
+                validated_data.pop("services"),
+                PharmacyService,
+                "service",
+                {"pharmacy_info": pharmacy_info},
+            )
+        return pharmacy_info
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["services"]
+
+
+class PharmacyAvailableHoursSettingsSerializer(ModelSerializer):
+    hours_of_operation = ReadWriteSerializerMethodField()
+
+    def get_hours_of_operation(self, pharmacy_info: PharmacyInfo) -> list:
+        return pharmacy_info.hours_of_operation
+
+    def update(self, instance, validated_data):
+        PharmacyAvailableHours.objects.filter(pharmacy_info=instance).delete()
+        available_hour_data = validated_data.pop("hours_of_operation")
+        PharmacyAvailableHours.objects.bulk_create(
+            [
+                PharmacyAvailableHours(
+                    pharmacy_info=instance,
+                    **available_hour,
+                )
+                for available_hour in available_hour_data
+            ]
+        )
+        return instance
+
+    class Meta:
+        model = PharmacyInfo
+        fields = ["hours_of_operation"]
