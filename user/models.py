@@ -554,6 +554,24 @@ class PharmacyService(CoreModel):
     service = models.CharField(max_length=200)
 
 
+class PharmacyAvailableHours(CoreModel):
+    class DayOfWeek(models.TextChoices):
+        SUNDAY = "SUN", _("sunday")
+        MONDAY = "MON", _("monday")
+        TUESDAY = "TUE", _("tuesday")
+        WEDNESDAY = "WED", _("wednesday")
+        THURSDAY = "THU", _("thursday")
+        FRIDAY = "FRI", _("friday")
+        SATURDAY = "SAT", _("saturday")
+
+    pharmacy_info = models.ForeignKey(PharmacyInfo, on_delete=models.CASCADE)
+    day_of_week = models.CharField(
+        max_length=3, choices=DayOfWeek.choices, blank=True, null=True
+    )
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+
+
 class PatientInfo(CoreModel):
     class Gender(models.TextChoices):
         MALE = "MALE", _("male")
