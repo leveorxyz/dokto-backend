@@ -581,3 +581,11 @@ class PharmacyProfileSerializer(ModelSerializer):
             "bio",
         ]
         extra_kwargs = {"website": {"required": False}, "bio": {"required": False}}
+
+
+class PharmacyLicenseSerializer(ModelSerializer):
+    license_file = CharField(required=False, allow_null=True)
+
+    class Meta:
+        model = PharmacyInfo
+        fields = ["license_file", "license_expiration"]
