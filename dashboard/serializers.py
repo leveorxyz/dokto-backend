@@ -543,7 +543,7 @@ class ClinicLicenseSerializer(ModelSerializer):
         fields = ["license_file", "license_expiration"]
 
 
-class PharmacyProfileSerializer(ModelSerializer):
+class PharmacyProfileSettingsSerializer(ModelSerializer):
     full_name = CharField(source="user.full_name", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
@@ -589,3 +589,33 @@ class PharmacyLicenseSerializer(ModelSerializer):
     class Meta:
         model = PharmacyInfo
         fields = ["license_file", "license_expiration"]
+
+
+class PharmacyProfileDetailsSerializer(ModelSerializer):
+    profile_photo = CharField(source="user.profile_photo")
+    full_name = CharField(source="user.full_name")
+    contact_no = CharField(source="user.contact_no")
+    email = EmailField(source="user.email")
+    address = SerializerMethodField()
+
+    def get_address(self, obj: PharmacyInfo) -> str:
+        address_fields = ["street", "city", "state", "zip_code"]
+        return ",".join(
+            [
+                getattr(obj.user, field)
+                for field in address_fields
+                if getattr(obj.user, field)
+            ]
+        )
+
+    class Meta:
+        model = PharmacyInfo
+        fields = [
+            "profile_photo",
+            "full_name",
+            "contact_no",
+            "email",
+            "address",
+            "bio",
+            "website",
+        ]
