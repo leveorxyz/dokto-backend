@@ -15,6 +15,7 @@ from .views import (
     DoctorAccountSettingsAPIView,
     PatientProfileDetailsAPIView,
     AccountSettingsSerializer,
+    PharmacyLicenseAPIView,
     PharmacyProfileAPIView,
 )
 
@@ -87,5 +88,8 @@ urlpatterns = [
         "pharmacy/profile-settings/",
         PharmacyProfileAPIView.as_view(),
         name="pharmacy-profile-settings",
+    ),
+    path(
+        "pharmacy/license/", PharmacyLicenseAPIView.as_view(), name="pharmacy-license"
     ),
 ]

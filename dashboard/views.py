@@ -39,6 +39,7 @@ from .serializers import (
     PatientAccountSettingsSerializer,
     DoctorProfessionalProfileSerializer,
     PharmacyAccountSettingsSerializer,
+    PharmacyLicenseSerializer,
     PharmacyProfileSerializer,
 )
 from .filters import ReviewFilter
@@ -300,6 +301,17 @@ class ClinicLicenseAPIView(CustomRetrieveUpdateAPIView):
 
 class PharmacyProfileAPIView(CustomRetrieveUpdateAPIView):
     serializer_class = PharmacyProfileSerializer
+    permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
+
+    def get_queryset(self):
+        return PharmacyInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset())
+
+
+class PharmacyLicenseAPIView(CustomRetrieveUpdateAPIView):
+    serializer_class = PharmacyLicenseSerializer
     permission_classes = [IsAuthenticated, PharmacyPermission, OwnProfilePermission]
 
     def get_queryset(self):
