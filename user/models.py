@@ -502,10 +502,11 @@ class PharmacyInfo(CoreModel):
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user", "notification_email"]
+        return super().get_hidden_fields() + ["user", "notification_email", "bio"]
 
 
 class PatientInfo(CoreModel):
