@@ -229,7 +229,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         )
         extra_fields = list(
             set(field.name for field in DoctorInfo._meta.fields)
-            - set(DoctorInfo.get_hidden_fields() + ["profession"])
+            - set(DoctorInfo.get_hidden_fields())
         )
         fields = (
             main_fields

@@ -279,7 +279,6 @@ class DoctorInfo(CoreModel):
     reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
-    profession = models.CharField(max_length=100, blank=True, null=True, default=None)
     license_expiration = models.DateField(blank=True, null=True)
 
     @classmethod
