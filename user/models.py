@@ -60,6 +60,7 @@ class User(AbstractUser, CoreModel):
     state = models.CharField(_("state"), max_length=50, blank=True, null=True)
     city = models.CharField(_("city"), max_length=50, blank=True, null=True)
     zip_code = models.CharField(_("zip code"), max_length=15, blank=True, null=True)
+    country = models.CharField(max_length=50, blank=True, null=True, default=None)
     contact_no = models.CharField(_("contact no"), max_length=20, blank=True, null=True)
     _profile_photo = models.ImageField(
         upload_to=PROFILE_PHOTO_DIRECTORY,
@@ -256,7 +257,6 @@ class DoctorInfo(CoreModel):
         User, on_delete=models.CASCADE, related_name="doctor_info"
     )
     date_of_birth = models.DateField(blank=True, null=True)
-    country = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(
         max_length=30, choices=Gender.choices, blank=True, null=True
     )
