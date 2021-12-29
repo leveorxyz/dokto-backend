@@ -25,6 +25,7 @@ from user.models import (
     DoctorLanguage,
     DoctorEducation,
     DoctorExperience,
+    DoctorService,
     PatientInfo,
     PharmacyAvailableHours,
     PharmacyInfo,
@@ -336,6 +337,27 @@ class DoctorAccountSettingsSerializer(AbstractAccountSettingsSerializer):
     class Meta:
         model = DoctorInfo
         fields = AbstractAccountSettingsSerializer.Meta.fields
+
+
+class DoctorServiceSettingsSerializer(ModelSerializer):
+    services = ReadWriteSerializerMethodField(required=True)
+
+    def get_services(self, doctor_info: DoctorInfo) -> list:
+        service_data = {}
+        database_service_raw_data = DoctorService.objects.filter(
+            doctor_info=doctor_info
+        ).values("profession", "service", "price")
+        for service in database_service_raw_data:
+            if service["profession"] not in service_data:
+                service_data[service["profession"]] = []
+            service_data[service["profession"]].append(
+                {"service": service["service"], "price": service["price"]}
+            )
+        return service_data
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["services"]
 
 
 class PatientProfileDetailsSerializer(ModelSerializer):

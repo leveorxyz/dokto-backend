@@ -34,6 +34,7 @@ from .serializers import (
     DoctorExperienceEducationSerializer,
     DoctorAvailableHoursSerializerWithID,
     DoctorAccountSettingsSerializer,
+    DoctorServiceSettingsSerializer,
     PatientProfileDetailsSerializer,
     PatientAccountSettingsSerializer,
     DoctorProfessionalProfileSerializer,
@@ -157,6 +158,17 @@ class PatientProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
 class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorProfessionalProfileSerializer
+    queryset = DoctorInfo.objects.all()
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset(), user=self.request.user)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class DoctorServiceSettingsAPIView(CustomRetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+    serializer_class = DoctorServiceSettingsSerializer
     queryset = DoctorInfo.objects.all()
 
     def get_object(self):
