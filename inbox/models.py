@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 
 from core.models import CoreModel
+from core.literals import CONVERSATION_UPLOAD_FILE_DIREECTORY
 from user.models import User
 
 # Create your models here.
@@ -36,3 +37,9 @@ class InboxMessage(CoreModel):
     message = models.TextField(max_length=512, blank=True, null=True, default=None)
     subject = models.CharField(blank=True, null=True, max_length=128, default=None)
     read_status = models.BooleanField(default=False)
+    uploaded_file = models.FileField(
+        upload_to=CONVERSATION_UPLOAD_FILE_DIREECTORY, null=True, blank=True
+    )
+    uploaded_file_mimetype = models.CharField(
+        max_length=20, null=True, blank=True, default=None
+    )
