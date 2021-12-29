@@ -1,4 +1,5 @@
 from django.db.models import Sum
+from drf_spectacular.utils import OpenApiExample, extend_schema_serializer
 from rest_framework.fields import DateField, ListField
 from rest_framework.serializers import (
     ModelSerializer,
@@ -339,6 +340,30 @@ class DoctorAccountSettingsSerializer(AbstractAccountSettingsSerializer):
         fields = AbstractAccountSettingsSerializer.Meta.fields
 
 
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            name="example 1",
+            value={
+                "services": {
+                    "Cardiologist": [
+                        {
+                            "service": "string",
+                            "price": 0,
+                        }
+                    ],
+                    "Chiropractor": [
+                        {
+                            "service": "string",
+                            "price": 0,
+                        }
+                    ],
+                }
+            },
+            request_only=True,
+        )
+    ]
+)
 class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
     services = ReadWriteSerializerMethodField(required=True)
 

@@ -6,7 +6,12 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from core.serializers import AbstractAccountSettingsSerializer
 
 from core.views import (
@@ -170,6 +175,102 @@ class DoctorServiceSettingsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorServiceSettingsSerializer
     queryset = DoctorInfo.objects.all()
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="Successful",
+                examples=[
+                    OpenApiExample(
+                        name="example 1",
+                        value={
+                            "services": {
+                                "Cardiologist": [
+                                    {
+                                        "service": "string",
+                                        "price": 0,
+                                    }
+                                ],
+                                "Chiropractor": [
+                                    {
+                                        "service": "string",
+                                        "price": 0,
+                                    }
+                                ],
+                            }
+                        },
+                    )
+                ],
+                response=OpenApiTypes.ANY,
+            )
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="Successful",
+                examples=[
+                    OpenApiExample(
+                        name="example 1",
+                        value={
+                            "services": {
+                                "Cardiologist": [
+                                    {
+                                        "service": "string",
+                                        "price": 0,
+                                    }
+                                ],
+                                "Chiropractor": [
+                                    {
+                                        "service": "string",
+                                        "price": 0,
+                                    }
+                                ],
+                            }
+                        },
+                    )
+                ],
+                response=OpenApiTypes.ANY,
+            )
+        },
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="Successful",
+                examples=[
+                    OpenApiExample(
+                        name="example 1",
+                        value={
+                            "services": {
+                                "Cardiologist": [
+                                    {
+                                        "service": "string",
+                                        "price": 0,
+                                    }
+                                ],
+                                "Chiropractor": [
+                                    {
+                                        "service": "string",
+                                        "price": 0,
+                                    }
+                                ],
+                            }
+                        },
+                    )
+                ],
+                response=OpenApiTypes.ANY,
+            )
+        },
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
 
     def get_object(self):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)
