@@ -14,6 +14,9 @@ class InboxChannel(CoreModel):
     second_user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="second_user"
     )
+    encounter_reason = models.CharField(
+        max_length=255, null=True, blank=True, default=""
+    )
 
     def get_unread_msg_count(self, user: User) -> int:
         return self.message.filter(~Q(sender=user) & Q(read_status=False)).count()
