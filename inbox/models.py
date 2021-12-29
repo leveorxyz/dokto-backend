@@ -18,12 +18,6 @@ class InboxChannel(CoreModel):
     encounter_reason = models.CharField(
         max_length=255, null=True, blank=True, default=""
     )
-    uploaded_file = models.FileField(
-        upload_to=CONVERSATION_UPLOAD_FILE_DIREECTORY, null=True, blank=True
-    )
-    uploaded_file_mimetype = models.CharField(
-        max_length=20, null=True, blank=True, default=None
-    )
 
     def get_unread_msg_count(self, user: User) -> int:
         return self.message.filter(~Q(sender=user) & Q(read_status=False)).count()
@@ -43,3 +37,9 @@ class InboxMessage(CoreModel):
     message = models.TextField(max_length=512, blank=True, null=True, default=None)
     subject = models.CharField(blank=True, null=True, max_length=128, default=None)
     read_status = models.BooleanField(default=False)
+    uploaded_file = models.FileField(
+        upload_to=CONVERSATION_UPLOAD_FILE_DIREECTORY, null=True, blank=True
+    )
+    uploaded_file_mimetype = models.CharField(
+        max_length=20, null=True, blank=True, default=None
+    )
