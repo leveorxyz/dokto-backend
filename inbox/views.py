@@ -26,6 +26,40 @@ from .serializers import (
 class InboxChannelListView(CustomListAPIView):
     serializer_class = InboxChannelSerializer
 
+    @extend_schema(
+        request=InboxChannelPostSchemaSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Successfully created channel",
+                examples=[
+                    OpenApiExample(
+                        name="example 1",
+                        value=[
+                            {
+                                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                "first_user": {
+                                    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                    "full_name": "string",
+                                    "profile_photo": "string",
+                                },
+                                "second_user": {
+                                    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                    "full_name": "string",
+                                    "profile_photo": "string",
+                                },
+                                "encounter_reason": "string",
+                                "unread_count": 0,
+                            }
+                        ],
+                    )
+                ],
+                response=OpenApiTypes.ANY,
+            )
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
     def get_queryset(self):
         user = self.request.user
         return InboxChannel.objects.filter(Q(first_user=user) | Q(second_user=user))
