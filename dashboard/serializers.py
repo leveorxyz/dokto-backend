@@ -238,10 +238,6 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
             "end_time": {"required": False},
         }
 
-    class Meta:
-        model = DoctorInfo
-        fields = ["specialty"]
-
 
 class DoctorProfileSerializer(ModelSerializer):
     """
@@ -276,7 +272,6 @@ class DoctorProfileSerializer(ModelSerializer):
         allow_null=True,
         source="doctorexperience_set",
     )
-    specialty = SerializerMethodField(required=False, allow_null=True)
     available_hours = DoctorAvailableHoursSerializerWithID(
         many=True,
         required=False,
@@ -299,9 +294,6 @@ class DoctorProfileSerializer(ModelSerializer):
     def get_qualification_suffix(self, doctor_info: DoctorInfo) -> str:
         courses = doctor_info.doctoreducation_set.all().values_list("course", flat=True)
         return ", ".join(courses)
-
-    def get_specialty(self, doctor_info: DoctorInfo) -> list:
-        return doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
 
     class Meta:
         model = DoctorInfo
@@ -335,7 +327,6 @@ class DoctorProfileSerializer(ModelSerializer):
             "accepted_insurance",
             "education",
             "experience",
-            "specialty",
             "available_hours",
             "review",
         ]
