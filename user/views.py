@@ -162,15 +162,15 @@ class DoctorsListView(CustomListAPIView):
     queryset = DoctorInfo.objects.all()
     search_fields = ["user__full_name", "username"]
 
-    def filter_queryset(self, queryset):
-        filtered_queryset = super().filter_queryset(queryset)
-        if "search" in self.request.query_params:
-            specialty_query = DoctorSpecialty.objects.filter(
-                specialty__icontains=self.request.query_params["search"]
-            ).values_list("doctor_info_id", flat=True)
-            specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
-            return (filtered_queryset | specialty_queryset).distinct()
-        return filtered_queryset
+    # def filter_queryset(self, queryset):
+    #     filtered_queryset = super().filter_queryset(queryset)
+    #     if "search" in self.request.query_params:
+    #         specialty_query = DoctorSpecialty.objects.filter(
+    #             specialty__icontains=self.request.query_params["search"]
+    #         ).values_list("doctor_info_id", flat=True)
+    #         specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
+    #         return (filtered_queryset | specialty_queryset).distinct()
+    #     return filtered_queryset
 
 
 class PasswordResetEmailView(CustomAPIView):
