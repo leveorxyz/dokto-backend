@@ -10,3 +10,11 @@ class HospitalTeam(CoreModel):
     clinic = models.ForeignKey(ClinicInfo, on_delete=models.CASCADE)
     doctor = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
     profession = models.CharField(max_length=100, null=True, blank=True)
+
+
+class HospitalService(CoreModel):
+    clinic = models.ForeignKey(ClinicInfo, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    profession = models.CharField(max_length=100, null=True, blank=True)
+    service = models.CharField(max_length=100, null=True, blank=True)
+    price = models.CharField(max_length=100, null=True, blank=True)
