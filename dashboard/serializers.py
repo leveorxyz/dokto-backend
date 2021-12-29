@@ -756,6 +756,7 @@ class ClinicTeamListSerializer(ModelSerializer):
     doctor_rating = FloatField(source="doctor.rating")
     doctor_review_count = IntegerField(source="doctor.review_count")
     doctor_profile_photo = CharField(source="doctor.user.profile_photo")
+    doctor_username = CharField(source="doctor.username")
 
     class Meta:
         model = HospitalTeam
@@ -766,6 +767,7 @@ class ClinicTeamListSerializer(ModelSerializer):
             "doctor_review_count",
             "profession",
             "doctor_profile_photo",
+            "doctor_username",
         ]
         extra_kwargs = {field: {"read_only": True} for field in fields}
 
