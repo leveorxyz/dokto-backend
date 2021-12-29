@@ -1,7 +1,9 @@
 from django.db import models
 
 from core.models import CoreModel
-from user.models import DoctorInfo, PatientInfo
+from user.models import DoctorInfo, PatientInfo, DoctorSpecialty
+
+
 
 # Create your models here.
 
@@ -23,8 +25,14 @@ class Appointment(CoreModel):
     end_time = models.TimeField()
     number_of_patients = models.IntegerField(default=0)
     payment_status = models.BooleanField(default=False)
-    transaction_id = models.CharField(max_length=100, null=True)
+    payment = models.ForeignKey('accounting.Payment', null=True, on_delete=models.CASCADE, related_name='paymentt')
     patient_status = models.CharField(max_length=50, null=True)
+    specialty = models.ForeignKey(DoctorSpecialty, on_delete=models.CASCADE)
+
 
     def __str__(self):
-        return self.id
+        return str(self.id)
+
+    def __repr__(self):
+        return str(self.id)
+

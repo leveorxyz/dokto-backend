@@ -375,6 +375,12 @@ class DoctorExperience(CoreModel):
     job_description = models.TextField(max_length=200, blank=True, null=True)
 
 
+class DoctorSpecialty(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    specialty = models.CharField(max_length=50, null=True)
+    price = models.IntegerField()
+
+
 class DoctorAvailableHours(CoreModel):
     class DayOfWeek(models.TextChoices):
         SUNDAY = "SUN", _("sunday")
