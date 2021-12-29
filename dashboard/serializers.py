@@ -1,7 +1,6 @@
 from django.db.models import Sum
-from rest_framework.fields import DateField, ListField, URLField
+from rest_framework.fields import DateField, ListField
 from rest_framework.serializers import (
-    Serializer,
     ModelSerializer,
     SerializerMethodField,
     CharField,
@@ -25,6 +24,7 @@ from user.models import (
     DoctorLanguage,
     DoctorEducation,
     DoctorExperience,
+    DoctorProfession,
     DoctorService,
     PatientInfo,
     PharmacyAvailableHours,
@@ -339,7 +339,7 @@ class DoctorAccountSettingsSerializer(AbstractAccountSettingsSerializer):
         fields = AbstractAccountSettingsSerializer.Meta.fields
 
 
-class DoctorServiceSettingsSerializer(ModelSerializer):
+class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
     services = ReadWriteSerializerMethodField(required=True)
 
     def get_services(self, doctor_info: DoctorInfo) -> list:
@@ -354,6 +354,45 @@ class DoctorServiceSettingsSerializer(ModelSerializer):
                 {"service": service["service"], "price": service["price"]}
             )
         return service_data
+
+    def update(self, instance, validated_data):
+        services = validated_data.pop("services", {})
+        updated_profession_data = list(services.keys())
+        self.perform_list_field_update(
+            updated_profession_data,
+            DoctorProfession,
+            "profession",
+            {"doctor_info": instance},
+        )
+        old_service_data = set(
+            DoctorService.objects.filter(doctor_info=instance).values_list(
+                "profession", "service", "price"
+            )
+        )
+        new_service_data = []
+        for k, v in services.items():
+            for service in v:
+                new_service_data.append((k, service["service"], service["price"]))
+        new_service_data = set(new_service_data)
+        added_items = new_service_data - old_service_data
+        deleted_items = old_service_data - new_service_data
+        for profession, service, price in added_items:
+            DoctorService.objects.create(
+                doctor_info=instance,
+                profession=profession,
+                service=service,
+                price=price,
+            )
+
+        for profession, service, price in deleted_items:
+            DoctorService.objects.filter(
+                doctor_info=instance,
+                profession=profession,
+                service=service,
+                price=price,
+            ).delete()
+
+        return instance
 
     class Meta:
         model = DoctorInfo
