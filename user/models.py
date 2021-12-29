@@ -279,7 +279,6 @@ class DoctorInfo(CoreModel):
     reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
-    profession = models.CharField(max_length=100, blank=True, null=True, default=None)
     license_expiration = models.DateField(blank=True, null=True)
 
     @classmethod
@@ -365,11 +364,6 @@ class DoctorExperience(CoreModel):
     job_description = models.TextField(max_length=200, blank=True, null=True)
 
 
-class DoctorSpecialty(CoreModel):
-    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
-    specialty = models.CharField(max_length=50)
-
-
 class DoctorAvailableHours(CoreModel):
     class DayOfWeek(models.TextChoices):
         SUNDAY = "SUN", _("sunday")
@@ -398,6 +392,18 @@ class DoctorReview(CoreModel):
 class DoctorAcceptedInsurance(CoreModel):
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
     insurance = models.CharField(max_length=50)
+
+
+class DoctorProfession(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    profession = models.CharField(max_length=100)
+
+
+class DoctorService(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    profession = models.CharField(max_length=100)
+    service = models.CharField(max_length=100)
+    price = models.CharField(max_length=50)
 
 
 class ClinicInfo(CoreModel):

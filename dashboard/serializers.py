@@ -1,7 +1,7 @@
 from django.db.models import Sum
-from rest_framework.fields import DateField, ListField, URLField
+from drf_spectacular.utils import OpenApiExample, extend_schema_serializer
+from rest_framework.fields import DateField, ListField
 from rest_framework.serializers import (
-    Serializer,
     ModelSerializer,
     SerializerMethodField,
     CharField,
@@ -23,9 +23,10 @@ from user.models import (
     DoctorAvailableHours,
     DoctorInfo,
     DoctorLanguage,
-    DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
+    DoctorProfession,
+    DoctorService,
     PatientInfo,
     PharmacyAvailableHours,
     PharmacyInfo,
@@ -240,33 +241,6 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
         }
 
 
-class DoctorSpecialtySettingsSerializer(FieldListUpdateSerializer):
-    """
-    Serializer for `dashboard > specialties and services` page.
-    """
-
-    specialty = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
-    def get_specialty(self, doctor_info: DoctorInfo) -> list:
-        return list(
-            doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
-        )
-
-    def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
-        if "specialty" in validated_data:
-            _ = self.perform_list_field_update(
-                validated_data.pop("specialty"),
-                DoctorSpecialty,
-                "specialty",
-                {"doctor_info": doctor_info},
-            )
-        return doctor_info
-
-    class Meta:
-        model = DoctorInfo
-        fields = ["specialty"]
-
-
 class DoctorProfileSerializer(ModelSerializer):
     """
     Serializer for `dashboard > see my profile` page
@@ -300,7 +274,6 @@ class DoctorProfileSerializer(ModelSerializer):
         allow_null=True,
         source="doctorexperience_set",
     )
-    specialty = SerializerMethodField(required=False, allow_null=True)
     available_hours = DoctorAvailableHoursSerializerWithID(
         many=True,
         required=False,
@@ -323,9 +296,6 @@ class DoctorProfileSerializer(ModelSerializer):
     def get_qualification_suffix(self, doctor_info: DoctorInfo) -> str:
         courses = doctor_info.doctoreducation_set.all().values_list("course", flat=True)
         return ", ".join(courses)
-
-    def get_specialty(self, doctor_info: DoctorInfo) -> list:
-        return doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
 
     class Meta:
         model = DoctorInfo
@@ -359,7 +329,6 @@ class DoctorProfileSerializer(ModelSerializer):
             "accepted_insurance",
             "education",
             "experience",
-            "specialty",
             "available_hours",
             "review",
         ]
@@ -369,6 +338,90 @@ class DoctorAccountSettingsSerializer(AbstractAccountSettingsSerializer):
     class Meta:
         model = DoctorInfo
         fields = AbstractAccountSettingsSerializer.Meta.fields
+
+
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            name="example 1",
+            value={
+                "services": {
+                    "Cardiologist": [
+                        {
+                            "service": "string",
+                            "price": 0,
+                        }
+                    ],
+                    "Chiropractor": [
+                        {
+                            "service": "string",
+                            "price": 0,
+                        }
+                    ],
+                }
+            },
+            request_only=True,
+        )
+    ]
+)
+class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
+    services = ReadWriteSerializerMethodField(required=True)
+
+    def get_services(self, doctor_info: DoctorInfo) -> list:
+        service_data = {}
+        database_service_raw_data = DoctorService.objects.filter(
+            doctor_info=doctor_info
+        ).values("profession", "service", "price")
+        for service in database_service_raw_data:
+            if service["profession"] not in service_data:
+                service_data[service["profession"]] = []
+            service_data[service["profession"]].append(
+                {"service": service["service"], "price": service["price"]}
+            )
+        return service_data
+
+    def update(self, instance, validated_data):
+        services = validated_data.pop("services", {})
+        updated_profession_data = list(services.keys())
+        self.perform_list_field_update(
+            updated_profession_data,
+            DoctorProfession,
+            "profession",
+            {"doctor_info": instance},
+        )
+        old_service_data = set(
+            DoctorService.objects.filter(doctor_info=instance).values_list(
+                "profession", "service", "price"
+            )
+        )
+        new_service_data = []
+        for k, v in services.items():
+            for service in v:
+                new_service_data.append((k, service["service"], service["price"]))
+        new_service_data = set(new_service_data)
+        added_items = new_service_data - old_service_data
+        deleted_items = old_service_data - new_service_data
+        for profession, service, price in added_items:
+            DoctorService.objects.create(
+                doctor_info=instance,
+                profession=profession,
+                service=service,
+                price=price,
+            )
+
+        for profession, service, price in deleted_items:
+            DoctorService.objects.filter(
+                doctor_info=instance,
+                profession=profession,
+                service=service,
+                price=price,
+            ).delete()
+
+        return instance
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["services"]
 
 
 class PatientProfileDetailsSerializer(ModelSerializer):

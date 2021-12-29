@@ -19,12 +19,12 @@ from core.classes import ExpiringActivationTokenGenerator
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
+    DoctorProfession,
     DoctorReview,
     DoctorAcceptedInsurance,
     User,
     DoctorInfo,
     DoctorExperience,
-    DoctorSpecialty,
     DoctorLanguage,
     ClinicInfo,
     PharmacyInfo,
@@ -85,16 +85,6 @@ class DoctorExpericenceSerializer(ModelSerializer):
         extra_kwargs = {"doctor_info": {"required": False}}
 
 
-class DoctorSpecialtySerializer(ModelSerializer):
-    class Meta:
-        model = DoctorSpecialty
-        fields = list(
-            set(field.name for field in model._meta.fields)
-            - set(model.get_hidden_fields())
-        )
-        extra_kwargs = {"doctor_info": {"required": False}}
-
-
 class DoctorAvailableHoursSerializer(ModelSerializer):
     class Meta:
         model = DoctorAvailableHours
@@ -140,6 +130,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     accepted_insurance = ListField(child=CharField(), required=False, write_only=True)
     accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
     license_expiration = DateField(required=True, write_only=True)
+    profession = ListField(child=CharField(), write_only=True, required=False)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
@@ -181,8 +172,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
         experience_data = []
         insurance_data = []
+        profession_data = []
         if "experience" in validated_data:
             experience_data = validated_data.pop("experience")
+        if "profession" in validated_data:
+            profession_data = validated_data.pop("profession")
         if "accepted_insurance" in validated_data:
             insurance_data = validated_data.pop("accepted_insurance")
         else:
@@ -227,6 +221,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "insurance",
             doctor_info=doctor_info,
         )
+        self.from_list(
+            profession_data, DoctorProfession, "profession", doctor_info=doctor_info
+        )
 
         user.send_email_verification_mail()
 
@@ -240,7 +237,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         )
         extra_fields = list(
             set(field.name for field in DoctorInfo._meta.fields)
-            - set(DoctorInfo.get_hidden_fields() + ["profession"])
+            - set(DoctorInfo.get_hidden_fields())
         )
         fields = (
             main_fields
@@ -256,6 +253,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 "education",
                 "experience",
                 "accept_all_insurance",
+                "profession",
             ]
         )
 
