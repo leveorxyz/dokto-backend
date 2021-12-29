@@ -300,6 +300,7 @@ class DoctorInfo(CoreModel):
         ]
         return rating if rating else 0
 
+    @property
     def review_count(self):
         return len(self.doctorreview_set.all())
 

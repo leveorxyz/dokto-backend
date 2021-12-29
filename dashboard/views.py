@@ -15,6 +15,8 @@ from drf_spectacular.utils import (
 from core.serializers import AbstractAccountSettingsSerializer
 
 from core.views import (
+    CustomAPIView,
+    CustomListAPIView,
     CustomListCreateAPIView,
     CustomRetrieveAPIView,
     CustomRetrieveUpdateAPIView,
@@ -29,10 +31,13 @@ from core.permissions import (
 )
 from user.models import ClinicInfo, DoctorInfo, PatientInfo, PharmacyInfo
 from user.serializers import DoctorReviewSerializer
+from .models import HospitalTeam, HospitalService
 from .serializers import (
     ClinicAccountSettingsSerializer,
     ClinicProfileDetailsSerializer,
     ClinicLicenseSerializer,
+    ClinicServiceListSerializer,
+    ClinicTeamListSerializer,
     DoctorAcceptedInsuranceSerializer,
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
@@ -470,3 +475,37 @@ class PharmacyAvailableHoursSettingsAPIView(CustomRetrieveUpdateAPIView):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)
         self.check_object_permissions(self.request, obj)
         return obj
+
+
+class ClinicTeamListAPIView(CustomListAPIView):
+    permission_classes = [IsAuthenticated, ClinicPermission]
+    serializer_class = ClinicTeamListSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        return HospitalTeam.objects.filter(clinic=self.request.user.clinic_info)
+
+
+class ClinicServiceListAPIView(CustomListAPIView):
+    permission_classes = [IsAuthenticated, ClinicPermission]
+    serializer_class = ClinicServiceListSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        doctor_username = self.kwargs.get("doctor_username")
+        return HospitalService.objects.filter(
+            clinic=self.request.user.clinic_info, doctor__username=doctor_username
+        )
+
+
+class ClinicTeamRemoveAPIView(CustomAPIView):
+    permission_classes = [IsAuthenticated, ClinicPermission]
+    http_method_names = ["delete", "options"]
+
+    def delete(self, request, *args, **kwargs):
+        doctor_username = self.kwargs.get("doctor_username")
+        HospitalService.objects.filter(
+            clinic=self.request.user.clinic_info, doctor__username=doctor_username
+        ).delete()
+        HospitalTeam.objects.filter(
+            clinic=self.request.user.clinic_info, doctor__username=doctor_username
+        ).delete()
+        return super().delete(request, response_data={}, *args, **kwargs)
