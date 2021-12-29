@@ -22,7 +22,7 @@ class InboxChannelSerializer(ModelSerializer):
 
     class Meta:
         model = InboxChannel
-        fields = ("id", "first_user", "second_user", "unread_count")
+        fields = ("id", "first_user", "second_user", "encounter_reason", "unread_count")
         extra_kwargs = {"first_user": {"read_only": True}}
 
 
