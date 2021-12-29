@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 
 from core.models import CoreModel
+from core.literals import CONVERSATION_UPLOAD_FILE_DIREECTORY
 from user.models import User
 
 # Create your models here.
@@ -16,6 +17,12 @@ class InboxChannel(CoreModel):
     )
     encounter_reason = models.CharField(
         max_length=255, null=True, blank=True, default=""
+    )
+    uploaded_file = models.FileField(
+        upload_to=CONVERSATION_UPLOAD_FILE_DIREECTORY, null=True, blank=True
+    )
+    uploaded_file_mimetype = models.CharField(
+        max_length=20, null=True, blank=True, default=None
     )
 
     def get_unread_msg_count(self, user: User) -> int:
