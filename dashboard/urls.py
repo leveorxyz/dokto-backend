@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     ClinicLicenseAPIView,
     ClinicProfileAPIView,
+    ClinicTeamListAPIView,
     DoctorInsuranceAPIView,
     DoctorProfessionalProfileAPIView,
     DoctorProfileAPIView,
@@ -114,4 +115,5 @@ urlpatterns = [
         PharmacyAvailableHoursSettingsAPIView.as_view(),
         name="pharmacy-available-hours",
     ),
+    path("clinic/team-list/", ClinicTeamListAPIView.as_view(), name="clinic-team-list"),
 ]

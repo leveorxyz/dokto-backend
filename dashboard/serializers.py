@@ -1,6 +1,6 @@
 from django.db.models import Sum
 from drf_spectacular.utils import OpenApiExample, extend_schema_serializer
-from rest_framework.fields import DateField, ListField
+from rest_framework.fields import DateField, FloatField, IntegerField, ListField
 from rest_framework.serializers import (
     ModelSerializer,
     SerializerMethodField,
@@ -17,6 +17,7 @@ from core.serializers import (
     CustomCreateUpdateDeleteObjectOperationSerializer,
     FieldListUpdateSerializer,
 )
+from dashboard.models import HospitalTeam
 from user.models import (
     ClinicInfo,
     DoctorAcceptedInsurance,
@@ -748,3 +749,22 @@ class PharmacyAvailableHoursSettingsSerializer(ModelSerializer):
     class Meta:
         model = PharmacyInfo
         fields = ["hours_of_operation"]
+
+
+class ClinicTeamListSerializer(ModelSerializer):
+    doctor_full_name = CharField(source="doctor.user.full_name")
+    doctor_rating = FloatField(source="doctor.rating")
+    doctor_review_count = IntegerField(source="doctor.review_count")
+    doctor_profile_photo = CharField(source="doctor.user.profile_photo")
+
+    class Meta:
+        model = HospitalTeam
+        fields = [
+            "id",
+            "doctor_full_name",
+            "doctor_rating",
+            "doctor_review_count",
+            "profession",
+            "doctor_profile_photo",
+        ]
+        extra_kwargs = {field: {"read_only": True} for field in fields}
