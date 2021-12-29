@@ -54,7 +54,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
     street = CharField(source="user.street", required=False)
     city = CharField(source="user.city", required=False)
     state = CharField(source="user.state", required=False)
-    country = CharField(required=False)
+    country = CharField(source="user.country", required=False)
     zip_code = CharField(source="user.zip_code", required=False)
 
     def update(self, instance: DoctorInfo, validated_data: dict) -> DoctorInfo:
@@ -281,6 +281,7 @@ class DoctorProfileSerializer(ModelSerializer):
     state = CharField(source="user.state", required=False, allow_null=True)
     city = CharField(source="user.city", required=False, allow_null=True)
     zip_code = CharField(source="user.zip_code", required=False, allow_null=True)
+    country = CharField(source="user.country", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True

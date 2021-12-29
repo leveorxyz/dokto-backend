@@ -57,7 +57,6 @@ class DoctorInfoSerializer(ModelSerializer):
     fields = [
         "id",
         "date_of_birth",
-        "country",
         "gender",
         "professional_bio",
         "linkedin_url",
@@ -133,7 +132,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
     twitter_url = URLField(required=False, write_only=True)
     license_file = CharField(required=True, write_only=True)
     awards = CharField(write_only=True, required=False)
-    country = CharField(required=True, write_only=True)
     professional_bio = CharField(required=True, write_only=True)
     gender = ChoiceField(
         choices=PatientInfo.Gender.choices, required=True, write_only=True
@@ -488,6 +486,7 @@ class DoctorDirectorySerializer(ModelSerializer):
     state = CharField(source="user.state")
     city = CharField(source="user.city")
     zip_code = CharField(source="user.zip_code")
+    country = CharField(source="user.country")
     contact_no = CharField(source="user.contact_no")
 
     class Meta:
