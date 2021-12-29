@@ -5,6 +5,7 @@ from .views import (
     ClinicProfileAPIView,
     ClinicServiceListAPIView,
     ClinicTeamListAPIView,
+    ClinicTeamRemoveAPIView,
     DoctorInsuranceAPIView,
     DoctorProfessionalProfileAPIView,
     DoctorProfileAPIView,
@@ -118,8 +119,13 @@ urlpatterns = [
     ),
     path("clinic/team-list/", ClinicTeamListAPIView.as_view(), name="clinic-team-list"),
     path(
-        "clinic/serice/<str:doctor_username>",
+        "clinic/service/<str:doctor_username>",
         ClinicServiceListAPIView.as_view(),
         name="clinic-service",
+    ),
+    path(
+        "clinic/remove-doctor/<str:doctor_username>",
+        ClinicTeamRemoveAPIView.as_view(),
+        name="clinic-remove-doctor",
     ),
 ]

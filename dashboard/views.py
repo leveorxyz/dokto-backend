@@ -15,6 +15,7 @@ from drf_spectacular.utils import (
 from core.serializers import AbstractAccountSettingsSerializer
 
 from core.views import (
+    CustomAPIView,
     CustomListAPIView,
     CustomListCreateAPIView,
     CustomRetrieveAPIView,
@@ -493,3 +494,18 @@ class ClinicServiceListAPIView(CustomListAPIView):
         return HospitalService.objects.filter(
             clinic=self.request.user.clinic_info, doctor__username=doctor_username
         )
+
+
+class ClinicTeamRemoveAPIView(CustomAPIView):
+    permission_classes = [IsAuthenticated, ClinicPermission]
+    http_method_names = ["delete", "options"]
+
+    def delete(self, request, *args, **kwargs):
+        doctor_username = self.kwargs.get("doctor_username")
+        HospitalService.objects.filter(
+            clinic=self.request.user.clinic_info, doctor__username=doctor_username
+        ).delete()
+        HospitalTeam.objects.filter(
+            clinic=self.request.user.clinic_info, doctor__username=doctor_username
+        ).delete()
+        return super().delete(request, response_data={}, *args, **kwargs)
