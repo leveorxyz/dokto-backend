@@ -17,7 +17,7 @@ from core.serializers import (
     CustomCreateUpdateDeleteObjectOperationSerializer,
     FieldListUpdateSerializer,
 )
-from dashboard.models import HospitalTeam
+from dashboard.models import HospitalService, HospitalTeam
 from user.models import (
     ClinicInfo,
     DoctorAcceptedInsurance,
@@ -767,4 +767,11 @@ class ClinicTeamListSerializer(ModelSerializer):
             "profession",
             "doctor_profile_photo",
         ]
+        extra_kwargs = {field: {"read_only": True} for field in fields}
+
+
+class ClinicServiceListSerializer(ModelSerializer):
+    class Meta:
+        model = HospitalService
+        fields = ["id", "service", "price"]
         extra_kwargs = {field: {"read_only": True} for field in fields}

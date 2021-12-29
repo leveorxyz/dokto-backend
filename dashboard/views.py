@@ -35,6 +35,7 @@ from .serializers import (
     ClinicAccountSettingsSerializer,
     ClinicProfileDetailsSerializer,
     ClinicLicenseSerializer,
+    ClinicServiceListSerializer,
     ClinicTeamListSerializer,
     DoctorAcceptedInsuranceSerializer,
     DoctorProfileDetailsSerializer,
@@ -481,3 +482,14 @@ class ClinicTeamListAPIView(CustomListAPIView):
 
     def get_queryset(self, *args, **kwargs):
         return HospitalTeam.objects.filter(clinic=self.request.user.clinic_info)
+
+
+class ClinicServiceListAPIView(CustomListAPIView):
+    permission_classes = [IsAuthenticated, ClinicPermission]
+    serializer_class = ClinicServiceListSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        doctor_username = self.kwargs.get("doctor_username")
+        return HospitalService.objects.filter(
+            clinic=self.request.user.clinic_info, doctor__username=doctor_username
+        )
