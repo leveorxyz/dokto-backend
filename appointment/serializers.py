@@ -8,8 +8,6 @@ from rest_framework.serializers import (
 )
 
 from .models import Appointment
-from user.models import DoctorInfo
-from dashboard.serializers import DoctorProfileSerializer
 
 
 class AppointmentSerializer(ModelSerializer):
@@ -35,8 +33,3 @@ class EncounteredListSerializer(ModelSerializer):
             "phone_number",
             "display_id",
         ]
-
-
-class DummyDoctorListSerializer(DoctorProfileSerializer):
-    def get_avg_rating(self, doctor_info: DoctorInfo) -> str:
-        return random.random() * 5.0
