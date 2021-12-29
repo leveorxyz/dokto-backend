@@ -9,7 +9,6 @@ from .views import (
     DoctorProfileDetailsAPIView,
     DoctorProfilePublicAPIView,
     DoctorReviewListCreateAPIView,
-    DoctorSpecialtySettingsAPIView,
     DoctorEducationExperienceSettingsAPIView,
     DoctorAvailableHoursSettingsAPIView,
     DoctorAccountSettingsAPIView,
@@ -48,11 +47,6 @@ urlpatterns = [
         "doctor/profile-settings/available-hours/",
         DoctorAvailableHoursSettingsAPIView.as_view(),
         name="doctor-available-hours",
-    ),
-    path(
-        "doctor/specialty-settings/",
-        DoctorSpecialtySettingsAPIView.as_view(),
-        name="doctor-specialty-settings",
     ),
     path(
         "doctor/account-settings/",

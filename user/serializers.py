@@ -24,7 +24,6 @@ from .models import (
     User,
     DoctorInfo,
     DoctorExperience,
-    DoctorSpecialty,
     DoctorLanguage,
     ClinicInfo,
     PharmacyInfo,
@@ -78,16 +77,6 @@ class DoctorEducationSerializer(ModelSerializer):
 class DoctorExpericenceSerializer(ModelSerializer):
     class Meta:
         model = DoctorExperience
-        fields = list(
-            set(field.name for field in model._meta.fields)
-            - set(model.get_hidden_fields())
-        )
-        extra_kwargs = {"doctor_info": {"required": False}}
-
-
-class DoctorSpecialtySerializer(ModelSerializer):
-    class Meta:
-        model = DoctorSpecialty
         fields = list(
             set(field.name for field in model._meta.fields)
             - set(model.get_hidden_fields())

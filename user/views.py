@@ -21,7 +21,7 @@ from core.views import (
     CustomAPIView,
 )
 from core.utils import set_user_ip
-from .models import User, DoctorInfo, DoctorSpecialty
+from .models import User, DoctorInfo
 from .serializers import (
     DoctorDirectorySerializer,
     UserSerializer,

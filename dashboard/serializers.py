@@ -23,7 +23,6 @@ from user.models import (
     DoctorAvailableHours,
     DoctorInfo,
     DoctorLanguage,
-    DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
     PatientInfo,
@@ -238,29 +237,6 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
             "start_time": {"required": False},
             "end_time": {"required": False},
         }
-
-
-class DoctorSpecialtySettingsSerializer(FieldListUpdateSerializer):
-    """
-    Serializer for `dashboard > specialties and services` page.
-    """
-
-    specialty = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
-    def get_specialty(self, doctor_info: DoctorInfo) -> list:
-        return list(
-            doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
-        )
-
-    def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
-        if "specialty" in validated_data:
-            _ = self.perform_list_field_update(
-                validated_data.pop("specialty"),
-                DoctorSpecialty,
-                "specialty",
-                {"doctor_info": doctor_info},
-            )
-        return doctor_info
 
     class Meta:
         model = DoctorInfo
