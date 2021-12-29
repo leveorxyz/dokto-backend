@@ -1,4 +1,5 @@
 from typing import Union, List, Dict
+from rest_framework.fields import SerializerMethodField
 
 from rest_framework.serializers import (
     ModelSerializer,
@@ -499,6 +500,34 @@ class DoctorDirectorySerializer(ModelSerializer):
         )
         fields = main_fields + extra_fields
         extra_kwargs = {field: {"read_only": True} for field in extra_fields}
+
+
+class FeaturedDoctorSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name")
+    profile_photo = CharField(source="user.profile_photo")
+    address = SerializerMethodField()
+
+    def get_address(self, obj):
+        address_fields = ["street", "state", "city", "zip_code", "country"]
+        return ", ".join(
+            [
+                getattr(obj.user, field)
+                for field in address_fields
+                if getattr(obj.user, field)
+            ]
+        )
+
+    class Meta:
+        model = DoctorInfo
+        fields = [
+            "full_name",
+            "profile_photo",
+            "username",
+            "address",
+            "rating",
+            "review_count",
+        ]
+        extra_kwargs = {field: {"read_only": True} for field in fields}
 
 
 class PasswordResetEmailSerializer(Serializer):

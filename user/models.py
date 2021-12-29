@@ -294,6 +294,16 @@ class DoctorInfo(CoreModel):
         ]
 
     @property
+    def rating(self):
+        rating = self.doctorreview_set.all().aggregate(models.Avg("star_count"))[
+            "star_count__avg"
+        ]
+        return rating if rating else 0
+
+    def review_count(self):
+        return len(self.doctorreview_set.all())
+
+    @property
     def identification_photo(self):
         domain = Site.objects.get_current().domain
         if self._identification_photo.name:

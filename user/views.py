@@ -24,6 +24,7 @@ from core.utils import set_user_ip
 from .models import User, DoctorInfo
 from .serializers import (
     DoctorDirectorySerializer,
+    FeaturedDoctorSerializer,
     UserSerializer,
     UserLoginSerializer,
     VerifyEmailSerializer,
@@ -171,6 +172,12 @@ class DoctorsListView(CustomListAPIView):
     #         specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
     #         return (filtered_queryset | specialty_queryset).distinct()
     #     return filtered_queryset
+
+
+class FeaturedDoctorListView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = FeaturedDoctorSerializer
+    queryset = sorted(DoctorInfo.objects.all(), key=lambda x: x.rating, reverse=True)
 
 
 class PasswordResetEmailView(CustomAPIView):
