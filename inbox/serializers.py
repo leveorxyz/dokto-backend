@@ -69,10 +69,10 @@ class InboxMessageSerializer(ModelSerializer):
 
     def create(self, validated_data):
         validated_data["sender"] = self.context["request"].user
-        message = InboxMessage.from_validated_data(validated_data)
         if "uploaded_file" in validated_data:
             file = validated_data.get("uploaded_file")
-            message.uploaded_file_mimetype = file.content_type
+            validated_data["uploaded_file_mimetype"] = file.content_type
+        message = InboxMessage.from_validated_data(validated_data)
         message.save()
         return message
 
