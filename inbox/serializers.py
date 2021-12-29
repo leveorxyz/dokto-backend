@@ -70,18 +70,31 @@ class InboxMessageSerializer(ModelSerializer):
     def create(self, validated_data):
         validated_data["sender"] = self.context["request"].user
         message = InboxMessage.from_validated_data(validated_data)
+        if "uploaded_file" in validated_data:
+            file = validated_data.get("uploaded_file")
+            message.uploaded_file_mimetype = file.content_type
         message.save()
         return message
 
     class Meta:
         model = InboxMessage
-        fields = ["channel", "message", "subject", "sender", "read_status"]
+        fields = [
+            "channel",
+            "message",
+            "subject",
+            "sender",
+            "read_status",
+            "uploaded_file",
+            "uploaded_file_mimetype",
+        ]
         extra_kwargs = {
             "channel": {"required": True},
             "message": {"required": True},
             "subject": {"required": False},
             "read_status": {"read_only": True},
             "sender": {"read_only": True},
+            "uploaded_file": {"required": False},
+            "uploaded_file_mimetype": {"read_only": True},
         }
 
 
