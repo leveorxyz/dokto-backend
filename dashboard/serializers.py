@@ -386,6 +386,7 @@ class PatientProfileDetailsSerializer(ModelSerializer):
     city = CharField(source="user.city", required=False)
     state = CharField(source="user.state", required=False)
     zip_code = CharField(source="user.zip_code", required=False)
+    country = CharField(source="user.country", required=False)
 
     def update(self, instance: PatientInfo, validated_data: dict) -> PatientInfo:
         if "user" in validated_data:
@@ -411,6 +412,7 @@ class PatientProfileDetailsSerializer(ModelSerializer):
             "zip_code",
             "date_of_birth",
             "state",
+            "country",
         ]
 
 
@@ -510,6 +512,7 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
     city = CharField(source="user.city", required=False)
     state = CharField(source="user.state", required=False)
     zip_code = CharField(source="user.zip_code", required=False)
+    country = CharField(source="user.country", required=False)
 
     def update(self, instance: ClinicInfo, validated_data: dict) -> ClinicInfo:
         if "user" in validated_data:
@@ -533,6 +536,7 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
             "city",
             "zip_code",
             "state",
+            "country",
             "website",
         ]
         extra_kwargs = {"website": {"required": False}}
@@ -557,6 +561,7 @@ class PharmacyProfileSettingsSerializer(ModelSerializer):
     city = CharField(source="user.city", required=False)
     state = CharField(source="user.state", required=False)
     zip_code = CharField(source="user.zip_code", required=False)
+    country = CharField(source="user.country", required=False)
 
     def update(self, instance: PharmacyInfo, validated_data: dict) -> PharmacyInfo:
         if "user" in validated_data:
@@ -580,6 +585,7 @@ class PharmacyProfileSettingsSerializer(ModelSerializer):
             "city",
             "zip_code",
             "state",
+            "country",
             "website",
             "bio",
         ]
@@ -602,7 +608,7 @@ class PharmacyProfileDetailsSerializer(ModelSerializer):
     address = SerializerMethodField()
 
     def get_address(self, obj: PharmacyInfo) -> str:
-        address_fields = ["street", "city", "state", "zip_code"]
+        address_fields = ["street", "city", "state", "zip_code", "country"]
         return ",".join(
             [
                 getattr(obj.user, field)
