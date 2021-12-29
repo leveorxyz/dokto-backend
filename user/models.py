@@ -395,6 +395,11 @@ class DoctorAcceptedInsurance(CoreModel):
     insurance = models.CharField(max_length=50)
 
 
+class DoctorProfession(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    profession = models.CharField(max_length=100)
+
+
 class ClinicInfo(CoreModel):
     username = models.CharField(
         _("username"),
