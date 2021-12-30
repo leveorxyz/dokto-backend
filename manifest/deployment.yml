@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: dokto-backend
-        image: dokto.azurecr.io/toybethsystems/dokto-backend:dev3
+        image: dokto.azurecr.io/toybethsystems/dokto-backend-copy:dev3
         ports:
         - containerPort: 80
         resources:
