@@ -49,9 +49,7 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
         source="user.profile_photo", required=False, allow_null=True
     )
     date_of_birth = DateField(required=False, allow_null=True)
-    gender = ChoiceField(
-        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
-    )
+    gender = ChoiceField(choices=DoctorInfo.Gender.choices, required=False)
     email = EmailField(source="user.email", read_only=True)
     street = CharField(source="user.street", required=False)
     city = CharField(source="user.city", required=False)
@@ -447,9 +445,7 @@ class PatientProfileDetailsSerializer(ModelSerializer):
         source="user.profile_photo", required=False, allow_null=True
     )
     date_of_birth = DateField(required=False, allow_null=True)
-    gender = ChoiceField(
-        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
-    )
+    gender = ChoiceField(choices=DoctorInfo.Gender.choices, required=False)
     email = EmailField(source="user.email", read_only=True)
     street = CharField(source="user.street", required=False)
     city = CharField(source="user.city", required=False)
