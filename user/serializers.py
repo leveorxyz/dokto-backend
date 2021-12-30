@@ -46,8 +46,7 @@ class UserLoginSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = list(
-            set(field.name for field in model._meta.fields) -
-            set(["_profile_photo"])
+            set(field.name for field in model._meta.fields) - set(["_profile_photo"])
         ) + ["token", "profile_photo", "username"]
         extra_kwargs = {field: {"read_only": True} for field in fields}
         extra_kwargs["password"] = {"write_only": True}
@@ -111,8 +110,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     experience = ListField(
         child=DoctorExpericenceSerializer(), required=False, write_only=True
     )
-    accepted_insurance = ListField(
-        child=CharField(), write_only=True, required=False)
+    accepted_insurance = ListField(child=CharField(), write_only=True, required=False)
 
     # Doctor fields
     identification_photo = CharField(required=True, write_only=True)
@@ -130,10 +128,8 @@ class DoctorRegistrationSerializer(ModelSerializer):
         choices=PatientInfo.Gender.choices, required=True, write_only=True
     )
     date_of_birth = DateField(required=True, write_only=True)
-    accepted_insurance = ListField(
-        child=CharField(), required=False, write_only=True)
-    accept_all_insurance = ListField(
-        child=CharField(), write_only=True, required=False)
+    accepted_insurance = ListField(child=CharField(), required=False, write_only=True)
+    accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
     license_expiration = DateField(required=True, write_only=True)
     profession = ListField(child=CharField(), write_only=True, required=False)
 
@@ -164,8 +160,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data: dict):
         # Generate username
-        username = generate_username(
-            DoctorInfo, validated_data.get("full_name"))
+        username = generate_username(DoctorInfo, validated_data.get("full_name"))
 
         validated_data.update({"user_type": User.UserType.DOCTOR})
         user: User = User.from_validated_data(validated_data=validated_data)
@@ -220,8 +215,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        self.from_list(language, DoctorLanguage,
-                       "language", doctor_info=doctor_info)
+        self.from_list(language, DoctorLanguage, "language", doctor_info=doctor_info)
         self.from_list(
             insurance_data,
             DoctorAcceptedInsurance,
@@ -290,8 +284,7 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
     def create(self, validated_data):
         # Generate username
-        username = generate_username(
-            PharmacyInfo, validated_data.get("full_name"))
+        username = generate_username(PharmacyInfo, validated_data.get("full_name"))
 
         validated_data.update({"user_type": User.UserType.PHARMACY})
         user: User = User.from_validated_data(validated_data=validated_data)
@@ -308,8 +301,7 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             pharmacy_data = validated_data.pop("pharmacy_data")
         try:
             pharmacy = PharmacyInfo.from_validated_data(
-                validated_data={"user": user,
-                                "username": username, **pharmacy_data}
+                validated_data={"user": user, "username": username, **pharmacy_data}
             )
             pharmacy.save()
         except Exception as e:
@@ -344,8 +336,7 @@ class PharmacyRegistrationSerializer(ModelSerializer):
 
         read_only_fields = ["token", "username", "last_login"]
         write_only_fields = ["password"]
-        required_false_fields = ["state", "city",
-                                 "zip_code", "number_of_practitioners"]
+        required_false_fields = ["state", "city", "zip_code", "number_of_practitioners"]
         extra_kwargs = {
             **{key: {"required": False} for key in required_false_fields},
             **{key: {"write_only": True} for key in write_only_fields},
@@ -360,8 +351,7 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
 
     def create(self, validated_data: dict):
         # Generate username
-        username = generate_username(
-            ClinicInfo, validated_data.get("full_name"))
+        username = generate_username(ClinicInfo, validated_data.get("full_name"))
 
         validated_data.update({"user_type": User.UserType.CLINIC})
         user: User = User.from_validated_data(validated_data=validated_data)
@@ -379,8 +369,7 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
             clinic_data = validated_data.pop("clinic_info")
         try:
             clinic = ClinicInfo.from_validated_data(
-                validated_data={"user": user,
-                                "username": username, **clinic_data}
+                validated_data={"user": user, "username": username, **clinic_data}
             )
             clinic.save()
         except Exception as e:
@@ -482,8 +471,7 @@ class VerifyEmailSerializer(Serializer):
 
     def validate(self, data):
         try:
-            email = ExpiringActivationTokenGenerator(
-            ).get_token_value(data["token"])
+            email = ExpiringActivationTokenGenerator().get_token_value(data["token"])
         except InvalidToken:
             raise ValidationError("Invalid token")
 
@@ -518,8 +506,7 @@ class DoctorDirectorySerializer(ModelSerializer):
         )
         extra_fields = list(
             set(field.name for field in User._meta.fields)
-            - set(User.get_hidden_fields() +
-                  ["user_type", "password", "last_login"])
+            - set(User.get_hidden_fields() + ["user_type", "password", "last_login"])
         )
         fields = main_fields + extra_fields
         extra_kwargs = {field: {"read_only": True} for field in extra_fields}

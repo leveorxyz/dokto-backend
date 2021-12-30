@@ -8,27 +8,47 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('user', '0019_remove_doctorinfo_profession'),
-        ('dashboard', '0001_initial'),
+        ("user", "0019_remove_doctorinfo_profession"),
+        ("dashboard", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='HospitalService',
+            name="HospitalService",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('is_deleted', models.BooleanField(default=False)),
-                ('deleted_at', models.DateTimeField(blank=True, null=True)),
-                ('profession', models.CharField(blank=True, max_length=100, null=True)),
-                ('service', models.CharField(blank=True, max_length=100, null=True)),
-                ('price', models.CharField(blank=True, max_length=100, null=True)),
-                ('clinic', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='user.clinicinfo')),
-                ('doctor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='user.doctorinfo')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("is_deleted", models.BooleanField(default=False)),
+                ("deleted_at", models.DateTimeField(blank=True, null=True)),
+                ("profession", models.CharField(blank=True, max_length=100, null=True)),
+                ("service", models.CharField(blank=True, max_length=100, null=True)),
+                ("price", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "clinic",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="user.clinicinfo",
+                    ),
+                ),
+                (
+                    "doctor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="user.doctorinfo",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]
