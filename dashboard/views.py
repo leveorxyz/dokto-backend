@@ -509,3 +509,6 @@ class ClinicTeamRemoveAPIView(CustomAPIView):
             clinic=self.request.user.clinic_info, doctor__username=doctor_username
         ).delete()
         return super().delete(request, response_data={}, *args, **kwargs)
+
+class DoctorInvoiceAPIView(CustomRetrieveAPIView):
+    pass

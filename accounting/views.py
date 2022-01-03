@@ -5,8 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from paypalrestsdk import notifications
 from django.conf import settings
+from datetime import datetime
 import stripe
 import json
+
 import requests
 from .serializers import FlutterwaveChargeSerializer, FlutterwaveCheckoutSerializer, PaystackChargeSerializer, PaystackVerifySerializer, StripeChargeSerializer, StripeCheckoutSerializer, PaypalProcessSerializer, PaypalCheckoutSerializer
 from .models import Payment
@@ -77,6 +79,7 @@ class StripeChargeAPIView(generics.CreateAPIView):
     
         )
         payment.transaction_reference = stripe_checkout_response.id
+        payment.payment_date = datetime.now()
         payment.save()
         url = stripe_checkout_response.url #return to frontend
         success_url = stripe_checkout_response.success_url
@@ -149,6 +152,7 @@ class PaypalProcessAPIView(generics.CreateAPIView):
                         })
         create_charge_json = create_charge.json()
         payment.transaction_reference = create_charge_json['id']
+        payment.payment_date = datetime.now()
         payment.save()
         order_url = create_charge_json['links'][1]['href']
         
@@ -239,6 +243,7 @@ class FlutterwaveCheckoutAPIView(generics.CreateAPIView):
             if fvr_json['status']== 'success' and fvr_json['data']['currency'] == 'USD' and fvr_json['data']['amount'] ==payment.amount_paid :
                 payment.paid = True
                 payment.appointment.payment = True
+                payment.payment_date = datetime.now()
                 payment.save()
         except:
             return Response("Invalid transaction ID")
@@ -280,6 +285,7 @@ class PaystackChargeAPIView(generics.CreateAPIView):
         pcr_json = paystack_charge_response.json()
 
         payment.transaction_reference = pcr_json['data']['reference']
+        payment.payment_date = datetime.now()
         payment.save()
 
         return Response( data={ "checkout_url": pcr_json['data']['authorization_url']} )
@@ -315,6 +321,7 @@ class PaystackVerifyAPIView(APIView):
             if pvr_json['data']['status']== "success":
                 payment.paid = True
                 payment.appointment.payment = True
+                payment.payment_date = datetime.now()
                 payment.save()
         except:
             return Response("Invalid reference number")

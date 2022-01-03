@@ -9,6 +9,9 @@ class Payment(CoreModel):
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='appointment')
     paid = models.BooleanField(default=False)
     payment_gateway = models.CharField(max_length=100)
+    payment_released = models.BooleanField(default=False)
+    payment_release_date = models.DateTimeField()
+    payment_date = models.DateTimeField()
     
 
     def __str__(self) -> str:

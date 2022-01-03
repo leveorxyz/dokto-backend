@@ -378,7 +378,7 @@ class DoctorExperience(CoreModel):
 class DoctorSpecialty(CoreModel):
     doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
     specialty = models.CharField(max_length=50, null=True)
-    price = models.IntegerField()
+    price = models.IntegerField(help_text="Input amount in cents")
 
 
 class DoctorAvailableHours(CoreModel):
