@@ -11,8 +11,18 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.conf.beat_schedule = {
     'once everyday':{
-        'task':'tasks.update_wallet',
+        'task':'tasks.update_doctor_wallet',
+        'schedule': crontab(minute=15, hour=0),
+        'args': (16,16)
+    },
+    'update release_date everyday':{
+        'task':'tasks.update_sign_date',
         'schedule': crontab(minute=0, hour=0),
+        'args': (16,16)
+    },
+    'update wallet everyday':{
+        'task':'tasks.pay_to_wallet',
+        'schedule': crontab(minute=30, hour=0),
         'args': (16,16)
     },
 }

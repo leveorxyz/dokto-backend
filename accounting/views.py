@@ -43,6 +43,8 @@ class StripeChargeAPIView(generics.CreateAPIView):
          in the charge's description parameter)
 
     3. Return response to my frontend to display a confirmation / error
+
+    4. Stripe transaction fees is 2.9% of fee + 30cents
     """
 
     serializer_class = StripeChargeSerializer
@@ -68,7 +70,7 @@ class StripeChargeAPIView(generics.CreateAPIView):
                         "name":"Doctor Specialty: " + appointment.specialty.specialty ,
                         "description":"Description : " + appointment.description
                                 },
-                "unit_amount": payment.amount_paid
+                "unit_amount": payment.amount_paid 
                             },
             "quantity": 1,
             },
@@ -79,6 +81,7 @@ class StripeChargeAPIView(generics.CreateAPIView):
     
         )
         payment.transaction_reference = stripe_checkout_response.id
+        payment.amount_after_charge = payment.amount_paid - (payment.amount_paid*0.0029) - 30 - 50
         payment.payment_date = datetime.now()
         payment.save()
         url = stripe_checkout_response.url #return to frontend
@@ -185,6 +188,8 @@ class PaypalCheckoutAPIView(generics.CreateAPIView):
 class FlutterwaveChargeAPIView(generics.CreateAPIView):
     """
     Flutterwave initialize payment
+    Flutterwave charges 3.8%
+    https://flutterwave.com/ng/pricing
     """
     serializer_class = FlutterwaveChargeSerializer
     permission_classes = (AllowAny,)
@@ -201,7 +206,7 @@ class FlutterwaveChargeAPIView(generics.CreateAPIView):
         json = 
             {
             "tx_ref" : payment.id,
-            "amount" : payment.amount_paid,
+            "amount" : payment.amount_paid / 100,  #in cents, converting to dollars
             "currency": "USD",
             "payment_options": "card",
             "redirect_url": f"https://example.com/success/",
@@ -243,6 +248,7 @@ class FlutterwaveCheckoutAPIView(generics.CreateAPIView):
             if fvr_json['status']== 'success' and fvr_json['data']['currency'] == 'USD' and fvr_json['data']['amount'] ==payment.amount_paid :
                 payment.paid = True
                 payment.appointment.payment = True
+                payment.amount_after_charge = payment.amount_paid - (payment.amount_paid*0.0038) - 50
                 payment.payment_date = datetime.now()
                 payment.save()
         except:
@@ -259,6 +265,9 @@ class PaystackChargeAPIView(generics.CreateAPIView):
         'data': {'authorization_url': 'https://checkout.paystack.com/psw2iuzh6n55',
         'access_code': 'psw2iuzh6n55',
         'reference': '123456'}}
+
+        Paystack charges 3.9% of fee + 100naira(24 cents for now) for international transaction
+        https://paystack.com/pricing
     """
 
     serializer_class = PaystackChargeSerializer
@@ -320,6 +329,7 @@ class PaystackVerifyAPIView(APIView):
             pvr_json = paystack_verify_response.json()
             if pvr_json['data']['status']== "success":
                 payment.paid = True
+                payment.amount_after_charge = payment.amount_paid - (payment.amount_paid*0.0039) - 24 - 50
                 payment.appointment.payment = True
                 payment.payment_date = datetime.now()
                 payment.save()

@@ -511,4 +511,5 @@ class ClinicTeamRemoveAPIView(CustomAPIView):
         return super().delete(request, response_data={}, *args, **kwargs)
 
 class DoctorInvoiceAPIView(CustomRetrieveAPIView):
-    pass
+    serializer_class = DoctorInvoiceSerializer
+    permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
