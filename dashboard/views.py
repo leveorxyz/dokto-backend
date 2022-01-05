@@ -39,6 +39,7 @@ from .serializers import (
     ClinicServiceListSerializer,
     ClinicTeamListSerializer,
     DoctorAcceptedInsuranceSerializer,
+    DoctorInvoiceSerializer,
     DoctorProfileDetailsSerializer,
     DoctorProfileSerializer,
     DoctorExperienceEducationSerializer,
