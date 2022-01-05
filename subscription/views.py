@@ -117,6 +117,7 @@ class StripeWebhook(PaymentWebhookView):
 class PaypalWebhook(PaymentWebhookView):
     provider = PaypalProvider()
 
+
 class SubscriptionPaymentsView(GenericViewSet, ListModelMixin):
     serializer_class = SubscriptionHistoryPayment
 

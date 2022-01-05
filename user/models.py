@@ -358,8 +358,6 @@ class DoctorInfo(CoreModel, SubscriptionModelMixin):
         if self.country in HOME_VISIT_COUNTRIES:
             return False, f"Doctors in f{self.country} can't use pay as you go plan" # TODO: Find ways to return country full name
 
-    def confirm_subscription_cancelled(self):
-        pass
 
     def change_membership_type(self):
         pass
@@ -536,6 +534,7 @@ class ClinicInfo(CoreModel, SubscriptionModelMixin):
         pass
 
     def confirm_subscription_cancelled(self):
+        #TODO: find all doctors and cancel subscription
         pass
 
     def change_membership_type(self):
@@ -636,9 +635,6 @@ class PharmacyAvailableHours(CoreModel):
     end_time = models.TimeField(null=True, blank=True)
 
     # Subscription concrete methods
-
-    def confirm_subscription_cancelled(self):
-        pass
 
     def change_membership_type(self):
         pass

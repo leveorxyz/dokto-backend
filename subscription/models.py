@@ -1,3 +1,5 @@
+import logging
+
 from datetime import datetime, timedelta
 from re import sub
 from django.db import models
@@ -32,7 +34,7 @@ class SubscriptionHistory(CoreModel):
     extra_gateway_values = models.CharField(max_length=100, default='')
     user = models.ForeignKey("user.User", on_delete=models.PROTECT)
     active = models.BooleanField(default=False)
-    cancelled = models.BooleanField(default=False)
+    paused = models.BooleanField(default=False)
     amount = models.IntegerField()
     
     def add_new_payment(self, ref, start, end):
@@ -50,6 +52,12 @@ class SubscriptionHistory(CoreModel):
         SubscriptionHistoryPayment.objects.create(subscription=self, payment_ref=ref, start=start, end=end)
         subscription_object = SubscriptionModelMixin.get_subscription_user(self.user)
         subscription_object.confirm_subscription_extended()
+
+    def set_paused(self):
+        self.paused = True
+        subscription_object = SubscriptionModelMixin.get_subscription_user(self.user)
+        subscription_object.confirm_subscription_cancelled(self)
+        self.save()
 
 class SubscriptionModelMixin(models.Model):
     subscription_type = models.CharField(
@@ -78,19 +86,27 @@ class SubscriptionModelMixin(models.Model):
         return True, ""
 
     def confirm_subscription_extended(self, subscription):
+        if self.current_subscription and self.current_subscription != subscription:
+            logging.error(f"Another subscription is currently active for user {self.user.id}")
+            return
         self.is_active = True
+        self.current_subscription = subscription
         self.save()
 
-    def confirm_subscription_cancelled(self):
-        pass
+
+    def confirm_subscription_cancelled(self, subscription):
+        if subscription != self.current_subscription:
+            logging.error(f"Another subscription is currently active for user {self.user.id}")
+            return
+        self.is_active = False
+        self.current_subscription = None
+        self.save()
 
     def change_membership_type(self):
         pass
 
     def get_subscription_info(self) -> tuple[int, str, int]:
         return 0, SubscriptionPlanTypes.DOTOR_SUSBCRIPTION_TYPE, 1
-    # from user.models import User
-
 
 
 class SubscriptionHistoryPayment(CoreModel):
