@@ -1,7 +1,7 @@
 from django.db import models
 
 from core.models import CoreModel
-from user.models import DoctorInfo, PatientInfo, DoctorSpecialty
+from user.models import DoctorInfo, PatientInfo, DoctorService
 
 
 
@@ -27,7 +27,7 @@ class Appointment(CoreModel):
     payment_status = models.BooleanField(default=False)
     payment = models.ForeignKey('accounting.Payment', null=True, on_delete=models.CASCADE, related_name='paymentt')
     patient_status = models.CharField(max_length=50, null=True)
-    specialty = models.ForeignKey(DoctorSpecialty, on_delete=models.CASCADE)
+    specialty = models.ForeignKey(DoctorService, on_delete=models.CASCADE)
 
 
     def __str__(self):
