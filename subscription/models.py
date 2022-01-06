@@ -69,13 +69,17 @@ class SubscriptionModelMixin(models.Model):
     class Meta:
         abstract=True
 
+    @property
+    def is_subscription_active(self):
+        return self.is_active # TODO: Is it possible to use a new field name?
+
     def can_subscribe(self) -> tuple[bool, str]:
-        if not self.is_active and  self.subscription_type == SubscriptionType.MEMBERSHIP:
+        if not self.current_subscription and  self.subscription_type == SubscriptionType.MEMBERSHIP:
             return True, ""
         return False, "Doctor not on membership plan or is currently subscribed"
 
     def can_unsubscribe(self) -> tuple[bool, str]:
-        if not self.active:
+        if self.current_subscription:
             return True, ""
         return False, "Doctor is current not in any active subscription"
 
@@ -89,7 +93,7 @@ class SubscriptionModelMixin(models.Model):
         if self.current_subscription and self.current_subscription != subscription:
             logging.error(f"Another subscription is currently active for user {self.user.id}")
             return
-        self.is_active = True
+        self.is_subscription_active = True
         self.current_subscription = subscription
         self.save()
 
@@ -98,7 +102,7 @@ class SubscriptionModelMixin(models.Model):
         if subscription != self.current_subscription:
             logging.error(f"Another subscription is currently active for user {self.user.id}")
             return
-        self.is_active = False
+        self.is_subscription_active = False
         self.current_subscription = None
         self.save()
 

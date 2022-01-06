@@ -26,7 +26,7 @@ from .utils import generate_file_and_name
 
 # Create your models here.
 
-HOME_VISIT_COUNTRIES = [
+SUBSCRIPTION_ONLY_COUNTRIES = [
     'US', 'CANADA', 'MEXICO'
 ]
 
@@ -355,7 +355,7 @@ class DoctorInfo(CoreModel, SubscriptionModelMixin):
         return super(DoctorInfo, self).delete(*args, **kwargs)
 
     def can_use_pay_as_you_go(self):
-        if self.country in HOME_VISIT_COUNTRIES:
+        if self.country in SUBSCRIPTION_ONLY_COUNTRIES:
             return False, f"Doctors in f{self.country} can't use pay as you go plan" # TODO: Find ways to return country full name
 
 
