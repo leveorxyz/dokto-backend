@@ -16,8 +16,11 @@ class AppointmentListCreateAPIView(CustomListCreateAPIView):
     """
 
     permission_classes = (AllowAny,)
-    queryset = Appointment.objects.all()
     serializer_class = AppointmentSerializer
+
+    def get_queryset(self):
+        return Appointment.objects.all()
+
 
 
 class EncounteredPatientListAPIView(CustomListAPIView):
@@ -28,5 +31,7 @@ class EncounteredPatientListAPIView(CustomListAPIView):
     permission_classes = [
         AllowAny,
     ]
-    queryset = Appointment.objects.all()
     serializer_class = EncounteredListSerializer
+
+    def get_queryset(self):
+        return Appointment.objects.all()

@@ -38,14 +38,20 @@ from .serializers import (
 
 
 class UserRetrieveAPIView(CustomRetrieveAPIView):
-    queryset = User.objects.all()
+
+    def get_queryset(self):
+        return User.objects.all()
+
     serializer_class = UserSerializer
 
 
 class LoginView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer
-    queryset = User.objects.all()
+
+    def get_queryset(self):
+        return User.objects.all()
+
 
     def post(self, request):
         # Extracting data from request and validating it
@@ -109,7 +115,10 @@ class LogoutView(CustomAPIView):
 
 class DoctorSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.DOCTOR)
+
     serializer_class = DoctorRegistrationSerializer
 
     @extend_schema(
@@ -124,19 +133,28 @@ class DoctorSignupView(CustomCreateAPIView):
 
 class PatientSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.PATIENT)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.PATIENT)
+
     serializer_class = PatientRegistrationSerializer
 
 
 class ClinicSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.CLINIC)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.CLINIC)
+
     serializer_class = ClinicRegistrationSerializer
 
 
 class PharmacySignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.PHARMACY)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.PHARMACY)
+
     serializer_class = PharmacyRegistrationSerializer
 
 
@@ -160,7 +178,10 @@ class DoctorsListView(CustomListAPIView):
     permission_classes = [AllowAny]
     filter_backends = [SearchFilter]
     serializer_class = DoctorDirectorySerializer
-    queryset = DoctorInfo.objects.all()
+
+    def get_queryset(self):
+        return DoctorInfo.objects.all()
+
     search_fields = ["user__full_name", "username"]
 
     # def filter_queryset(self, queryset):
@@ -177,7 +198,10 @@ class DoctorsListView(CustomListAPIView):
 class FeaturedDoctorListView(CustomListAPIView):
     permission_classes = [AllowAny]
     serializer_class = FeaturedDoctorSerializer
-    queryset = sorted(DoctorInfo.objects.all(), key=lambda x: x.rating, reverse=True)
+
+    def get_queryset(self):
+        return sorted(DoctorInfo.objects.all(), key=lambda x: x.rating, reverse=True)
+
 
 
 class PasswordResetEmailView(CustomAPIView):

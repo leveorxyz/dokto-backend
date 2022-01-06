@@ -314,7 +314,10 @@ class WaitingRoomAPIView(CustomRetrieveUpdateAPIView):
 class PatientWaitingRoomView(CustomRetrieveAPIView):
     serializer_class = WaitingRoomSerializer
     permission_classes = [AllowAny]
-    queryset = WaitingRoom.objects.all()
+
+    def get_queryset(self):
+        return WaitingRoom.objects.all()
+
 
     def get_object(self):
         doctor_username = self.kwargs.get("doctor_username")
