@@ -7,7 +7,7 @@ from .views import (FlutterwaveWebhook, PaypalWebhook, PaystackWebhook, StripeWe
 urlpatterns = [
     path("subscribe/", SubscriptionView.as_view({'post': 'create'}), name="subscribe"),
     path("unsubscribe/", UnsubscribeView.as_view({'post': 'create'}), name="unsubscribe"),
-    path("subscriptions/", SubscriptionPaymentsView.as_view({'get': 'list'}), name="subscribe"),
+    path("subscriptions/", SubscriptionPaymentsView.as_view({'get': 'list'}), name="subscription-list"),
     path("change_subscription_type/", ChangeSubscriptionView.as_view({'get': 'create'}), name="change-subscription-type"),
     path("flutterwave-webhook", FlutterwaveWebhook.as_view()),
     path("paystack-webhook", PaystackWebhook.as_view(), name='paystack-webhook'),

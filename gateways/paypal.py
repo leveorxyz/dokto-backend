@@ -67,7 +67,7 @@ class PayPalAPI(Gateway):
         return self.send('catalogs/products', 'POST', {}, data)
 
 
-class PaypalProvider():
+class PaypalProvider(Gateway):
 
     def get_provider_type(self):
         return SubscriptionPaymantProvider.PAYPAL

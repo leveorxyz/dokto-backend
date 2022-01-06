@@ -16,7 +16,7 @@ from gateways.paystack import PaystackProvider
 from gateways.stripe import StripeProvider
 from subscription.utils import get_subscription_user
 from user.models import User
-from .models import SubscriptionHistoryPayment, SubscriptionModelMixin
+from .models import SubscriptionHistoryPayment, SubscriptionModelMixin, SubscriptionPlanTypes, SubscriptionType
 
 from .serializers import ChangeMembershipSerializer, SubscriptionChargeSerializer, SubscriptionSerializer
 
@@ -24,6 +24,10 @@ from .serializers import ChangeMembershipSerializer, SubscriptionChargeSerialize
 # Create your views here.
 class SubscriptionBaseView(GenericViewSet):
     serializer_class = SubscriptionSerializer
+
+    def __init__(self, *args, **kwargs):
+        super(SubscriptionBaseView, self).__init__(*args, **kwargs)
+        self.object = None
 
     def validate(self) -> tuple[bool, str]:
         # raise exception if not possible
@@ -38,51 +42,51 @@ class SubscriptionBaseView(GenericViewSet):
             self.object = get_subscription_user(user)
         return self.object
 
-    def check_permission(self, request):
-        if self.get_object().user != self.user:
-            raise self.permission_denied(request)
-
     def create(self, request, *args, **kwargs):
         self.serializer = self.get_serializer(data=request.data)
         self.serializer.is_valid(raise_exception=True)
         is_valid, reason = self.validate()
         if not is_valid:
             raise ValidationError([reason])
-        self.handle(self.serializer)
-        return Response(self.serializer.data, status=status.HTTP_200_OK)
+        res = self.handle(self.serializer)
+        return Response(res, status=status.HTTP_200_OK)
 
 
 class SubscriptionView(SubscriptionBaseView):
     serializer_class = SubscriptionChargeSerializer
 
     def validate(self):
-        self.get_object().can_subscribe()
+        return self.get_object().can_subscribe()
 
-    def handle(self):
+    def handle(self, serializer):
         obj = self.get_object()
         payment_method = self.serializer.validated_data.get('payment_method')
         amount_to_pay, plan_type, quantity = obj.get_subscription_info()
         sub_id, approval_url = Gateway.get_payment_gateway(payment_method).subscribe(self.request.user, amount_to_pay, plan_type, quantity)
-        return Response({'subscription_id': sub_id, 'approval_url': approval_url})
+        # self.serializer = SubscriptionChargeSerializer(data={'subscription_id': sub_id, 'approval_url': approval_url})
+        return {'approval_url': approval_url, 'payment_method': payment_method, 'status': True}
 
 
 class UnsubscribeView(SubscriptionBaseView):
 
     def validate(self):
-        self.get_object().can_unsubscribe()
+        return self.get_object().can_unsubscribe()
 
-    def handle(self):
+    def handle(self, _serializer):
         obj = self.get_object()
-        payment_method = self.serializer.validated_data.get('payment_method')
-        sub_id, approval_url = Gateway.get_payment_gateway(payment_method).cancel_subscription(obj)
-        return Response({'subscription_id': sub_id, 'approval_url': approval_url})
+        payment_method = obj.current_subscription.payment_method
+        Gateway.get_payment_gateway(payment_method).cancel_subscription(obj)
+        return {'status': True}
 
 
 class ChangeSubscriptionView(SubscriptionBaseView):
     serializer_class = ChangeMembershipSerializer
 
     def validate(self):
-        return self.get_object().can_unsubscribe(self.serializer.change_to)
+        if self.get_object().subscription_type == SubscriptionType.MEMBERSHIP:
+            return self.get_object().can_use_pay_as_you_go(self.serializer.change_to)
+        else:
+            return self.get_object().can_use_membership(self.serializer.change_to)
 
     def handle(self, serializer: ChangeMembershipSerializer):
         self.get_object().change_membership_type(serializer.change_to)
