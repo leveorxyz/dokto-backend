@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Tuple
 
 from rest_framework import permissions, status
 from rest_framework.decorators import permission_classes
@@ -29,7 +30,7 @@ class SubscriptionBaseView(GenericViewSet):
         super(SubscriptionBaseView, self).__init__(*args, **kwargs)
         self.object = None
 
-    def validate(self) -> tuple[bool, str]:
+    def validate(self) -> Tuple[bool, str]:
         # raise exception if not possible
         return True, ""
 
