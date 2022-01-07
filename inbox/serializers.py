@@ -108,10 +108,18 @@ class InboxChannelMessage(ModelSerializer):
 
     class Meta:
         model = InboxMessage
-        fields = ["channel", "message", "subject", "sender", "read_status"]
+        fields = [
+            "channel",
+            "message",
+            "subject",
+            "sender",
+            "read_status",
+            "created_at",
+        ]
         extra_kwargs = {
             "channel": {"required": True},
             "message": {"required": True},
             "subject": {"required": False},
             "read_status": {"read_only": True},
+            "created_at": {"read_only": True},
         }
