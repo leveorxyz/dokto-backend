@@ -115,7 +115,6 @@ class InboxChannelMessage(ModelSerializer):
             "sender",
             "read_status",
             "created_at",
-            "uploaded_file_mimetype",
         ]
         extra_kwargs = {
             "channel": {"required": True},
@@ -123,5 +122,4 @@ class InboxChannelMessage(ModelSerializer):
             "subject": {"required": False},
             "read_status": {"read_only": True},
             "created_at": {"read_only": True},
-            "uploaded_file_mimetype": {"read_only": True},
         }
