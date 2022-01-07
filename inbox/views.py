@@ -74,7 +74,7 @@ class InboxReadMessageAPIView(CustomListAPIView):
     serializer_class = InboxChannelMessage
 
     def get_queryset(self):
-        return InboxMessage.objects.filter()
+        return InboxMessage.objects.filter().order_by("-created_at")
 
     def get_object(self, channel_id):
         return get_object_or_404(self.get_queryset(), channel_id=channel_id)
