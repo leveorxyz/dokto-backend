@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple
 
 from datetime import datetime, timedelta
 from re import sub
@@ -73,17 +74,17 @@ class SubscriptionModelMixin(models.Model):
     def is_subscription_active(self):
         return self.is_active # TODO: Is it possible to use a new field name?
 
-    def can_subscribe(self) -> tuple[bool, str]:
+    def can_subscribe(self) -> Tuple[bool, str]:
         if not self.current_subscription and  self.subscription_type == SubscriptionType.MEMBERSHIP:
             return True, ""
         return False, "Doctor not on membership plan or is currently subscribed"
 
-    def can_unsubscribe(self) -> tuple[bool, str]:
+    def can_unsubscribe(self) -> Tuple[bool, str]:
         if self.current_subscription:
             return True, ""
         return False, "Doctor is current not in any active subscription"
 
-    def can_use_membership(self, membership_type) -> tuple[bool, str]:
+    def can_use_membership(self, membership_type) -> Tuple[bool, str]:
         return True, ""
 
     def can_use_pay_as_you_go(self):
@@ -109,7 +110,7 @@ class SubscriptionModelMixin(models.Model):
     def change_membership_type(self):
         pass
 
-    def get_subscription_info(self) -> tuple[int, str, int]:
+    def get_subscription_info(self) -> Tuple[int, str, int]:
         return 0, SubscriptionPlanTypes.DOTOR_SUSBCRIPTION_TYPE, 1
 
 
