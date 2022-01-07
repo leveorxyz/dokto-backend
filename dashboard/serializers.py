@@ -37,6 +37,10 @@ from user.serializers import (
     DoctorReviewSerializer,
 )
 
+from accounting.models import (
+    Payment
+)
+
 
 class DoctorProfileDetailsSerializer(ModelSerializer):
     """
@@ -436,6 +440,10 @@ class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
     class Meta:
         model = DoctorInfo
         fields = ["services"]
+class DoctorInvoiceSerializer(ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['amount_paid','payment_date',]
 
 
 class PatientProfileDetailsSerializer(ModelSerializer):
