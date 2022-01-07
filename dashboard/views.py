@@ -147,7 +147,10 @@ class DoctorAvailableHoursSettingsAPIView(CustomListUpdateAPIView):
 class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorAccountSettingsSerializer
-    queryset = DoctorInfo.objects.all()
+
+    def get_queryset(self):
+        return DoctorInfo.objects.all()
+
 
     def get_object(self):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)
@@ -158,7 +161,10 @@ class DoctorAccountSettingsAPIView(CustomRetrieveUpdateAPIView):
 class PatientProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, PatientPermission, OwnProfilePermission]
     serializer_class = PatientProfileDetailsSerializer
-    queryset = PatientInfo.objects.all()
+
+    def get_queryset(self):
+        return PatientInfo.objects.all()
+
 
     def get_object(self):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)
@@ -169,7 +175,10 @@ class PatientProfileDetailsAPIView(CustomRetrieveUpdateAPIView):
 class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorProfessionalProfileSerializer
-    queryset = DoctorInfo.objects.all()
+
+    def get_queryset(self):
+        return DoctorInfo.objects.all()
+
 
     def get_object(self):
         obj = get_object_or_404(self.get_queryset(), user=self.request.user)
@@ -180,7 +189,10 @@ class DoctorProfessionalProfileAPIView(CustomRetrieveUpdateAPIView):
 class DoctorServiceSettingsAPIView(CustomRetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
     serializer_class = DoctorServiceSettingsSerializer
-    queryset = DoctorInfo.objects.all()
+
+    def get_queryset(self):
+        return DoctorInfo.objects.all()
+
 
     @extend_schema(
         responses={
