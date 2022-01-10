@@ -131,7 +131,7 @@ class PaypalProcessAPIView(generics.CreateAPIView):
         appointment = Appointment.objects.get(pk=appointment_id)
         payment=Payment.objects.create( amount_paid =appointment.specialty.price, appointment= appointment, payment_gateway="Paypal",  )
         #auth=('user', 'pass')
-        get_auth = requests.post('https://api-m.sandbox.paypal.com/v1/oauth2/token', data={"grant_type":"client_credentials"}, auth=("ARbTuLo_10qKxP2bF2fxgOWjifq13176ze0RsaVLHVEsg7Izg5ShIDaizj7B-qw6kyJ_hbDQ65P-ag-M","EBEb6D2MUxhl9AoN85M_FYYG8-jyNw3XDFo0sWl8rzsNXdcU2PKlAVQeyFn3X4zKlKeOp-0CEr53ael1") )
+        get_auth = requests.post('https://api-m.sandbox.paypal.com/v1/oauth2/token', data={"grant_type":"client_credentials"}, auth=(f"{settings.PAYPAL_CLIENT_ID}",f"{settings.PAYPAL_CLIENT_SECRET}") )
         token = get_auth.json()['access_token']
 
         create_charge = requests.post('https://api-m.sandbox.paypal.com/v2/checkout/orders', 
@@ -170,13 +170,7 @@ class PaypalCheckoutAPIView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         payment_id = serializer.data["payment_id"]
         try:
-            payment = Payment.objects.get(id=payment_id)
-            print(Payment.objects.last())
-            stripe_checkout_response = stripe.checkout.Session.retrieve(payment.transaction_reference)
-            if stripe_checkout_response.payment_status == 'paid':
-                payment.paid = True
-                payment.appointment.payment = True
-                payment.save()
+          pass
         except:
             return Response("Invalid ID")
 

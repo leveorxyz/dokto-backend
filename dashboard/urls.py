@@ -9,6 +9,7 @@ from .views import (
     DoctorInsuranceAPIView,
     DoctorProfessionalProfileAPIView,
     DoctorProfileAPIView,
+    DoctorInvoiceAPIView,
     DoctorProfileDetailsAPIView,
     DoctorProfilePublicAPIView,
     DoctorReviewListCreateAPIView,
@@ -17,6 +18,7 @@ from .views import (
     DoctorAccountSettingsAPIView,
     DoctorServiceSettingsAPIView,
     PatientProfileDetailsAPIView,
+    PatientInvoiceAPIView,
     AccountSettingsSerializer,
     PharmacyAvailableHoursSettingsAPIView,
     PharmacyLicenseAPIView,
@@ -127,5 +129,15 @@ urlpatterns = [
         "clinic/remove-doctor/<str:doctor_username>",
         ClinicTeamRemoveAPIView.as_view(),
         name="clinic-remove-doctor",
+    ),
+    path(
+        "doctor/invoice/",
+        DoctorInvoiceAPIView.as_view(),
+        name="doctor-invoice",
+    ),
+    path(
+        "patient/invoice/",
+        PatientInvoiceAPIView.as_view(),
+        name="patient-invoice",
     ),
 ]
