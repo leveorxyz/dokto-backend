@@ -48,6 +48,7 @@ from .serializers import (
     DoctorServiceSettingsSerializer,
     PatientProfileDetailsSerializer,
     PatientAccountSettingsSerializer,
+    PatientInvoiceSerializer,
     DoctorProfessionalProfileSerializer,
     PharmacyAccountSettingsSerializer,
     PharmacyAvailableHoursSettingsSerializer,
@@ -526,3 +527,22 @@ class ClinicTeamRemoveAPIView(CustomAPIView):
 class DoctorInvoiceAPIView(CustomRetrieveAPIView):
     serializer_class = DoctorInvoiceSerializer
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
+    # date of transaction, amount, name of patient, appointment_id
+
+    def get_queryset(self):
+        return DoctorInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user=self.request.user)
+   
+
+class PatientInvoiceAPIView(CustomRetrieveAPIView):
+    serializer_class = PatientInvoiceSerializer
+    permission_classes = [IsAuthenticated, PatientPermission, OwnProfilePermission]
+    # date of transaction, amount, name of patient, appointment_id
+
+    def get_queryset(self):
+        return PatientInfo.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user=self.request.user)
