@@ -492,7 +492,7 @@ class ClinicInfo(CoreModel, SubscriptionModelMixin):
             "/".join(
                 [
                     settings.FRONTEND_URL,
-                    "onboard",
+                    "provider-registration",
                 ]
             )
             + f"?token={invite_token.decode('utf-8')}"
