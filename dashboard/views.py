@@ -538,7 +538,10 @@ class ClinicSendOnboardingMailAPIView(CustomAPIView):
         if not "doctor_email" in data:
             raise ValidationError("doctor_email is required")
         clinic: ClinicInfo = self.request.user.clinic_info
-        clinic.send_onboard_mail(data["doctor_email"])
+        try:
+            clinic.send_onboard_mail(data["doctor_email"])
+        except Exception as e:
+            pass
         return super().post(request, response_data={}, *args, **kwargs)
 class DoctorInvoiceAPIView(CustomRetrieveAPIView):
     serializer_class = DoctorInvoiceSerializer
