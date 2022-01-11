@@ -61,6 +61,9 @@ class User(AbstractUser, CoreModel):
     is_verified = models.BooleanField(
         _("is verified"), default=False, blank=True, null=True
     )
+    is_disabled = models.BooleanField(
+        _("is disabled"), default=False, blank=True, null=True
+    )
     street = models.CharField(_("street"), max_length=100, blank=True, null=True)
     state = models.CharField(_("state"), max_length=50, blank=True, null=True)
     city = models.CharField(_("city"), max_length=50, blank=True, null=True)
@@ -93,6 +96,7 @@ class User(AbstractUser, CoreModel):
             "is_staff",
             "is_superuser",
             "is_verified",
+            "is_disabled",
             "_profile_photo",
             "is_active",
             "date_joined",
