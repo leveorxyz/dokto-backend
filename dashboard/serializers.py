@@ -404,33 +404,34 @@ class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
             "profession",
             {"doctor_info": instance},
         )
-        old_service_data = set(
-            DoctorService.objects.filter(doctor_info=instance).values_list(
-                "profession", "service", "price"
-            )
-        )
         new_service_data = []
         for k, v in services.items():
             for service in v:
                 new_service_data.append((k, service["service"], service["price"]))
-        new_service_data = set(new_service_data)
-        added_items = new_service_data - old_service_data
-        deleted_items = old_service_data - new_service_data
-        for profession, service, price in added_items:
+
+        affiliated_clinic = (
+            instance.affiliated_hospital if instance.affiliated_hospital else None
+        )
+        DoctorService.objects.filter(doctor_info=instance).delete()
+        if affiliated_clinic:
+            HospitalService.objects.filter(
+                clinic=affiliated_clinic, doctor=instance
+            ).delete()
+        for profession, service, price in new_service_data:
             DoctorService.objects.create(
                 doctor_info=instance,
                 profession=profession,
                 service=service,
                 price=price,
             )
-
-        for profession, service, price in deleted_items:
-            DoctorService.objects.filter(
-                doctor_info=instance,
-                profession=profession,
-                service=service,
-                price=price,
-            ).delete()
+            if affiliated_clinic:
+                HospitalService.objects.create(
+                    clinic=affiliated_clinic,
+                    doctor=instance,
+                    profession=profession,
+                    service=service,
+                    price=price,
+                )
 
         return instance
 
