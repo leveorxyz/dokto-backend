@@ -280,6 +280,9 @@ class DoctorInfo(CoreModel):
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
     license_expiration = models.DateField(blank=True, null=True)
+    affiliated_hospital = models.ForeignKey(
+        "ClinicInfo", on_delete=models.CASCADE, null=True, blank=True, default=None
+    )
 
     @classmethod
     def get_hidden_fields(self, *args, **kwargs) -> list:
@@ -291,6 +294,7 @@ class DoctorInfo(CoreModel):
             "reason_to_delete",
             "temporary_disable",
             "notification_email",
+            "affiliated_hospital",
         ]
 
     @property

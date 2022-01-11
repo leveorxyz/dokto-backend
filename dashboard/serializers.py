@@ -44,10 +44,8 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
     Serializes the `Dashboard > Profile Settings > Profile Details` page
     """
 
-    full_name = CharField(source="user.full_name",
-                          required=False, allow_null=True)
-    contact_no = CharField(source="user.contact_no",
-                           required=False, allow_null=True)
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
@@ -256,17 +254,14 @@ class DoctorProfileSerializer(ModelSerializer):
     street = CharField(source="user.street", required=False, allow_null=True)
     state = CharField(source="user.state", required=False, allow_null=True)
     city = CharField(source="user.city", required=False, allow_null=True)
-    zip_code = CharField(source="user.zip_code",
-                         required=False, allow_null=True)
+    zip_code = CharField(source="user.zip_code", required=False, allow_null=True)
     country = CharField(source="user.country", required=False, allow_null=True)
-    contact_no = CharField(source="user.contact_no",
-                           required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
     avg_rating = SerializerMethodField(required=False, allow_null=True)
-    qualification_suffix = SerializerMethodField(
-        required=False, allow_null=True)
+    qualification_suffix = SerializerMethodField(required=False, allow_null=True)
     education = DoctorEducationSerializerWithID(
         many=True,
         required=False,
@@ -417,8 +412,7 @@ class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
         new_service_data = []
         for k, v in services.items():
             for service in v:
-                new_service_data.append(
-                    (k, service["service"], service["price"]))
+                new_service_data.append((k, service["service"], service["price"]))
         new_service_data = set(new_service_data)
         added_items = new_service_data - old_service_data
         deleted_items = old_service_data - new_service_data
@@ -446,10 +440,8 @@ class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
 
 
 class PatientProfileDetailsSerializer(ModelSerializer):
-    full_name = CharField(source="user.full_name",
-                          required=False, allow_null=True)
-    contact_no = CharField(source="user.contact_no",
-                           required=False, allow_null=True)
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
@@ -528,8 +520,7 @@ class DoctorProfessionalProfileSerializer(FieldListUpdateSerializer):
 
 
 class DoctorAcceptedInsuranceSerializer(FieldListUpdateSerializer):
-    accepted_insurance = ReadWriteSerializerMethodField(
-        required=False, allow_null=True)
+    accepted_insurance = ReadWriteSerializerMethodField(required=False, allow_null=True)
     accept_all_insurance = ListField(
         child=CharField(), required=False, allow_null=True, write_only=True
     )
@@ -577,10 +568,8 @@ class ClinicAccountSettingsSerializer(AbstractAccountSettingsSerializer):
 
 
 class ClinicProfileDetailsSerializer(ModelSerializer):
-    full_name = CharField(source="user.full_name",
-                          required=False, allow_null=True)
-    contact_no = CharField(source="user.contact_no",
-                           required=False, allow_null=True)
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
@@ -628,10 +617,8 @@ class ClinicLicenseSerializer(ModelSerializer):
 
 
 class PharmacyProfileSettingsSerializer(ModelSerializer):
-    full_name = CharField(source="user.full_name",
-                          required=False, allow_null=True)
-    contact_no = CharField(source="user.contact_no",
-                           required=False, allow_null=True)
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
     )
@@ -668,8 +655,7 @@ class PharmacyProfileSettingsSerializer(ModelSerializer):
             "website",
             "bio",
         ]
-        extra_kwargs = {"website": {"required": False},
-                        "bio": {"required": False}}
+        extra_kwargs = {"website": {"required": False}, "bio": {"required": False}}
 
 
 class PharmacyLicenseSerializer(ModelSerializer):

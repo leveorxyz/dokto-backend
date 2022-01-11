@@ -129,6 +129,9 @@ urlpatterns = [
         ClinicTeamRemoveAPIView.as_view(),
         name="clinic-remove-doctor",
     ),
-    path("clinic/send-onboarding-mail/", ClinicSendOnboardingMailAPIView.as_view(),
-         name="clinic-send-onboarding-mail")
+    path(
+        "clinic/send-onboarding-mail/",
+        ClinicSendOnboardingMailAPIView.as_view(),
+        name="clinic-send-onboarding-mail",
+    ),
 ]

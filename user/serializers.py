@@ -17,6 +17,7 @@ from cryptography.fernet import InvalidToken
 from core.models import CoreModel
 
 from core.classes import ExpiringActivationTokenGenerator
+from dashboard.models import HospitalTeam
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
@@ -132,6 +133,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
     license_expiration = DateField(required=True, write_only=True)
     profession = ListField(child=CharField(), write_only=True, required=False)
+    affiliated_hospital_id = CharField(required=False, write_only=True)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
@@ -159,8 +161,20 @@ class DoctorRegistrationSerializer(ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data: dict):
+        # Check if doctor is affiliated to a hospital
+        affiliated_hospital = None
+        if "affiliated_hospital_id" in validated_data:
+            affiliated_hospital = ClinicInfo.objects.get(
+                user_id=validated_data.get("affiliated_hospital_id")
+            )
+
         # Generate username
-        username = generate_username(DoctorInfo, validated_data.get("full_name"))
+        username_suffix = (
+            f" {affiliated_hospital.user.full_name}" if affiliated_hospital else ""
+        )
+        username = generate_username(
+            DoctorInfo, validated_data.get("full_name") + username_suffix
+        )
 
         validated_data.update({"user_type": User.UserType.DOCTOR})
         user: User = User.from_validated_data(validated_data=validated_data)
@@ -188,7 +202,13 @@ class DoctorRegistrationSerializer(ModelSerializer):
         license_file = validated_data.pop("license_file")
 
         # Creating doctor info
-        validated_data.update({"user": user, "username": username})
+        validated_data.update(
+            {
+                "user": user,
+                "username": username,
+                "affiliated_hospital": affiliated_hospital,
+            }
+        )
         try:
             doctor_info: DoctorInfo = DoctorInfo.from_validated_data(
                 validated_data=validated_data
@@ -196,6 +216,12 @@ class DoctorRegistrationSerializer(ModelSerializer):
             doctor_info.save()
             doctor_info.identification_photo = identification_photo
             doctor_info.license_file = license_file
+            if affiliated_hospital:
+                HospitalTeam.objects.create(
+                    clinic=affiliated_hospital,
+                    doctor=doctor_info,
+                    profession=profession_data[0],
+                )
         except Exception as e:
             user.delete()
             raise e
@@ -257,6 +283,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 "experience",
                 "accept_all_insurance",
                 "profession",
+                "affiliated_hospital_id",
             ]
         )
 

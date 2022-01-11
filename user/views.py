@@ -12,7 +12,7 @@ from drf_spectacular.utils import (
     OpenApiResponse,
 )
 from drf_spectacular.types import OpenApiTypes
-from core.classes import CustomTokenAuthentication
+from core.classes import CustomTokenAuthentication, ExpiringActivationTokenGenerator
 
 from core.views import (
     CustomListAPIView,
@@ -21,7 +21,7 @@ from core.views import (
     CustomAPIView,
 )
 from core.utils import set_user_ip
-from .models import User, DoctorInfo
+from .models import ClinicInfo, User, DoctorInfo
 from .serializers import (
     DoctorDirectorySerializer,
     FeaturedDoctorSerializer,
@@ -114,12 +114,23 @@ class DoctorSignupView(CustomCreateAPIView):
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("onboard-token", str, required=False),
+            OpenApiParameter("token", str, required=False),
         ],
         request=DoctorRegistrationSerializer,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+    def get_serializer(self, *args, **kwargs):
+        query_param = self.request.query_params
+        if "token" in query_param:
+            hospital_id = ExpiringActivationTokenGenerator().get_token_value(
+                query_param["token"]
+            )
+            self.request.data["affiliated_hospital_id"] = hospital_id
+        else:
+            self.request.data["affiliated_hospital_id"] = None
+        return super().get_serializer(*args, **kwargs)
 
 
 class PatientSignupView(CustomCreateAPIView):
