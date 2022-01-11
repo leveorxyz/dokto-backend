@@ -413,6 +413,7 @@ class DoctorAvailableHours(CoreModel):
     )
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
+    interval = models.IntegerField(blank=True, null=True, default=30)
 
 
 class DoctorReview(CoreModel):
