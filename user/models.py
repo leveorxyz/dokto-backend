@@ -462,16 +462,9 @@ class ClinicInfo(CoreModel):
         del self.license_file
         return super(ClinicInfo, self).delete(*args, **kwargs)
 
-    def send_onboard_mail(self, doctor_id=None, *args, **kwargs):
-        if not doctor_id:
-            raise ValidationError("doctor_id is required")
-        doctor_user: User = None
-        try:
-            doctor_user = DoctorInfo.objects.get(id=doctor_id).user
-        except DoctorInfo.DoesNotExist:
-            raise ValidationError("doctor_id is not valid")
+    def send_onboard_mail(self, doctor_email=None, *args, **kwargs):
         invite_token = ExpiringActivationTokenGenerator().generate_token(
-            text=self.email
+            text=self.user.id.__str__()
         )
         link = (
             "/".join(
@@ -483,11 +476,11 @@ class ClinicInfo(CoreModel):
             + f"?token={invite_token.decode('utf-8')}"
         )
         send_mail(
-            to_email=doctor_user.email,
+            to_email=doctor_email,
             subject=f"Dokto doctor onboarding",
-            template_name="email/password_reset.html",
+            template_name="email/doctor_onboard.html",
             input_context={
-                "name": doctor_user.full_name,
+                "name": self.user.full_name,
                 "link": link,
                 "host_url": Site.objects.get_current().domain,
             },
