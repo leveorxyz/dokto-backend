@@ -38,6 +38,10 @@ from user.serializers import (
     DoctorReviewSerializer,
 )
 
+from accounting.models import (
+    Payment
+)
+
 
 class DoctorProfileDetailsSerializer(ModelSerializer):
     """
@@ -439,6 +443,18 @@ class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
         model = DoctorInfo
         fields = ["services"]
 
+
+class DoctorInvoiceSerializer(ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id','amount_paid','payment_date','appointment']
+
+    # def get_appointment(self,patient):
+
+class PatientInvoiceSerializer(ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id','amount_paid','payment_date','appointment']
 
 class PatientProfileDetailsSerializer(ModelSerializer):
     full_name = CharField(source="user.full_name", required=False, allow_null=True)

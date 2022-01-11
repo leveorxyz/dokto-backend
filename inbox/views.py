@@ -67,7 +67,10 @@ class InboxChannelListView(CustomListAPIView):
 
 class InboxSendMessageAPIView(CustomCreateAPIView):
     serializer_class = InboxMessageSerializer
-    queryset = InboxMessage.objects.all()
+
+    def get_queryset(self):
+        return InboxMessage.objects.all()
+
 
 
 class InboxReadMessageAPIView(CustomListAPIView):
@@ -82,7 +85,10 @@ class InboxReadMessageAPIView(CustomListAPIView):
 
 class InboxCreateChannelAPIView(CustomCreateAPIView):
     serializer_class = InboxChannelSerializer
-    queryset = InboxChannel.objects.all()
+
+    def get_queryset(self):
+        return InboxChannel.objects.all()
+
 
     @extend_schema(
         request=InboxChannelPostSchemaSerializer,

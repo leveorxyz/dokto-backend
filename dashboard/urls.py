@@ -10,6 +10,7 @@ from .views import (
     DoctorInsuranceAPIView,
     DoctorProfessionalProfileAPIView,
     DoctorProfileAPIView,
+    DoctorInvoiceAPIView,
     DoctorProfileDetailsAPIView,
     DoctorProfilePublicAPIView,
     DoctorReviewListCreateAPIView,
@@ -18,6 +19,7 @@ from .views import (
     DoctorAccountSettingsAPIView,
     DoctorServiceSettingsAPIView,
     PatientProfileDetailsAPIView,
+    PatientInvoiceAPIView,
     AccountSettingsSerializer,
     PharmacyAvailableHoursSettingsAPIView,
     PharmacyLicenseAPIView,
@@ -133,5 +135,15 @@ urlpatterns = [
         "clinic/send-onboarding-mail/",
         ClinicSendOnboardingMailAPIView.as_view(),
         name="clinic-send-onboarding-mail",
+    ),
+    path(
+        "doctor/invoice/",
+        DoctorInvoiceAPIView.as_view(),
+        name="doctor-invoice",
+    ),
+    path(
+        "patient/invoice/",
+        PatientInvoiceAPIView.as_view(),
+        name="patient-invoice",
     ),
 ]
