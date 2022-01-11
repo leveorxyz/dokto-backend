@@ -3,6 +3,7 @@ from drf_spectacular.utils import OpenApiExample, extend_schema_serializer
 from rest_framework.fields import DateField, FloatField, IntegerField, ListField
 from rest_framework.serializers import (
     ModelSerializer,
+    Serializer,
     SerializerMethodField,
     CharField,
     EmailField,
@@ -407,33 +408,34 @@ class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
             "profession",
             {"doctor_info": instance},
         )
-        old_service_data = set(
-            DoctorService.objects.filter(doctor_info=instance).values_list(
-                "profession", "service", "price"
-            )
-        )
         new_service_data = []
         for k, v in services.items():
             for service in v:
                 new_service_data.append((k, service["service"], service["price"]))
-        new_service_data = set(new_service_data)
-        added_items = new_service_data - old_service_data
-        deleted_items = old_service_data - new_service_data
-        for profession, service, price in added_items:
+
+        affiliated_clinic = (
+            instance.affiliated_hospital if instance.affiliated_hospital else None
+        )
+        DoctorService.objects.filter(doctor_info=instance).delete()
+        if affiliated_clinic:
+            HospitalService.objects.filter(
+                clinic=affiliated_clinic, doctor=instance
+            ).delete()
+        for profession, service, price in new_service_data:
             DoctorService.objects.create(
                 doctor_info=instance,
                 profession=profession,
                 service=service,
                 price=price,
             )
-
-        for profession, service, price in deleted_items:
-            DoctorService.objects.filter(
-                doctor_info=instance,
-                profession=profession,
-                service=service,
-                price=price,
-            ).delete()
+            if affiliated_clinic:
+                HospitalService.objects.create(
+                    clinic=affiliated_clinic,
+                    doctor=instance,
+                    profession=profession,
+                    service=service,
+                    price=price,
+                )
 
         return instance
 
@@ -789,3 +791,10 @@ class ClinicServiceListSerializer(ModelSerializer):
         model = HospitalService
         fields = ["id", "service", "price"]
         extra_kwargs = {field: {"read_only": True} for field in fields}
+
+
+class ClinicSendOnboardingMailSerializer(Serializer):
+    doctor_email = EmailField(required=True)
+
+    class Meta:
+        fields = ["doctor_email"]

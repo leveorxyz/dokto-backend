@@ -36,6 +36,7 @@ from .serializers import (
     ClinicAccountSettingsSerializer,
     ClinicProfileDetailsSerializer,
     ClinicLicenseSerializer,
+    ClinicSendOnboardingMailSerializer,
     ClinicServiceListSerializer,
     ClinicTeamListSerializer,
     DoctorAcceptedInsuranceSerializer,
@@ -524,6 +525,21 @@ class ClinicTeamRemoveAPIView(CustomAPIView):
         ).delete()
         return super().delete(request, response_data={}, *args, **kwargs)
 
+
+class ClinicSendOnboardingMailAPIView(CustomAPIView):
+    permission_classes = [IsAuthenticated, ClinicPermission]
+    http_method_names = ["post", "options"]
+
+    @extend_schema(
+        request=ClinicSendOnboardingMailSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        if not "doctor_email" in data:
+            raise ValidationError("doctor_email is required")
+        clinic: ClinicInfo = self.request.user.clinic_info
+        clinic.send_onboard_mail(data["doctor_email"])
+        return super().post(request, response_data={}, *args, **kwargs)
 class DoctorInvoiceAPIView(CustomRetrieveAPIView):
     serializer_class = DoctorInvoiceSerializer
     permission_classes = [IsAuthenticated, DoctorPermission, OwnProfilePermission]
