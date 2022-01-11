@@ -234,6 +234,7 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
             "day_of_week",
             "start_time",
             "end_time",
+            "interval",
             "operation",
         ]
         extra_kwargs = {
@@ -242,6 +243,7 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
             "day_of_week": {"required": False},
             "start_time": {"required": False},
             "end_time": {"required": False},
+            "interval": {"required": False},
         }
 
 
