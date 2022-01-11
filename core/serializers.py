@@ -134,7 +134,8 @@ class AbstractAccountSettingsSerializer(Serializer):
         required=False, allow_null=True, write_only=True
     )
     reason_to_delete = CharField(required=False, allow_null=True, write_only=True)
-    temporary_disable = BooleanField(required=False, allow_null=True)
+    temporary_disable = BooleanField(
+        source="user.is_disabled", required=False, allow_null=True)
 
     def validate(self, data):
         user = self.context["request"].user
@@ -169,8 +170,9 @@ class AbstractAccountSettingsSerializer(Serializer):
                 instance.reason_to_delete = validated_data.pop("reason_to_delete")
         if validated_data.get("notification_email"):
             instance.notification_email = validated_data.pop("notification_email")
-        if validated_data.get("temporary_disable"):
-            user.is_active = False
+        if "user" in validated_data:
+            user.is_disabled = validated_data["user"]["is_disabled"]
+            user.save()
         user.save()
         instance.save()
 
