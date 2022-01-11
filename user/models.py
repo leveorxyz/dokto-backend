@@ -460,7 +460,8 @@ class ClinicInfo(CoreModel, SubscriptionModelMixin):
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
-    website = models.URLField(blank=True, null=True, default=None)
+    website = models.CharField(
+        max_length=255, blank=True, null=True, default=None)
     _license_file = models.FileField(
         upload_to=CLINIC_LICENSE_FILE_DIRECTORY, blank=True, null=True, default=None
     )
@@ -557,7 +558,8 @@ class PharmacyInfo(CoreModel, SubscriptionModelMixin):
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True, null=True)
-    website = models.URLField(blank=True, null=True, default=None)
+    website = models.CharField(
+        max_length=255, blank=True, null=True, default=None)
     _license_file = models.FileField(
         upload_to=PHARMACY_LICENSE_FILE_DIRECTORY, blank=True, null=True, default=None
     )
