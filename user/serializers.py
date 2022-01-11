@@ -133,7 +133,8 @@ class DoctorRegistrationSerializer(ModelSerializer):
     accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
     license_expiration = DateField(required=True, write_only=True)
     profession = ListField(child=CharField(), write_only=True, required=False)
-    affiliated_hospital_id = CharField(required=False, write_only=True)
+    affiliated_hospital_id = CharField(
+        required=False, write_only=True, allow_null=True)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
@@ -163,7 +164,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
     def create(self, validated_data: dict):
         # Check if doctor is affiliated to a hospital
         affiliated_hospital = None
-        if "affiliated_hospital_id" in validated_data:
+        if "affiliated_hospital_id" in validated_data and validated_data["affiliated_hospital_id"]:
             affiliated_hospital = ClinicInfo.objects.get(
                 user_id=validated_data.get("affiliated_hospital_id")
             )
