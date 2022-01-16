@@ -1,4 +1,5 @@
 from typing import Union, List, Dict
+from rest_framework.fields import SerializerMethodField
 
 from rest_framework.serializers import (
     ModelSerializer,
@@ -16,15 +17,16 @@ from cryptography.fernet import InvalidToken
 from core.models import CoreModel
 
 from core.classes import ExpiringActivationTokenGenerator
+from dashboard.models import HospitalTeam
 from .models import (
     DoctorAvailableHours,
     DoctorEducation,
+    DoctorProfession,
     DoctorReview,
     DoctorAcceptedInsurance,
     User,
     DoctorInfo,
     DoctorExperience,
-    DoctorSpecialty,
     DoctorLanguage,
     ClinicInfo,
     PharmacyInfo,
@@ -57,7 +59,6 @@ class DoctorInfoSerializer(ModelSerializer):
     fields = [
         "id",
         "date_of_birth",
-        "country",
         "gender",
         "professional_bio",
         "linkedin_url",
@@ -79,16 +80,6 @@ class DoctorEducationSerializer(ModelSerializer):
 class DoctorExpericenceSerializer(ModelSerializer):
     class Meta:
         model = DoctorExperience
-        fields = list(
-            set(field.name for field in model._meta.fields)
-            - set(model.get_hidden_fields())
-        )
-        extra_kwargs = {"doctor_info": {"required": False}}
-
-
-class DoctorSpecialtySerializer(ModelSerializer):
-    class Meta:
-        model = DoctorSpecialty
         fields = list(
             set(field.name for field in model._meta.fields)
             - set(model.get_hidden_fields())
@@ -133,7 +124,6 @@ class DoctorRegistrationSerializer(ModelSerializer):
     twitter_url = URLField(required=False, write_only=True)
     license_file = CharField(required=True, write_only=True)
     awards = CharField(write_only=True, required=False)
-    country = CharField(required=True, write_only=True)
     professional_bio = CharField(required=True, write_only=True)
     gender = ChoiceField(
         choices=PatientInfo.Gender.choices, required=True, write_only=True
@@ -142,6 +132,9 @@ class DoctorRegistrationSerializer(ModelSerializer):
     accepted_insurance = ListField(child=CharField(), required=False, write_only=True)
     accept_all_insurance = ListField(child=CharField(), write_only=True, required=False)
     license_expiration = DateField(required=True, write_only=True)
+    profession = ListField(child=CharField(), write_only=True, required=False)
+    affiliated_hospital_id = CharField(
+        required=False, write_only=True, allow_null=True)
 
     def from_serializer(
         self, data: Union[List, Dict], serializer_class: ModelSerializer, **extra_info
@@ -169,8 +162,20 @@ class DoctorRegistrationSerializer(ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data: dict):
+        # Check if doctor is affiliated to a hospital
+        affiliated_hospital = None
+        if "affiliated_hospital_id" in validated_data and validated_data["affiliated_hospital_id"]:
+            affiliated_hospital = ClinicInfo.objects.get(
+                user_id=validated_data.get("affiliated_hospital_id")
+            )
+
         # Generate username
-        username = generate_username(DoctorInfo, validated_data.get("full_name"))
+        username_suffix = (
+            f" {affiliated_hospital.user.full_name}" if affiliated_hospital else ""
+        )
+        username = generate_username(
+            DoctorInfo, validated_data.get("full_name") + username_suffix
+        )
 
         validated_data.update({"user_type": User.UserType.DOCTOR})
         user: User = User.from_validated_data(validated_data=validated_data)
@@ -183,8 +188,11 @@ class DoctorRegistrationSerializer(ModelSerializer):
 
         experience_data = []
         insurance_data = []
+        profession_data = []
         if "experience" in validated_data:
             experience_data = validated_data.pop("experience")
+        if "profession" in validated_data:
+            profession_data = validated_data.pop("profession")
         if "accepted_insurance" in validated_data:
             insurance_data = validated_data.pop("accepted_insurance")
         else:
@@ -195,7 +203,13 @@ class DoctorRegistrationSerializer(ModelSerializer):
         license_file = validated_data.pop("license_file")
 
         # Creating doctor info
-        validated_data.update({"user": user, "username": username})
+        validated_data.update(
+            {
+                "user": user,
+                "username": username,
+                "affiliated_hospital": affiliated_hospital,
+            }
+        )
         try:
             doctor_info: DoctorInfo = DoctorInfo.from_validated_data(
                 validated_data=validated_data
@@ -203,6 +217,12 @@ class DoctorRegistrationSerializer(ModelSerializer):
             doctor_info.save()
             doctor_info.identification_photo = identification_photo
             doctor_info.license_file = license_file
+            if affiliated_hospital:
+                HospitalTeam.objects.create(
+                    clinic=affiliated_hospital,
+                    doctor=doctor_info,
+                    profession=profession_data[0],
+                )
         except Exception as e:
             user.delete()
             raise e
@@ -229,9 +249,14 @@ class DoctorRegistrationSerializer(ModelSerializer):
             "insurance",
             doctor_info=doctor_info,
         )
+        self.from_list(
+            profession_data, DoctorProfession, "profession", doctor_info=doctor_info
+        )
 
-        user.send_email_verification_mail()
-
+        try:
+            user.send_email_verification_mail()
+        except:
+            pass
         return user
 
     class Meta:
@@ -242,7 +267,7 @@ class DoctorRegistrationSerializer(ModelSerializer):
         )
         extra_fields = list(
             set(field.name for field in DoctorInfo._meta.fields)
-            - set(DoctorInfo.get_hidden_fields() + ["profession"])
+            - set(DoctorInfo.get_hidden_fields())
         )
         fields = (
             main_fields
@@ -258,6 +283,8 @@ class DoctorRegistrationSerializer(ModelSerializer):
                 "education",
                 "experience",
                 "accept_all_insurance",
+                "profession",
+                "affiliated_hospital_id",
             ]
         )
 
@@ -309,8 +336,10 @@ class PharmacyRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        user.send_email_verification_mail()
-
+        try:
+            user.send_email_verification_mail()
+        except:
+            pass
         return user
 
     class Meta:
@@ -375,7 +404,10 @@ class ClinicRegistrationSerializer(PharmacyRegistrationSerializer):
             user.delete()
             raise e
 
-        user.send_email_verification_mail()
+        try:
+            user.send_email_verification_mail()
+        except:
+            pass
 
         return user
 
@@ -421,7 +453,10 @@ class PatientRegistrationSerializer(ModelSerializer):
             user.delete()
             raise e
 
-        user.send_email_verification_mail()
+        try:
+            user.send_email_verification_mail()
+        except:
+            pass
 
         return user
 
@@ -488,6 +523,7 @@ class DoctorDirectorySerializer(ModelSerializer):
     state = CharField(source="user.state")
     city = CharField(source="user.city")
     zip_code = CharField(source="user.zip_code")
+    country = CharField(source="user.country")
     contact_no = CharField(source="user.contact_no")
 
     class Meta:
@@ -502,6 +538,34 @@ class DoctorDirectorySerializer(ModelSerializer):
         )
         fields = main_fields + extra_fields
         extra_kwargs = {field: {"read_only": True} for field in extra_fields}
+
+
+class FeaturedDoctorSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name")
+    profile_photo = CharField(source="user.profile_photo")
+    address = SerializerMethodField()
+
+    def get_address(self, obj):
+        address_fields = ["street", "state", "city", "zip_code", "country"]
+        return ", ".join(
+            [
+                getattr(obj.user, field)
+                for field in address_fields
+                if getattr(obj.user, field)
+            ]
+        )
+
+    class Meta:
+        model = DoctorInfo
+        fields = [
+            "full_name",
+            "profile_photo",
+            "username",
+            "address",
+            "rating",
+            "review_count",
+        ]
+        extra_kwargs = {field: {"read_only": True} for field in fields}
 
 
 class PasswordResetEmailSerializer(Serializer):

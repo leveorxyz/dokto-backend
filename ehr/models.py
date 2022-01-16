@@ -2,6 +2,7 @@ from django.db import models
 
 from core.models import CoreModel
 from user.models import DoctorInfo, PatientInfo
+from appointment.models import Appointment
 from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
@@ -26,13 +27,15 @@ class PatientEncounters(CoreModel):
 
     patient = models.ForeignKey(PatientInfo, on_delete=models.CASCADE)
     provider = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
-
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='ehr_appointment')
     visit_date = models.DateField(blank=True, null=True)
     location = models.CharField(max_length=250, blank=True, null=True)
     # visit_reason = models.CharField(max_length=512, blank=True, null=True)
     reason = models.CharField(max_length=512, blank=True, null=True)
 
     signed = models.BooleanField(blank=True, null=True)
+    signed_date = models.DateTimeField(blank=True, null=True)
+
     timing = models.CharField(max_length=512, blank=True, null=True)
 
     # gender = models.CharField(

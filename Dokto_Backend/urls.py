@@ -54,6 +54,8 @@ urlpatterns = [
     path("appointment/", include("appointment.urls")),
     path("onboarding/", include("onboarding.urls")),
     path("inbox/", include("inbox.urls")),
+    path("wallet/", include(("wallet.urls", "wallet"), namespace="wallet",)),
+    path("subscription/", include(("subscription.urls", "subscription"), namespace='subscription')),
     url(
         r"^media/(?P<path>.*)$",
         serve,

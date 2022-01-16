@@ -1,3 +1,4 @@
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from django.conf import settings
 import json
@@ -93,14 +94,20 @@ class AddEncounters(CustomCreateAPIView):
         - reason: string
         - signed: boolean
     """
-    queryset = PatientEncounters.objects.all()
     serializer_class = PatientEncounterSerializer
+
+    def get_queryset(self):
+        return PatientEncounters.objects.all()
+
 
 
 class PatientEncountersView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = PatientEncounters.objects.all()
     serializer_class = PatientEncounterSerializer
+
+    def get_queryset(self):
+        return PatientEncounters.objects.all()
+
 
 
 class AssessmentDiagnosisByEncounterIDView(CustomListAPIView):
@@ -128,13 +135,19 @@ class AssessmentDiagnosisView(CustomCreateAPIView):
         ---
         - patient_encounter: uuid
     """
-    queryset = AssessmentDiagnosis.objects.all()
+
+    def get_queryset(self):
+        return AssessmentDiagnosis.objects.all()
+
     serializer_class = AssessmentDiagnosisSerializer
 
 
 class AssessmentDiagnosisUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = AssessmentDiagnosis.objects.all()
+
+    def get_queryset(self):
+        return AssessmentDiagnosis.objects.all()
+
     serializer_class = AssessmentDiagnosisSerializer
 
 
@@ -167,13 +180,19 @@ class PlanOfCareView(CustomCreateAPIView):
         ---
         - patient_encounter: uuid
     """
-    queryset = PlanOfCare.objects.all()
+
+    def get_queryset(self):
+        return PlanOfCare.objects.all()
+
     serializer_class = PlanOfCareSerializer
 
 
 class PlanOfCareUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = PlanOfCare.objects.all()
+
+    def get_queryset(self):
+        return PlanOfCare.objects.all()
+
     serializer_class = PlanOfCareSerializer
 
 
@@ -209,13 +228,19 @@ class PatientSocialHistoryView(CustomCreateAPIView):
         ---
         - patient_encounter: uuid
     """
-    queryset = PatientSocialHistory.objects.all()
+
+    def get_queryset(self):
+        return PatientSocialHistory.objects.all()
+
     serializer_class = PatientSocialHistorySerializer
 
 
 class PatientSocialHistoryUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = PatientSocialHistory.objects.all()
+
+    def get_queryset(self):
+        return PatientSocialHistory.objects.all()
+
     serializer_class = PatientSocialHistorySerializer
 
 
@@ -291,13 +316,19 @@ class FunctionalAndCognitiveStatusView(CustomCreateAPIView):
 
 
     """
-    queryset = FunctionalAndCognitiveStatus.objects.all()
+
+    def get_queryset(self):
+        return FunctionalAndCognitiveStatus.objects.all()
+
     serializer_class = FunctionalAndCognitiveStatusSerializer
 
 
 class FunctionalAndCognitiveStatusUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = FunctionalAndCognitiveStatus.objects.all()
+
+    def get_queryset(self):
+        return FunctionalAndCognitiveStatus.objects.all()
+
     serializer_class = FunctionalAndCognitiveStatusSerializer
 
 
@@ -322,6 +353,12 @@ class ChiefComplaintsAndHPIByEncounterIDView(CustomRetrieveAPIView):
             patient_encounter_id=patient_encounter_uuid
         )
 
+    def get_object(self):
+        main_query = self.get_queryset()
+        if len(main_query) != 0:
+            return main_query.order_by("-created_at").first()
+        raise get_object_or_404(main_query)
+
 
 class ChiefComplaintsAndHPIView(CustomCreateAPIView):
     permission_classes = [AllowAny]
@@ -336,13 +373,19 @@ class ChiefComplaintsAndHPIView(CustomCreateAPIView):
 
 
     """
-    queryset = ChiefComplaintsAndHPI.objects.all()
+
+    def get_queryset(self):
+        return ChiefComplaintsAndHPI.objects.all()
+
     serializer_class = ChiefComplaintsAndHPISerializer
 
 
 class ChiefComplaintsAndHPIUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = ChiefComplaintsAndHPI.objects.all()
+
+    def get_queryset(self):
+        return ChiefComplaintsAndHPI.objects.all()
+
     serializer_class = ChiefComplaintsAndHPISerializer
 
 
@@ -380,13 +423,19 @@ class PatientProcedureView(CustomCreateAPIView):
         - patient_encounter: uuid
 
     """
-    queryset = PatientProcedure.objects.all()
+
+    def get_queryset(self):
+        return PatientProcedure.objects.all()
+
     serializer_class = PatientProcedureSerializer
 
 
 class PatientProcedureUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = PatientProcedure.objects.all()
+
+    def get_queryset(self):
+        return PatientProcedure.objects.all()
+
     serializer_class = PatientProcedureSerializer
 
 
@@ -423,13 +472,19 @@ class ReviewOfSystemView(CustomCreateAPIView):
         - patient_encounter: uuid
 
     """
-    queryset = ReviewOfSystem.objects.all()
+
+    def get_queryset(self):
+        return ReviewOfSystem.objects.all()
+
     serializer_class = ReviewOfSystemSerializer
 
 
 class ReviewOfSystemUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = ReviewOfSystem.objects.all()
+
+    def get_queryset(self):
+        return ReviewOfSystem.objects.all()
+
     serializer_class = ReviewOfSystemSerializer
 
 
@@ -464,13 +519,19 @@ class PhysicalExamView(CustomCreateAPIView):
         - patient_encounter: uuid
 
     """
-    queryset = PhysicalExam.objects.all()
+
+    def get_queryset(self):
+        return PhysicalExam.objects.all()
+
     serializer_class = PhysicalExamSerializer
 
 
 class PhysicalExamUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = PhysicalExam.objects.all()
+
+    def get_queryset(self):
+        return PhysicalExam.objects.all()
+
     serializer_class = PhysicalExamSerializer
 
 
@@ -505,13 +566,19 @@ class OrdersView(CustomCreateAPIView):
         - patient_encounter: uuid
 
     """
-    queryset = Orders.objects.all()
+
+    def get_queryset(self):
+        return Orders.objects.all()
+
     serializer_class = OrdersSerializer
 
 
 class OrdersUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = Orders.objects.all()
+
+    def get_queryset(self):
+        return Orders.objects.all()
+
     serializer_class = OrdersSerializer
 
 
@@ -547,11 +614,17 @@ class VitalsView(CustomCreateAPIView):
 
 
     """
-    queryset = Vitals.objects.all()
+
+    def get_queryset(self):
+        return Vitals.objects.all()
+
     serializer_class = VitalsSerializer
 
 
 class VitalsUpdateView(CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AllowAny]
-    queryset = Vitals.objects.all()
+
+    def get_queryset(self):
+        return Vitals.objects.all()
+
     serializer_class = VitalsSerializer

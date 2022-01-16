@@ -1,8 +1,9 @@
 from django.db.models import Sum
-from rest_framework.fields import DateField, ListField, URLField
+from drf_spectacular.utils import OpenApiExample, extend_schema_serializer
+from rest_framework.fields import DateField, FloatField, IntegerField, ListField
 from rest_framework.serializers import (
-    Serializer,
     ModelSerializer,
+    Serializer,
     SerializerMethodField,
     CharField,
     EmailField,
@@ -17,20 +18,28 @@ from core.serializers import (
     CustomCreateUpdateDeleteObjectOperationSerializer,
     FieldListUpdateSerializer,
 )
+from dashboard.models import HospitalService, HospitalTeam
 from user.models import (
     ClinicInfo,
     DoctorAcceptedInsurance,
     DoctorAvailableHours,
     DoctorInfo,
     DoctorLanguage,
-    DoctorSpecialty,
     DoctorEducation,
     DoctorExperience,
+    DoctorProfession,
+    DoctorService,
     PatientInfo,
+    PharmacyAvailableHours,
     PharmacyInfo,
+    PharmacyService,
 )
 from user.serializers import (
     DoctorReviewSerializer,
+)
+
+from accounting.models import (
+    Payment
 )
 
 
@@ -45,14 +54,12 @@ class DoctorProfileDetailsSerializer(ModelSerializer):
         source="user.profile_photo", required=False, allow_null=True
     )
     date_of_birth = DateField(required=False, allow_null=True)
-    gender = ChoiceField(
-        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
-    )
+    gender = ChoiceField(choices=DoctorInfo.Gender.choices, required=False)
     email = EmailField(source="user.email", read_only=True)
     street = CharField(source="user.street", required=False)
     city = CharField(source="user.city", required=False)
     state = CharField(source="user.state", required=False)
-    country = CharField(required=False)
+    country = CharField(source="user.country", required=False)
     zip_code = CharField(source="user.zip_code", required=False)
 
     def update(self, instance: DoctorInfo, validated_data: dict) -> DoctorInfo:
@@ -238,33 +245,6 @@ class DoctorAvailableHoursSerializerWithID(ModelSerializer):
         }
 
 
-class DoctorSpecialtySettingsSerializer(FieldListUpdateSerializer):
-    """
-    Serializer for `dashboard > specialties and services` page.
-    """
-
-    specialty = ReadWriteSerializerMethodField(required=False, allow_null=True)
-
-    def get_specialty(self, doctor_info: DoctorInfo) -> list:
-        return list(
-            doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
-        )
-
-    def update(self, doctor_info: DoctorInfo, validated_data: dict) -> DoctorInfo:
-        if "specialty" in validated_data:
-            _ = self.perform_list_field_update(
-                validated_data.pop("specialty"),
-                DoctorSpecialty,
-                "specialty",
-                {"doctor_info": doctor_info},
-            )
-        return doctor_info
-
-    class Meta:
-        model = DoctorInfo
-        fields = ["specialty"]
-
-
 class DoctorProfileSerializer(ModelSerializer):
     """
     Serializer for `dashboard > see my profile` page
@@ -279,6 +259,7 @@ class DoctorProfileSerializer(ModelSerializer):
     state = CharField(source="user.state", required=False, allow_null=True)
     city = CharField(source="user.city", required=False, allow_null=True)
     zip_code = CharField(source="user.zip_code", required=False, allow_null=True)
+    country = CharField(source="user.country", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
     profile_photo = CharField(
         source="user.profile_photo", required=False, allow_null=True
@@ -297,7 +278,6 @@ class DoctorProfileSerializer(ModelSerializer):
         allow_null=True,
         source="doctorexperience_set",
     )
-    specialty = SerializerMethodField(required=False, allow_null=True)
     available_hours = DoctorAvailableHoursSerializerWithID(
         many=True,
         required=False,
@@ -310,6 +290,7 @@ class DoctorProfileSerializer(ModelSerializer):
         allow_null=True,
         source="doctorreview_set",
     )
+    services = SerializerMethodField()
 
     def get_avg_rating(self, doctor_info: DoctorInfo) -> str:
         reviews = doctor_info.doctorreview_set.all()
@@ -321,8 +302,18 @@ class DoctorProfileSerializer(ModelSerializer):
         courses = doctor_info.doctoreducation_set.all().values_list("course", flat=True)
         return ", ".join(courses)
 
-    def get_specialty(self, doctor_info: DoctorInfo) -> list:
-        return doctor_info.doctorspecialty_set.all().values_list("specialty", flat=True)
+    def get_services(self, doctor_info: DoctorInfo) -> list:
+        service_data = {}
+        database_service_raw_data = DoctorService.objects.filter(
+            doctor_info=doctor_info
+        ).values("profession", "service", "price")
+        for service in database_service_raw_data:
+            if service["profession"] not in service_data:
+                service_data[service["profession"]] = []
+            service_data[service["profession"]].append(
+                {"service": service["service"], "price": service["price"]}
+            )
+        return service_data
 
     class Meta:
         model = DoctorInfo
@@ -356,9 +347,9 @@ class DoctorProfileSerializer(ModelSerializer):
             "accepted_insurance",
             "education",
             "experience",
-            "specialty",
             "available_hours",
             "review",
+            "services",
         ]
 
 
@@ -368,6 +359,103 @@ class DoctorAccountSettingsSerializer(AbstractAccountSettingsSerializer):
         fields = AbstractAccountSettingsSerializer.Meta.fields
 
 
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            name="example 1",
+            value={
+                "services": {
+                    "Cardiologist": [
+                        {
+                            "service": "string",
+                            "price": 0,
+                        }
+                    ],
+                    "Chiropractor": [
+                        {
+                            "service": "string",
+                            "price": 0,
+                        }
+                    ],
+                }
+            },
+            request_only=True,
+        )
+    ]
+)
+class DoctorServiceSettingsSerializer(FieldListUpdateSerializer):
+    services = ReadWriteSerializerMethodField(required=True)
+
+    def get_services(self, doctor_info: DoctorInfo) -> list:
+        service_data = {}
+        database_service_raw_data = DoctorService.objects.filter(
+            doctor_info=doctor_info
+        ).values("profession", "service", "price")
+        for service in database_service_raw_data:
+            if service["profession"] not in service_data:
+                service_data[service["profession"]] = []
+            service_data[service["profession"]].append(
+                {"service": service["service"], "price": service["price"]}
+            )
+        return service_data
+
+    def update(self, instance, validated_data):
+        services = validated_data.pop("services", {})
+        updated_profession_data = list(services.keys())
+        self.perform_list_field_update(
+            updated_profession_data,
+            DoctorProfession,
+            "profession",
+            {"doctor_info": instance},
+        )
+        new_service_data = []
+        for k, v in services.items():
+            for service in v:
+                new_service_data.append((k, service["service"], service["price"]))
+
+        affiliated_clinic = (
+            instance.affiliated_hospital if instance.affiliated_hospital else None
+        )
+        DoctorService.objects.filter(doctor_info=instance).delete()
+        if affiliated_clinic:
+            HospitalService.objects.filter(
+                clinic=affiliated_clinic, doctor=instance
+            ).delete()
+        for profession, service, price in new_service_data:
+            DoctorService.objects.create(
+                doctor_info=instance,
+                profession=profession,
+                service=service,
+                price=price,
+            )
+            if affiliated_clinic:
+                HospitalService.objects.create(
+                    clinic=affiliated_clinic,
+                    doctor=instance,
+                    profession=profession,
+                    service=service,
+                    price=price,
+                )
+
+        return instance
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["services"]
+
+
+class DoctorInvoiceSerializer(ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id','amount_paid','payment_date','appointment']
+
+    # def get_appointment(self,patient):
+
+class PatientInvoiceSerializer(ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id','amount_paid','payment_date','appointment']
+
 class PatientProfileDetailsSerializer(ModelSerializer):
     full_name = CharField(source="user.full_name", required=False, allow_null=True)
     contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
@@ -375,14 +463,13 @@ class PatientProfileDetailsSerializer(ModelSerializer):
         source="user.profile_photo", required=False, allow_null=True
     )
     date_of_birth = DateField(required=False, allow_null=True)
-    gender = ChoiceField(
-        source="user.gender", choices=DoctorInfo.Gender.choices, required=False
-    )
+    gender = ChoiceField(choices=DoctorInfo.Gender.choices, required=False)
     email = EmailField(source="user.email", read_only=True)
     street = CharField(source="user.street", required=False)
     city = CharField(source="user.city", required=False)
     state = CharField(source="user.state", required=False)
     zip_code = CharField(source="user.zip_code", required=False)
+    country = CharField(source="user.country", required=False)
 
     def update(self, instance: PatientInfo, validated_data: dict) -> PatientInfo:
         if "user" in validated_data:
@@ -408,6 +495,7 @@ class PatientProfileDetailsSerializer(ModelSerializer):
             "zip_code",
             "date_of_birth",
             "state",
+            "country",
         ]
 
 
@@ -507,6 +595,7 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
     city = CharField(source="user.city", required=False)
     state = CharField(source="user.state", required=False)
     zip_code = CharField(source="user.zip_code", required=False)
+    country = CharField(source="user.country", required=False)
 
     def update(self, instance: ClinicInfo, validated_data: dict) -> ClinicInfo:
         if "user" in validated_data:
@@ -530,8 +619,10 @@ class ClinicProfileDetailsSerializer(ModelSerializer):
             "city",
             "zip_code",
             "state",
+            "country",
             "website",
         ]
+        extra_kwargs = {"website": {"required": False}}
 
 
 class ClinicLicenseSerializer(ModelSerializer):
@@ -540,3 +631,170 @@ class ClinicLicenseSerializer(ModelSerializer):
     class Meta:
         model = ClinicInfo
         fields = ["license_file", "license_expiration"]
+
+
+class PharmacyProfileSettingsSerializer(ModelSerializer):
+    full_name = CharField(source="user.full_name", required=False, allow_null=True)
+    contact_no = CharField(source="user.contact_no", required=False, allow_null=True)
+    profile_photo = CharField(
+        source="user.profile_photo", required=False, allow_null=True
+    )
+    email = EmailField(source="user.email", read_only=True)
+    street = CharField(source="user.street", required=False)
+    city = CharField(source="user.city", required=False)
+    state = CharField(source="user.state", required=False)
+    zip_code = CharField(source="user.zip_code", required=False)
+    country = CharField(source="user.country", required=False)
+
+    def update(self, instance: PharmacyInfo, validated_data: dict) -> PharmacyInfo:
+        if "user" in validated_data:
+            user_data = validated_data.pop("user")
+            instance.user.update_from_validated_data(user_data)
+            if "profile_photo" in user_data:
+                profile_photo_data = user_data.pop("profile_photo")
+                instance.user.profile_photo = profile_photo_data
+
+        instance.update_from_validated_data(validated_data)
+        return instance
+
+    class Meta:
+        model = PharmacyInfo
+        fields = [
+            "full_name",
+            "contact_no",
+            "profile_photo",
+            "email",
+            "street",
+            "city",
+            "zip_code",
+            "state",
+            "country",
+            "website",
+            "bio",
+        ]
+        extra_kwargs = {"website": {"required": False}, "bio": {"required": False}}
+
+
+class PharmacyLicenseSerializer(ModelSerializer):
+    license_file = CharField(required=False, allow_null=True)
+
+    class Meta:
+        model = PharmacyInfo
+        fields = ["license_file", "license_expiration"]
+
+
+class PharmacyProfileDetailsSerializer(ModelSerializer):
+    profile_photo = CharField(source="user.profile_photo")
+    full_name = CharField(source="user.full_name")
+    contact_no = CharField(source="user.contact_no")
+    email = EmailField(source="user.email")
+    address = SerializerMethodField()
+
+    def get_address(self, obj: PharmacyInfo) -> str:
+        address_fields = ["street", "city", "state", "zip_code", "country"]
+        return ",".join(
+            [
+                getattr(obj.user, field)
+                for field in address_fields
+                if getattr(obj.user, field)
+            ]
+        )
+
+    class Meta:
+        model = PharmacyInfo
+        fields = [
+            "profile_photo",
+            "full_name",
+            "contact_no",
+            "email",
+            "address",
+            "bio",
+            "website",
+            "services",
+            "hours_of_operation",
+        ]
+
+
+class PharmacyServicesSettingsSerializer(FieldListUpdateSerializer):
+    """
+    Serializer for `dashboard > specialties and services` page.
+    """
+
+    services = ReadWriteSerializerMethodField(required=False, allow_null=True)
+
+    def get_services(self, pharmacy_info: PharmacyInfo) -> list:
+        return pharmacy_info.services
+
+    def update(self, pharmacy_info: PharmacyInfo, validated_data: dict) -> PharmacyInfo:
+        if "services" in validated_data:
+            _ = self.perform_list_field_update(
+                validated_data.pop("services"),
+                PharmacyService,
+                "service",
+                {"pharmacy_info": pharmacy_info},
+            )
+        return pharmacy_info
+
+    class Meta:
+        model = DoctorInfo
+        fields = ["services"]
+
+
+class PharmacyAvailableHoursSettingsSerializer(ModelSerializer):
+    hours_of_operation = ReadWriteSerializerMethodField()
+
+    def get_hours_of_operation(self, pharmacy_info: PharmacyInfo) -> list:
+        return pharmacy_info.hours_of_operation
+
+    def update(self, instance, validated_data):
+        PharmacyAvailableHours.objects.filter(pharmacy_info=instance).delete()
+        available_hour_data = validated_data.pop("hours_of_operation")
+        PharmacyAvailableHours.objects.bulk_create(
+            [
+                PharmacyAvailableHours(
+                    pharmacy_info=instance,
+                    **available_hour,
+                )
+                for available_hour in available_hour_data
+            ]
+        )
+        return instance
+
+    class Meta:
+        model = PharmacyInfo
+        fields = ["hours_of_operation"]
+
+
+class ClinicTeamListSerializer(ModelSerializer):
+    doctor_full_name = CharField(source="doctor.user.full_name")
+    doctor_rating = FloatField(source="doctor.rating")
+    doctor_review_count = IntegerField(source="doctor.review_count")
+    doctor_profile_photo = CharField(source="doctor.user.profile_photo")
+    doctor_username = CharField(source="doctor.username")
+
+    class Meta:
+        model = HospitalTeam
+        fields = [
+            "id",
+            "doctor_full_name",
+            "doctor_rating",
+            "doctor_review_count",
+            "profession",
+            "doctor_profile_photo",
+            "doctor_username",
+        ]
+        extra_kwargs = {field: {"read_only": True} for field in fields}
+
+
+class ClinicServiceListSerializer(ModelSerializer):
+    class Meta:
+        model = HospitalService
+        fields = ["id", "service", "price"]
+        extra_kwargs = {field: {"read_only": True} for field in fields}
+
+
+class ClinicSendOnboardingMailSerializer(Serializer):
+    doctor_email = EmailField(required=True)
+
+    class Meta:
+        fields = ["doctor_email"]

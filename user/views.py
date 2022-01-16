@@ -12,6 +12,7 @@ from drf_spectacular.utils import (
     OpenApiResponse,
 )
 from drf_spectacular.types import OpenApiTypes
+from core.classes import CustomTokenAuthentication, ExpiringActivationTokenGenerator
 
 from core.views import (
     CustomListAPIView,
@@ -20,9 +21,10 @@ from core.views import (
     CustomAPIView,
 )
 from core.utils import set_user_ip
-from .models import User, DoctorInfo, DoctorSpecialty
+from .models import ClinicInfo, User, DoctorInfo
 from .serializers import (
     DoctorDirectorySerializer,
+    FeaturedDoctorSerializer,
     UserSerializer,
     UserLoginSerializer,
     VerifyEmailSerializer,
@@ -36,14 +38,20 @@ from .serializers import (
 
 
 class UserRetrieveAPIView(CustomRetrieveAPIView):
-    queryset = User.objects.all()
+
+    def get_queryset(self):
+        return User.objects.all()
+
     serializer_class = UserSerializer
 
 
 class LoginView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer
-    queryset = User.objects.all()
+
+    def get_queryset(self):
+        return User.objects.all()
+
 
     def post(self, request):
         # Extracting data from request and validating it
@@ -77,6 +85,15 @@ class LoginView(GenericAPIView):
                 raise AuthenticationFailed()
             result = serializer.data
 
+            # In case the token expires, create new token
+            token_key = result.get("token")
+            token_validator = CustomTokenAuthentication()
+            token_class = token_validator.get_model()
+            token = token_class.objects.get(key=token_key)
+            if token_validator.is_expired(token):
+                token.delete()
+                result["token"] = user.token
+
         # Returning token
         return Response(
             {
@@ -98,34 +115,57 @@ class LogoutView(CustomAPIView):
 
 class DoctorSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.DOCTOR)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.DOCTOR)
+
     serializer_class = DoctorRegistrationSerializer
 
     @extend_schema(
         parameters=[
-            OpenApiParameter("onboard-token", str, required=False),
+            OpenApiParameter("token", str, required=False),
         ],
         request=DoctorRegistrationSerializer,
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
+    def get_serializer(self, *args, **kwargs):
+        query_param = self.request.query_params
+        if "token" in query_param:
+            hospital_id = ExpiringActivationTokenGenerator().get_token_value(
+                query_param["token"]
+            )
+            self.request.data["affiliated_hospital_id"] = hospital_id
+        else:
+            self.request.data["affiliated_hospital_id"] = None
+        return super().get_serializer(*args, **kwargs)
+
 
 class PatientSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.PATIENT)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.PATIENT)
+
     serializer_class = PatientRegistrationSerializer
 
 
 class ClinicSignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.CLINIC)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.CLINIC)
+
     serializer_class = ClinicRegistrationSerializer
 
 
 class PharmacySignupView(CustomCreateAPIView):
     permission_classes = [AllowAny]
-    queryset = User.objects.filter(user_type=User.UserType.PHARMACY)
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=User.UserType.PHARMACY)
+
     serializer_class = PharmacyRegistrationSerializer
 
 
@@ -149,18 +189,30 @@ class DoctorsListView(CustomListAPIView):
     permission_classes = [AllowAny]
     filter_backends = [SearchFilter]
     serializer_class = DoctorDirectorySerializer
-    queryset = DoctorInfo.objects.all()
+
+    def get_queryset(self):
+        return DoctorInfo.objects.all()
+
     search_fields = ["user__full_name", "username"]
 
-    def filter_queryset(self, queryset):
-        filtered_queryset = super().filter_queryset(queryset)
-        if "search" in self.request.query_params:
-            specialty_query = DoctorSpecialty.objects.filter(
-                specialty__icontains=self.request.query_params["search"]
-            ).values_list("doctor_info_id", flat=True)
-            specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
-            return (filtered_queryset | specialty_queryset).distinct()
-        return filtered_queryset
+    # def filter_queryset(self, queryset):
+    #     filtered_queryset = super().filter_queryset(queryset)
+    #     if "search" in self.request.query_params:
+    #         specialty_query = DoctorSpecialty.objects.filter(
+    #             specialty__icontains=self.request.query_params["search"]
+    #         ).values_list("doctor_info_id", flat=True)
+    #         specialty_queryset = DoctorInfo.objects.filter(id__in=specialty_query).all()
+    #         return (filtered_queryset | specialty_queryset).distinct()
+    #     return filtered_queryset
+
+
+class FeaturedDoctorListView(CustomListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = FeaturedDoctorSerializer
+
+    def get_queryset(self):
+        return sorted(DoctorInfo.objects.all(), key=lambda x: x.rating, reverse=True)
+
 
 
 class PasswordResetEmailView(CustomAPIView):

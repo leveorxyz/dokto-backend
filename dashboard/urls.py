@@ -3,18 +3,30 @@ from django.urls import path
 from .views import (
     ClinicLicenseAPIView,
     ClinicProfileAPIView,
+    ClinicSendOnboardingMailAPIView,
+    ClinicServiceListAPIView,
+    ClinicTeamListAPIView,
+    ClinicTeamRemoveAPIView,
     DoctorInsuranceAPIView,
     DoctorProfessionalProfileAPIView,
     DoctorProfileAPIView,
+    DoctorInvoiceAPIView,
     DoctorProfileDetailsAPIView,
     DoctorProfilePublicAPIView,
     DoctorReviewListCreateAPIView,
-    DoctorSpecialtySettingsAPIView,
     DoctorEducationExperienceSettingsAPIView,
     DoctorAvailableHoursSettingsAPIView,
     DoctorAccountSettingsAPIView,
+    DoctorServiceSettingsAPIView,
     PatientProfileDetailsAPIView,
+    PatientInvoiceAPIView,
     AccountSettingsSerializer,
+    PharmacyAvailableHoursSettingsAPIView,
+    PharmacyLicenseAPIView,
+    PharmacyProfileAPIView,
+    PharmacyProfilePublicAPIView,
+    PharmacyProfileSettingsAPIView,
+    PharmacyServiesSettingsAPIView,
 )
 
 urlpatterns = [
@@ -44,9 +56,9 @@ urlpatterns = [
         name="doctor-available-hours",
     ),
     path(
-        "doctor/specialty-settings/",
-        DoctorSpecialtySettingsAPIView.as_view(),
-        name="doctor-specialty-settings",
+        "doctor/service-settings/",
+        DoctorServiceSettingsAPIView.as_view(),
+        name="doctor-service-settings",
     ),
     path(
         "doctor/account-settings/",
@@ -82,4 +94,56 @@ urlpatterns = [
         name="clinic-profile-settings",
     ),
     path("clinic/license/", ClinicLicenseAPIView.as_view(), name="clinic-license"),
+    path(
+        "pharmacy/profile-settings/",
+        PharmacyProfileSettingsAPIView.as_view(),
+        name="pharmacy-profile-settings",
+    ),
+    path(
+        "pharmacy/license/", PharmacyLicenseAPIView.as_view(), name="pharmacy-license"
+    ),
+    path(
+        "pharmacy/profile/", PharmacyProfileAPIView.as_view(), name="pharmacy-profile"
+    ),
+    path(
+        "public/pharmacy/profile/<str:username>/",
+        PharmacyProfilePublicAPIView.as_view(),
+        name="public-pharmacy-profile",
+    ),
+    path(
+        "pharmacy/services-settings/",
+        PharmacyServiesSettingsAPIView.as_view(),
+        name="pharmacy-services-settings",
+    ),
+    path(
+        "pharmacy/available-hours/",
+        PharmacyAvailableHoursSettingsAPIView.as_view(),
+        name="pharmacy-available-hours",
+    ),
+    path("clinic/team-list/", ClinicTeamListAPIView.as_view(), name="clinic-team-list"),
+    path(
+        "clinic/service/<str:doctor_username>",
+        ClinicServiceListAPIView.as_view(),
+        name="clinic-service",
+    ),
+    path(
+        "clinic/remove-doctor/<str:doctor_username>",
+        ClinicTeamRemoveAPIView.as_view(),
+        name="clinic-remove-doctor",
+    ),
+    path(
+        "clinic/send-onboarding-mail/",
+        ClinicSendOnboardingMailAPIView.as_view(),
+        name="clinic-send-onboarding-mail",
+    ),
+    path(
+        "doctor/invoice/",
+        DoctorInvoiceAPIView.as_view(),
+        name="doctor-invoice",
+    ),
+    path(
+        "patient/invoice/",
+        PatientInvoiceAPIView.as_view(),
+        name="patient-invoice",
+    ),
 ]

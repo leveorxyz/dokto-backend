@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     DoctorsListView,
+    FeaturedDoctorListView,
     UserRetrieveAPIView,
     LoginView,
     LogoutView,
@@ -30,4 +31,7 @@ urlpatterns = [
         name="send-password-reset-email",
     ),
     path("password-reset/", PasswordResetView.as_view(), name="password-reset"),
+    path(
+        "featured-doctors/", FeaturedDoctorListView.as_view(), name="featured-doctors"
+    ),
 ]

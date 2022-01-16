@@ -8,8 +8,6 @@ from rest_framework.serializers import (
 )
 
 from .models import Appointment
-from user.models import DoctorInfo
-from dashboard.serializers import DoctorProfileSerializer
 
 
 class AppointmentSerializer(ModelSerializer):
@@ -24,6 +22,7 @@ class EncounteredListSerializer(ModelSerializer):
     address = CharField(source="patient.user.street")
     phone_number = CharField(source="patient.user.contact_no")
     display_id = IntegerField(source="patient.display_id")
+    profile_photo = CharField(source="patient.user.profile_photo")
 
     class Meta:
         model = Appointment
@@ -31,12 +30,8 @@ class EncounteredListSerializer(ModelSerializer):
         fields = [field.name for field in model._meta.fields] + [
             "account_id",
             "name",
+            "profile_photo",
             "address",
             "phone_number",
             "display_id",
         ]
-
-
-class DummyDoctorListSerializer(DoctorProfileSerializer):
-    def get_avg_rating(self, doctor_info: DoctorInfo) -> str:
-        return random.random() * 5.0

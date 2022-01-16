@@ -1,13 +1,41 @@
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import SerializerMethodField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.fields import CharField, SerializerMethodField, UUIDField
+from rest_framework.serializers import ModelSerializer, Serializer
 from django.db.models import Q
 
 from .models import InboxChannel, InboxMessage
+from core.serializers import ReadWriteSerializerMethodField
+from user.models import User
+
+
+class InboxUserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "full_name", "profile_photo"]
+        extra_kwargs = {
+            "full_name": {"read_only": True},
+            "profile_photo": {"read_only": True},
+        }
+
+
+class InboxChannelPostSchemaSerializer(Serializer):
+    second_user = UUIDField(required=True)
+    encounter_reason = CharField(required=False, allow_blank=True)
+
+    class Meta:
+        fields = ["second_user", "encounter_reason"]
 
 
 class InboxChannelSerializer(ModelSerializer):
+    first_user = ReadWriteSerializerMethodField()
+    second_user = ReadWriteSerializerMethodField()
     unread_count = SerializerMethodField()
+
+    def get_first_user(self, obj):
+        return InboxUserSerializer(obj.first_user).data
+
+    def get_second_user(self, obj):
+        return InboxUserSerializer(obj.second_user).data
 
     def get_unread_count(self, obj) -> int:
         return obj.get_unread_msg_count(self.context["request"].user)
@@ -15,15 +43,18 @@ class InboxChannelSerializer(ModelSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         if InboxChannel.objects.filter(
-            Q(first_user=data["first_user"], second_user=data["second_user"])
-            | Q(first_user=data["second_user"], second_user=data["first_user"])
+            Q(first_user=data["first_user"].id, second_user=data["second_user"].id)
+            | Q(first_user=data["second_user"].id, second_user=data["first_user"].id)
         ).exists():
             raise ValidationError("Channel already exists")
+        return data
+
+    def create(self, validated_data):
+        return InboxChannel.objects.create(**validated_data)
 
     class Meta:
         model = InboxChannel
-        fields = ("id", "first_user", "second_user", "unread_count")
-        extra_kwargs = {"first_user": {"read_only": True}}
+        fields = ("id", "first_user", "second_user", "encounter_reason", "unread_count")
 
 
 class InboxMessageSerializer(ModelSerializer):
@@ -38,19 +69,32 @@ class InboxMessageSerializer(ModelSerializer):
 
     def create(self, validated_data):
         validated_data["sender"] = self.context["request"].user
+        if "uploaded_file" in validated_data:
+            file = validated_data.get("uploaded_file")
+            validated_data["uploaded_file_mimetype"] = file.content_type
         message = InboxMessage.from_validated_data(validated_data)
         message.save()
         return message
 
     class Meta:
         model = InboxMessage
-        fields = ["channel", "message", "subject", "sender", "read_status"]
+        fields = [
+            "channel",
+            "message",
+            "subject",
+            "sender",
+            "read_status",
+            "uploaded_file",
+            "uploaded_file_mimetype",
+        ]
         extra_kwargs = {
             "channel": {"required": True},
             "message": {"required": True},
             "subject": {"required": False},
             "read_status": {"read_only": True},
             "sender": {"read_only": True},
+            "uploaded_file": {"required": False},
+            "uploaded_file_mimetype": {"read_only": True},
         }
 
 
@@ -64,10 +108,22 @@ class InboxChannelMessage(ModelSerializer):
 
     class Meta:
         model = InboxMessage
-        fields = ["channel", "message", "subject", "sender", "read_status"]
+        fields = [
+            "channel",
+            "message",
+            "subject",
+            "sender",
+            "read_status",
+            "created_at",
+            "uploaded_file",
+            "uploaded_file_mimetype",
+        ]
         extra_kwargs = {
             "channel": {"required": True},
             "message": {"required": True},
             "subject": {"required": False},
             "read_status": {"read_only": True},
+            "created_at": {"read_only": True},
+            "uploaded_file": {"required": False},
+            "uploaded_file_mimetype": {"read_only": True},
         }

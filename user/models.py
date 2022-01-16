@@ -18,11 +18,17 @@ from core.literals import (
     DOCTOR_LICENSE_FILE_DIRECTORY,
     PATIENT_IDENTIFICATION_PHOTO_DIRECTORY,
     CLINIC_LICENSE_FILE_DIRECTORY,
+    PHARMACY_LICENSE_FILE_DIRECTORY,
 )
 from core.modelutils import send_mail
+from subscription.models import SubscriptionModelMixin, SubscriptionPlanTypes
 from .utils import generate_file_and_name
 
 # Create your models here.
+
+SUBSCRIPTION_ONLY_COUNTRIES = [
+    'US', 'CANADA', 'MEXICO'
+]
 
 username_validator = UnicodeUsernameValidator()
 
@@ -59,6 +65,7 @@ class User(AbstractUser, CoreModel):
     state = models.CharField(_("state"), max_length=50, blank=True, null=True)
     city = models.CharField(_("city"), max_length=50, blank=True, null=True)
     zip_code = models.CharField(_("zip code"), max_length=15, blank=True, null=True)
+    country = models.CharField(max_length=50, blank=True, null=True, default=None)
     contact_no = models.CharField(_("contact no"), max_length=20, blank=True, null=True)
     _profile_photo = models.ImageField(
         upload_to=PROFILE_PHOTO_DIRECTORY,
@@ -229,7 +236,7 @@ class UserIp(CoreModel):
         return f"{self.user.id}-{self.ip_address}"
 
 
-class DoctorInfo(CoreModel):
+class DoctorInfo(CoreModel, SubscriptionModelMixin):
     class Gender(models.TextChoices):
         MALE = "MALE", _("male")
         FEMALE = "FEMALE", _("female")
@@ -255,7 +262,6 @@ class DoctorInfo(CoreModel):
         User, on_delete=models.CASCADE, related_name="doctor_info"
     )
     date_of_birth = models.DateField(blank=True, null=True)
-    country = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(
         max_length=30, choices=Gender.choices, blank=True, null=True
     )
@@ -278,8 +284,10 @@ class DoctorInfo(CoreModel):
     reason_to_delete = models.CharField(max_length=2000, blank=True, null=True)
     temporary_disable = models.BooleanField(blank=True, default=False)
     accepted_insurance = models.CharField(max_length=100, blank=True, null=True)
-    profession = models.CharField(max_length=100, blank=True, null=True, default=None)
     license_expiration = models.DateField(blank=True, null=True)
+    affiliated_hospital = models.ForeignKey(
+        "ClinicInfo", on_delete=models.CASCADE, null=True, blank=True, default=None
+    )
 
     @classmethod
     def get_hidden_fields(self, *args, **kwargs) -> list:
@@ -291,7 +299,21 @@ class DoctorInfo(CoreModel):
             "reason_to_delete",
             "temporary_disable",
             "notification_email",
+            "affiliated_hospital",
+            "current_subscription",
+            "subscription_type",
         ]
+
+    @property
+    def rating(self):
+        rating = self.doctorreview_set.all().aggregate(models.Avg("star_count"))[
+            "star_count__avg"
+        ]
+        return rating if rating else 0
+
+    @property
+    def review_count(self):
+        return len(self.doctorreview_set.all())
 
     @property
     def identification_photo(self):
@@ -336,6 +358,17 @@ class DoctorInfo(CoreModel):
         del self.license_file
         return super(DoctorInfo, self).delete(*args, **kwargs)
 
+    def can_use_pay_as_you_go(self):
+        if self.country in SUBSCRIPTION_ONLY_COUNTRIES:
+            return False, f"Doctors in f{self.country} can't use pay as you go plan" # TODO: Find ways to return country full name
+
+
+    def change_membership_type(self):
+        pass
+
+    def get_subscription_info(self):
+        return 5000, SubscriptionPlanTypes.DOTOR_SUSBCRIPTION_TYPE, 1 # TODO: Add check for home visit, Q: How do I recognize doctors performing home visit
+
     def __str__(self):
         return f"{self.id}-{self.username}"
 
@@ -362,11 +395,6 @@ class DoctorExperience(CoreModel):
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     job_description = models.TextField(max_length=200, blank=True, null=True)
-
-
-class DoctorSpecialty(CoreModel):
-    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
-    specialty = models.CharField(max_length=50)
 
 
 class DoctorAvailableHours(CoreModel):
@@ -399,7 +427,19 @@ class DoctorAcceptedInsurance(CoreModel):
     insurance = models.CharField(max_length=50)
 
 
-class ClinicInfo(CoreModel):
+class DoctorProfession(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    profession = models.CharField(max_length=100)
+
+
+class DoctorService(CoreModel):
+    doctor_info = models.ForeignKey(DoctorInfo, on_delete=models.CASCADE)
+    profession = models.CharField(max_length=100)
+    service = models.CharField(max_length=100)
+    price = models.CharField(max_length=50)
+
+
+class ClinicInfo(CoreModel, SubscriptionModelMixin):
     username = models.CharField(
         _("username"),
         max_length=150,
@@ -444,32 +484,25 @@ class ClinicInfo(CoreModel):
         del self.license_file
         return super(ClinicInfo, self).delete(*args, **kwargs)
 
-    def send_onboard_mail(self, doctor_id=None, *args, **kwargs):
-        if not doctor_id:
-            raise ValidationError("doctor_id is required")
-        doctor_user: User = None
-        try:
-            doctor_user = DoctorInfo.objects.get(id=doctor_id).user
-        except DoctorInfo.DoesNotExist:
-            raise ValidationError("doctor_id is not valid")
+    def send_onboard_mail(self, doctor_email=None, *args, **kwargs):
         invite_token = ExpiringActivationTokenGenerator().generate_token(
-            text=self.email
+            text=self.user.id.__str__()
         )
         link = (
             "/".join(
                 [
                     settings.FRONTEND_URL,
-                    "onboard",
+                    "provider-registration",
                 ]
             )
             + f"?token={invite_token.decode('utf-8')}"
         )
         send_mail(
-            to_email=doctor_user.email,
+            to_email=doctor_email,
             subject=f"Dokto doctor onboarding",
-            template_name="email/password_reset.html",
+            template_name="email/doctor_onboard.html",
             input_context={
-                "name": doctor_user.full_name,
+                "name": self.user.full_name,
                 "link": link,
                 "host_url": Site.objects.get_current().domain,
             },
@@ -483,10 +516,26 @@ class ClinicInfo(CoreModel):
             "website",
             "_license_file",
             "license_expiration",
-        ]
+        ] + ["current_subscription", "subscription_type"]
+
+    # Subscription concrete methods
+    
+    def confirm_subscription_extended(self):
+        #TODO: find all doctors and extend subscription
+        pass
+
+    def confirm_subscription_cancelled(self):
+        #TODO: find all doctors and cancel subscription
+        pass
+
+    def change_membership_type(self):
+        pass
+
+    def get_subscription_info(self):
+        return 5000 * self.number_of_practitioners, SubscriptionPlanTypes.CLINIC_SUBSCRIPTION_PLAN, self.number_of_practitioners # TODO: Add check for no of registered practitioners
 
 
-class PharmacyInfo(CoreModel):
+class PharmacyInfo(CoreModel, SubscriptionModelMixin):
     username = models.CharField(
         _("username"),
         max_length=150,
@@ -502,11 +551,87 @@ class PharmacyInfo(CoreModel):
     )
     number_of_practitioners = models.IntegerField(blank=True, null=True, default=0)
     notification_email = models.EmailField(blank=True, null=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
+    website = models.URLField(blank=True, null=True, default=None)
+    _license_file = models.FileField(
+        upload_to=PHARMACY_LICENSE_FILE_DIRECTORY, blank=True, null=True, default=None
+    )
+    license_expiration = models.DateField(blank=True, null=True)
+
+    @property
+    def services(self):
+        return self.pharmacyservice_set.all().values_list("service", flat=True)
+
+    @property
+    def hours_of_operation(self):
+        return self.pharmacyavailablehours_set.all().values(
+            "day_of_week", "start_time", "end_time"
+        )
+
+    @property
+    def license_file(self):
+        domain = Site.objects.get_current().domain
+        if self._license_file.name:
+            return domain + self._license_file.url
+
+    @license_file.setter
+    def license_file(self, license_file_data):
+        if self._license_file.name:
+            del self.license_file
+        file_name, file = generate_file_and_name(license_file_data, self.id)
+        self._license_file.save(file_name, file, save=True)
+        self.save()
+
+    @license_file.deleter
+    def license_file(self):
+        if self._license_file.name:
+            self._license_file.delete(save=True)
+
+    def delete(self, *args, **kwargs):
+        del self.license_file
+        return super(PharmacyInfo, self).delete(*args, **kwargs)
 
     @classmethod
     def get_hidden_fields(cls):
-        return super().get_hidden_fields() + ["user", "notification_email"]
+        return super().get_hidden_fields() + [
+            "user",
+            "notification_email",
+            "bio",
+            "website",
+            "_license_file",
+            "license_expiration",
+        ] + ["current_subscription", "subscription_type"]
 
+
+class PharmacyService(CoreModel):
+    pharmacy_info = models.ForeignKey(PharmacyInfo, on_delete=models.CASCADE)
+    service = models.CharField(max_length=200)
+
+
+class PharmacyAvailableHours(CoreModel):
+    class DayOfWeek(models.TextChoices):
+        SUNDAY = "SUN", _("sunday")
+        MONDAY = "MON", _("monday")
+        TUESDAY = "TUE", _("tuesday")
+        WEDNESDAY = "WED", _("wednesday")
+        THURSDAY = "THU", _("thursday")
+        FRIDAY = "FRI", _("friday")
+        SATURDAY = "SAT", _("saturday")
+
+    pharmacy_info = models.ForeignKey(PharmacyInfo, on_delete=models.CASCADE)
+    day_of_week = models.CharField(
+        max_length=3, choices=DayOfWeek.choices, blank=True, null=True
+    )
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+
+    # Subscription concrete methods
+
+    def change_membership_type(self):
+        pass
+
+    def get_subscription_info(self):
+        return 10000, SubscriptionPlanTypes.PHARMACY_SUBSCRIPTION_PLAN, 1
 
 class PatientInfo(CoreModel):
     class Gender(models.TextChoices):
